@@ -28,8 +28,13 @@ func (k *KramerBot) GetToken() string {
 
 // function to create a new bot
 func (k *KramerBot) NewBot() {
+	// If user has forgotten to set the token
 	if k.Token == "" {
-		k.Logger.Fatal("Cannot proceed without a bot token")
+		k.Token = k.GetToken()
+	}
+
+	if k.Token == "" {
+		k.Logger.Fatal("Cannot proceed without a bot token, is the TELEGRAM_BOT_TOKEN environment variable set?")
 	}
 
 	bot, err := tgbotapi.NewBotAPI(k.Token)
@@ -48,4 +53,29 @@ func (k *KramerBot) NewBot() {
 func (k *KramerBot) SendMessage(chatID int64, text string) {
 	msg := tgbotapi.NewMessage(chatID, text)
 	k.Bot.Send(msg)
+}
+
+// start receiving updates from telegram
+func (k *KramerBot) StartReceivingUpdates() {
+	// log start receiving updates
+	k.Logger.Info("Start receiving updates")
+
+	// setup updates
+	u := tgbotapi.NewUpdate(0)
+	u.Timeout = 60
+
+	// get updates channel
+	updates, err := k.Bot.GetUpdatesChan(u)
+	if err != nil {
+		k.Logger.Fatal(err.Error())
+	}
+
+	// keep watching updates channel
+	for update := range updates {
+		if update.Message == nil {
+			continue
+		}
+
+		k.Logger.Info("Received message", zap.String("text", update.Message.Text), zap.Int64("chatID", update.Message.Chat.ID))
+	}
 }

@@ -21,4 +21,7 @@ func main() {
 
 	// create a new bot
 	k.NewBot()
+
+	// start receiving updates from telegram
+	k.StartReceivingUpdates()
 }
