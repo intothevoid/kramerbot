@@ -27,7 +27,7 @@ func main() {
 	scraper := new(scrapers.OzBargainScraper)
 	scraper.SID = scrapers.SID_OZBARGAIN
 	scraper.Logger = k.Logger
-	scraper.BaseUrl = "https://www.ozbargain.com.au"
+	scraper.BaseUrl = "https://www.ozbargain.com.au/"
 	scraper.Deals = []scrapers.OzBargainDeal{}
 
 	// start receiving updates from telegram

@@ -59,6 +59,20 @@ func (k *KramerBot) SendMessage(chatID int64, text string) {
 	k.Bot.Send(msg)
 }
 
+// send html message to chat
+func (k *KramerBot) SendHTMLMessage(chatID int64, text string) {
+	msg := tgbotapi.NewMessage(chatID, text)
+	msg.ParseMode = "HTML"
+	k.Bot.Send(msg)
+}
+
+// send markdown message to chat
+func (k *KramerBot) SendMarkdownMessage(chatID int64, text string) {
+	msg := tgbotapi.NewMessage(chatID, text)
+	msg.ParseMode = "Markdown"
+	k.Bot.Send(msg)
+}
+
 // start receiving updates from telegram
 func (k *KramerBot) StartReceivingUpdates(scraper scrapers.Scraper) {
 	// log start receiving updates
@@ -86,13 +100,13 @@ func (k *KramerBot) StartReceivingUpdates(scraper scrapers.Scraper) {
 		k.Logger.Info("Received message", zap.String("text", update.Message.Text), zap.Int64("chatID", update.Message.Chat.ID))
 
 		// User asked for latest deals
-		if strings.Contains(update.Message.Text, "latest") {
+		if strings.Contains(strings.ToLower(update.Message.Text), "latest") {
 			k.SendLatestDeals(update.Message.Chat.ID, s)
 			continue
 		}
 
 		// Help command
-		if strings.Contains(update.Message.Text, "help") {
+		if strings.Contains(strings.ToLower(update.Message.Text), "help") {
 			k.Help(update.Message.Chat.ID)
 			continue
 		}
@@ -110,7 +124,9 @@ func (k *KramerBot) SendLatestDeals(chatID int64, s *scrapers.OzBargainScraper) 
 
 	// Send latest deals to the user
 	for _, deal := range latestDeals {
-		k.SendMessage(chatID, fmt.Sprintf("%s (%s)", deal.Title, deal.Url))
+		formattedDeal := fmt.Sprintf("<a href='%s' target='_blank'>CLICK HERE</a>", deal.Url)
+
+		k.SendHTMLMessage(chatID, formattedDeal)
 
 		// Delay for a bit don't send all deals at once
 		time.Sleep(1 * time.Second)
@@ -120,12 +136,12 @@ func (k *KramerBot) SendLatestDeals(chatID int64, s *scrapers.OzBargainScraper) 
 // Function to display help message
 func (k *KramerBot) Help(chatID int64) {
 	// Show the help banner
-	k.SendMessage(chatID, "Giddyup! Available commands are: \n"+
+	k.SendMessage(chatID, "Giddyup! Available commands are: \n\n"+
 		"/help - View this help message \n"+
-		"/latest - View the 5 latest deals on ozbargain.com.au \n"+
-		"/watchsuper - Watch deals with 50+ upvotes within the hour\n"+
-		"/watchgood - Watch deals with 25+ upvotes within the hour\n"+
-		"/watch100 - Watch deals with 100+ upvotes\n"+
+		"/latest - View the 5 latest deals on OzBargain\n"+
+		"/watchsuper - Watch out for deals with 50+ upvotes within the hour\n"+
+		"/watchgood - Watch out for deals with 25+ upvotes within the hour\n"+
+		"/watch100 - Watch out for deals with 100+ upvotes\n"+
 		"/watch - Watch deals with specified keyword\n"+
 		"/kramerism - Get a Kramer quote from Seinfeld")
 }
