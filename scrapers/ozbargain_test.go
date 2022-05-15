@@ -99,3 +99,39 @@ func TestIsSuperDeal(t *testing.T) {
 		t.Log("Deal3 is a regular deal")
 	}
 }
+
+// Test if filter is working
+func TestFilter(t *testing.T) {
+	// create a new scraper
+	s := new(scrapers.OzBargainScraper)
+
+	// create a new deal
+	deal1 := scrapers.OzBargainDeal{
+		Title:    "Test deal",
+		Url:      "https://www.ozbargain.com.au/deals/test-deal",
+		PostedOn: "Neoika on 15/05/2022 - 14:38  kogan.com",
+		Upvotes:  "49",
+		DealAge:  "0h59m00s",
+	}
+
+	deal2 := scrapers.OzBargainDeal{
+		Title:    "Test Beer Deal Weihenstephaner Schooner Cheap!",
+		Url:      "https://www.ozbargain.com.au/deals/test-deal-beer",
+		PostedOn: "intothevoid on 15/05/2022 - 14:38  danmurphys.com",
+		Upvotes:  "100",
+		DealAge:  "5h59m00s",
+	}
+
+	s.Deals = []scrapers.OzBargainDeal{deal1, deal2}
+
+	filtered := s.FilterByKeywords([]string{"w00t", "beer"})
+
+	if len(filtered) == 0 {
+		t.Error("Filter deals did not work as intended")
+		t.Fail()
+	}
+
+	for deal := range filtered {
+		t.Log(filtered[deal].Title)
+	}
+}
