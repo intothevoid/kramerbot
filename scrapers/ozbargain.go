@@ -93,9 +93,8 @@ func (s *OzBargainScraper) GetDealAge(postedOn string) time.Duration {
 	return tmnow.Sub(tmts)
 }
 
-// Check if deal is a super deal
-// 50+ votes in the last hour
-func (s *OzBargainScraper) IsSuperDeal(deal OzBargainDeal) bool {
+// Check if deal is a super deal, good deal or just a regular deal
+func (s *OzBargainScraper) GetDealType(deal OzBargainDeal) int {
 	upvotes := deal.Upvotes
 	dealAge := deal.DealAge
 
@@ -111,34 +110,18 @@ func (s *OzBargainScraper) IsSuperDeal(deal OzBargainDeal) bool {
 		s.Logger.Error("Error converting upvotes to int", zap.Error(err))
 	}
 
+	// 50+ upvotes within an hour
 	if duration.Hours() < 1.0 && upvotesInt >= 50 {
-		return true
-	}
-	return false
-}
-
-// Check if deal is a good deal
-// 50+ votes in the last hour
-func (s *OzBargainScraper) IsGoodDeal(deal OzBargainDeal) bool {
-	upvotes := deal.Upvotes
-	dealAge := deal.DealAge
-
-	duration, err := time.ParseDuration(dealAge)
-	if err != nil {
-		s.Logger.Error("Error parsing time", zap.Error(err))
+		return int(SUPER_DEAL)
 	}
 
-	// convert upvotes to int
-	upvotesInt, err := strconv.Atoi(upvotes)
-
-	if err != nil {
-		s.Logger.Error("Error converting upvotes to int", zap.Error(err))
-	}
-
+	// 25+ upvotes within an hour
 	if duration.Hours() < 1.0 && upvotesInt >= 25 {
-		return true
+		return int(GOOD_DEAL)
 	}
-	return false
+
+	// regular deal
+	return int(REGULAR_DEAL)
 }
 
 // Filter list of deals by keywords
