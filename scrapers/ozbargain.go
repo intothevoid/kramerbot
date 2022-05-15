@@ -129,7 +129,7 @@ func (s *OzBargainScraper) FilterByKeywords(keywords []string) []OzBargainDeal {
 	filteredDeals := []OzBargainDeal{}
 	for _, deal := range s.Deals {
 		for _, keyword := range keywords {
-			if strings.Contains(deal.Title, keyword) {
+			if strings.Contains(strings.ToLower(deal.Title), strings.ToLower(keyword)) {
 				filteredDeals = append(filteredDeals, deal)
 			}
 		}
