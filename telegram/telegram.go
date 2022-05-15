@@ -7,9 +7,13 @@ package telegram
 
 // imports
 import (
+	"fmt"
 	"os"
+	"strings"
+	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
+	"github.com/intothevoid/cosmobot/scrapers"
 	"go.uber.org/zap"
 )
 
@@ -56,7 +60,7 @@ func (k *KramerBot) SendMessage(chatID int64, text string) {
 }
 
 // start receiving updates from telegram
-func (k *KramerBot) StartReceivingUpdates() {
+func (k *KramerBot) StartReceivingUpdates(scraper scrapers.Scraper) {
 	// log start receiving updates
 	k.Logger.Info("Start receiving updates")
 
@@ -70,6 +74,9 @@ func (k *KramerBot) StartReceivingUpdates() {
 		k.Logger.Fatal(err.Error())
 	}
 
+	// create a scraper
+	s := scraper.(*scrapers.OzBargainScraper)
+
 	// keep watching updates channel
 	for update := range updates {
 		if update.Message == nil {
@@ -77,5 +84,48 @@ func (k *KramerBot) StartReceivingUpdates() {
 		}
 
 		k.Logger.Info("Received message", zap.String("text", update.Message.Text), zap.Int64("chatID", update.Message.Chat.ID))
+
+		// User asked for latest deals
+		if strings.Contains(update.Message.Text, "latest") {
+			k.SendLatestDeals(update.Message.Chat.ID, s)
+			continue
+		}
+
+		// Help command
+		if strings.Contains(update.Message.Text, "help") {
+			k.Help(update.Message.Chat.ID)
+			continue
+		}
+
+		// Unknown command - show help banner
+		k.Help(update.Message.Chat.ID)
 	}
+}
+
+// Function to send latest deals
+func (k *KramerBot) SendLatestDeals(chatID int64, s *scrapers.OzBargainScraper) {
+	// Let the scraper go to work
+	s.Scrape()
+	latestDeals := s.GetLatestDeals()
+
+	// Send latest deals to the user
+	for _, deal := range latestDeals {
+		k.SendMessage(chatID, fmt.Sprintf("%s (%s)", deal.Title, deal.Url))
+
+		// Delay for a bit don't send all deals at once
+		time.Sleep(1 * time.Second)
+	}
+}
+
+// Function to display help message
+func (k *KramerBot) Help(chatID int64) {
+	// Show the help banner
+	k.SendMessage(chatID, "Giddyup! Available commands are: \n"+
+		"/help - View this help message \n"+
+		"/latest - View the 5 latest deals on ozbargain.com.au \n"+
+		"/watchsuper - Watch deals with 50+ upvotes within the hour\n"+
+		"/watchgood - Watch deals with 25+ upvotes within the hour\n"+
+		"/watch100 - Watch deals with 100+ upvotes\n"+
+		"/watch - Watch deals with specified keyword\n"+
+		"/kramerism - Get a Kramer quote from Seinfeld")
 }

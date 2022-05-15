@@ -103,6 +103,11 @@ func (s *OzBargainScraper) GetDealType(deal OzBargainDeal) int {
 		return int(GOOD_DEAL)
 	}
 
+	// 100+ upvotes
+	if upvotesInt >= 100 {
+		return int(HUNDRED_VOTES_DEAL)
+	}
+
 	// regular deal
 	return int(REGULAR_DEAL)
 }
