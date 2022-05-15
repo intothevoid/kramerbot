@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 
-	"github.com/intothevoid/ozbot/scrapers"
-	"github.com/intothevoid/ozbot/util"
+	"github.com/intothevoid/cosmobot/scrapers"
+	"github.com/intothevoid/cosmobot/util"
 )
 
 func main() {

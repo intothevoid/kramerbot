@@ -1,4 +1,4 @@
-module github.com/intothevoid/ozbot
+module github.com/intothevoid/cosmobot
 
 go 1.18
 
