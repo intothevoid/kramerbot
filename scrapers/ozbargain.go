@@ -10,23 +10,6 @@ import (
 	"go.uber.org/zap"
 )
 
-// Ozbargain scraper
-// implement the scraper interface
-type OzBargainScraper struct {
-	BaseUrl string
-	Logger  *zap.Logger
-	Deals   []OzBargainDeal
-}
-
-type OzBargainDeal struct {
-	Title    string `json:"title"`
-	Url      string `json:"url"`
-	PostedOn string `json:"time"`
-	Upvotes  string `json:"upvotes"`
-	DealAge  string `json:"dealage"`
-	DealType int    `json:"dealtype"`
-}
-
 // Scrape the url
 func (s *OzBargainScraper) Scrape() {
 	url := s.BaseUrl + "/deals"
@@ -139,5 +122,8 @@ func (s *OzBargainScraper) FilterByKeywords(keywords []string) []OzBargainDeal {
 
 // Get latest 5 deals from the list
 func (s *OzBargainScraper) GetLatestDeals() []OzBargainDeal {
-	return s.Deals[:5]
+	if len(s.Deals) < 5 {
+		return []OzBargainDeal{}
+	}
+	return s.Deals[:NUM_DEALS_TO_SEND]
 }
