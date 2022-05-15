@@ -1,2 +1,9 @@
-# cosmobot
-A telegram bot to get you the latest Aussie deals
+# Kramer's Deals
+
+### @kramerbot
+
+https://t.me/kramerbot
+
+A Telegram bot to get you the latest deals from websites like https://www.ozbargain.com.au
+
+<img src="https://raw.githubusercontent.com/intothevoid/cosmobot/main/static/about.jpeg"></img>
