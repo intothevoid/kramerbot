@@ -1,23 +1,24 @@
 package main
 
 import (
-	"fmt"
-
-	"github.com/intothevoid/cosmobot/scrapers"
+	"github.com/intothevoid/cosmobot/telegram"
 	"github.com/intothevoid/cosmobot/util"
 )
 
 func main() {
-	// create a new scraper
-	ozbScraper := new(scrapers.OzBargainScraper)
+	// create a new instance of our bot
+	k := new(telegram.KramerBot)
 
 	// initialise logger
-	ozbScraper.Logger = util.SetupLogger()
-	ozbScraper.BaseUrl = "https://www.ozbargain.com.au/"
+	k.Logger = util.SetupLogger()
 
-	// Start scraping
-	ozbScraper.Scrape()
+	// get the token for the telegram bot api
+	k.Token = k.GetToken()
 
-	// Print deals
-	fmt.Println(ozbScraper.Deals)
+	if k.Token == "" {
+		k.Logger.Fatal("Cannot proceed without a bot token")
+	}
+
+	// create a new bot
+	k.NewBot()
 }

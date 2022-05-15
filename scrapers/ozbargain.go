@@ -136,3 +136,8 @@ func (s *OzBargainScraper) FilterByKeywords(keywords []string) []OzBargainDeal {
 	}
 	return filteredDeals
 }
+
+// Get latest 5 deals from the list
+func (s *OzBargainScraper) GetLatestDeals() []OzBargainDeal {
+	return s.Deals[:5]
+}
