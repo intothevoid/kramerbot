@@ -48,7 +48,7 @@ func TestIsSuperDeal(t *testing.T) {
 	// create a new scraper
 	s := new(scrapers.OzBargainScraper)
 
-	// create a new deal2
+	// create a new deal
 	deal1 := scrapers.OzBargainDeal{
 		Title:    "Test deal",
 		Url:      "https://www.ozbargain.com.au/deals/test-deal",
@@ -57,13 +57,15 @@ func TestIsSuperDeal(t *testing.T) {
 		DealAge:  "0h59m00s",
 	}
 
-	if s.IsSuperDeal(deal1) {
+	if s.GetDealType(deal1) == int(scrapers.SUPER_DEAL) {
 		t.Log("Deal1 is a super deal")
+	} else if s.GetDealType(deal1) == int(scrapers.GOOD_DEAL) {
+		t.Log("Deal1 is a good deal")
 	} else {
-		t.Log("Deal1 is not a super deal")
+		t.Log("Deal1 is a regular deal")
 	}
 
-	// create a new deal1
+	// create a new deal
 	deal2 := scrapers.OzBargainDeal{
 		Title:    "Test deal",
 		Url:      "https://www.ozbargain.com.au/deals/test-deal",
@@ -72,45 +74,28 @@ func TestIsSuperDeal(t *testing.T) {
 		DealAge:  "0h59m00s",
 	}
 
-	if s.IsSuperDeal(deal2) {
+	if s.GetDealType(deal2) == int(scrapers.SUPER_DEAL) {
 		t.Log("Deal2 is a super deal")
-	} else {
-		t.Log("Deal2 is not a super deal")
-	}
-}
-
-// Test if deal is a good deal
-func TestIsGoodDeal(t *testing.T) {
-	// create a new scraper
-	s := new(scrapers.OzBargainScraper)
-
-	// create a new deal2
-	deal1 := scrapers.OzBargainDeal{
-		Title:    "Test deal",
-		Url:      "https://www.ozbargain.com.au/deals/test-deal",
-		PostedOn: "Neoika on 15/05/2022 - 14:38  kogan.com",
-		Upvotes:  "24",
-		DealAge:  "0h59m00s",
-	}
-
-	if s.IsGoodDeal(deal1) {
-		t.Log("Deal1 is a good deal")
-	} else {
-		t.Log("Deal1 is not a good deal")
-	}
-
-	// create a new deal1
-	deal2 := scrapers.OzBargainDeal{
-		Title:    "Test deal",
-		Url:      "https://www.ozbargain.com.au/deals/test-deal",
-		PostedOn: "Neoika on 15/05/2022 - 14:38  kogan.com",
-		Upvotes:  "30",
-		DealAge:  "0h59m00s",
-	}
-
-	if s.IsGoodDeal(deal2) {
+	} else if s.GetDealType(deal2) == int(scrapers.GOOD_DEAL) {
 		t.Log("Deal2 is a good deal")
 	} else {
-		t.Log("Deal2 is not a good deal")
+		t.Log("Deal2 is a regular deal")
+	}
+
+	// create a new deal
+	deal3 := scrapers.OzBargainDeal{
+		Title:    "Test deal",
+		Url:      "https://www.ozbargain.com.au/deals/test-deal",
+		PostedOn: "Neoika on 15/05/2022 - 14:38  kogan.com",
+		Upvotes:  "20",
+		DealAge:  "0h25m00s",
+	}
+
+	if s.GetDealType(deal3) == int(scrapers.SUPER_DEAL) {
+		t.Log("Deal3 is a super deal")
+	} else if s.GetDealType(deal2) == int(scrapers.GOOD_DEAL) {
+		t.Log("Deal3 is a good deal")
+	} else {
+		t.Log("Deal3 is a regular deal")
 	}
 }
