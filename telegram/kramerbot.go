@@ -18,9 +18,10 @@ import (
 )
 
 type KramerBot struct {
-	Token  string
-	Logger *zap.Logger
-	Bot    *tgbotapi.BotAPI
+	Token   string
+	Logger  *zap.Logger
+	Bot     *tgbotapi.BotAPI
+	Scraper scrapers.Scraper
 }
 
 // function to read token from environment variable
@@ -88,8 +89,9 @@ func (k *KramerBot) StartReceivingUpdates(scraper scrapers.Scraper) {
 		k.Logger.Fatal(err.Error())
 	}
 
-	// create a scraper
+	// Start scraping
 	s := scraper.(*scrapers.OzBargainScraper)
+	s.AutoScrape()
 
 	// keep watching updates channel
 	for update := range updates {
@@ -116,11 +118,9 @@ func (k *KramerBot) StartReceivingUpdates(scraper scrapers.Scraper) {
 	}
 }
 
-// Function to send latest deals
+// Function to send latest deals i.e. NUM_DEALS_TO_SEND
 func (k *KramerBot) SendLatestDeals(chatID int64, s *scrapers.OzBargainScraper) {
-	// Let the scraper go to work
-	s.Scrape()
-	latestDeals := s.GetLatestDeals()
+	latestDeals := s.GetLatestDeals(scrapers.NUM_DEALS_TO_SEND)
 
 	// Send latest deals to the user
 	for _, deal := range latestDeals {
