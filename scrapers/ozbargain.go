@@ -27,6 +27,11 @@ func (s *OzBargainScraper) Scrape() {
 		// get the deal url
 		dealURL := s.BaseUrl[:len(s.BaseUrl)-1] + e.ChildAttr(".n-right h2 a", "href")
 
+		// Compute the deal identifier
+		dealID := e.ChildAttr(".n-right h2 a", "href")
+		re := regexp.MustCompile(`[\d]+`)
+		dealID = re.FindString(dealID)
+
 		// get the deal poster and time
 		postedOn := e.ChildText(".n-right div.submitted")
 
@@ -35,6 +40,7 @@ func (s *OzBargainScraper) Scrape() {
 
 		// populate the deal
 		deal := OzBargainDeal{
+			Id:       dealID,
 			Title:    dealTitle,
 			Url:      dealURL,
 			PostedOn: postedOn,
