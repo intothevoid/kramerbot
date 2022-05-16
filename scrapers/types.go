@@ -31,6 +31,7 @@ type OzBargainScraper struct {
 
 // Deal type
 type OzBargainDeal struct {
+	Id       string `json:"id"`
 	Title    string `json:"title"`
 	Url      string `json:"url"`
 	PostedOn string `json:"time"`

@@ -119,6 +119,18 @@ func (k *KramerBot) StartReceivingUpdates(scraper scrapers.Scraper) {
 			continue
 		}
 
+		// User asked to watch good deals i.e. 25+ upvotes within the hour
+		if strings.Contains(strings.ToLower(update.Message.Text), "watchgood") {
+			k.WatchGoodDeals(update.Message.Chat)
+			continue
+		}
+
+		// User asked to watch 100+ upvotes deals
+		if strings.Contains(strings.ToLower(update.Message.Text), "watch100") {
+			k.Watch100Deals(update.Message.Chat)
+			continue
+		}
+
 		// Help command
 		if strings.Contains(strings.ToLower(update.Message.Text), "help") {
 			k.Help(update.Message.Chat.ID)
@@ -136,7 +148,8 @@ func (k *KramerBot) SendLatestDeals(chatID int64, s *scrapers.OzBargainScraper) 
 
 	// Send latest deals to the user
 	for _, deal := range latestDeals {
-		formattedDeal := fmt.Sprintf("<a href='%s' target='_blank'>CLICK HERE</a>", deal.Url)
+		shortenedTitle := util.ShortenString(deal.Title, 40) + "..."
+		formattedDeal := fmt.Sprintf("<a href='%s' target='_blank'>%s</a>", deal.Url, shortenedTitle)
 
 		k.SendHTMLMessage(chatID, formattedDeal)
 
@@ -154,7 +167,9 @@ func (k *KramerBot) Help(chatID int64) {
 		"/watchsuper - Watch out for deals with 50+ upvotes within the hour\n"+
 		"/watchgood - Watch out for deals with 25+ upvotes within the hour\n"+
 		"/watch100 - Watch out for deals with 100+ upvotes\n"+
-		"/watch - Watch deals with specified keyword\n"+
+		"/keywordwatch - Watch deals with specified keyword\n"+
+		"/keywordclear - Clear deals with specified keyword\n"+
+		"/keywordclearall - Clear deals with all watched keywords\n"+
 		"/kramerism - Get a Kramer quote from Seinfeld")
 }
 
@@ -168,12 +183,12 @@ func (k *KramerBot) WatchSuperDeals(chat *tgbotapi.Chat) {
 		userData.SuperDeals = true
 	} else {
 		// Key does not exist, create new user
-		userData := k.CreateUserData(chat.ID, chat.UserName, "", false, false, true)
+		userData := k.CreateUserData(chat.ID, chat.FirstName, "", false, false, true)
 		k.UserStore.Users[chat.ID] = userData
 	}
 
 	// Send message to user
-	k.SendMessage(chat.ID, fmt.Sprintf("%s, you are now added to the super deals watchlist.", chat.UserName))
+	k.SendMessage(chat.ID, fmt.Sprintf("%s, you are now added to the super deals watchlist.", chat.FirstName))
 }
 
 // Add watch to good deals by chat id
@@ -186,12 +201,12 @@ func (k *KramerBot) WatchGoodDeals(chat *tgbotapi.Chat) {
 		userData.GoodDeals = true
 	} else {
 		// Key does not exist, create new user
-		userData := k.CreateUserData(chat.ID, chat.UserName, "", false, true, false)
+		userData := k.CreateUserData(chat.ID, chat.FirstName, "", false, true, false)
 		k.UserStore.Users[chat.ID] = userData
 	}
 
 	// Send message to user
-	k.SendMessage(chat.ID, fmt.Sprintf("%s, you are now added to the good deals watchlist.", chat.UserName))
+	k.SendMessage(chat.ID, fmt.Sprintf("%s, you are now added to the good deals watchlist.", chat.FirstName))
 }
 
 // Add watch to super deals by chat id
@@ -204,12 +219,12 @@ func (k *KramerBot) Watch100Deals(chat *tgbotapi.Chat) {
 		userData.Deals100 = true
 	} else {
 		// Key does not exist, create new user
-		userData := k.CreateUserData(chat.ID, chat.UserName, "", true, false, false)
+		userData := k.CreateUserData(chat.ID, chat.FirstName, "", true, false, false)
 		k.UserStore.Users[chat.ID] = userData
 	}
 
 	// Send message to user
-	k.SendMessage(chat.ID, fmt.Sprintf("%s, you are now added to the 100+ upvotes deals watchlist.", chat.UserName))
+	k.SendMessage(chat.ID, fmt.Sprintf("%s, you are now added to the 100+ upvotes deals watchlist.", chat.FirstName))
 }
 
 // Create user data from parameters passed in

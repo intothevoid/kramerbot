@@ -41,7 +41,7 @@ func (d *DataStore) ReadUserStore() *models.UserStore {
 		d.Logger.Error(err.Error())
 
 		file.Close()
-		return &models.UserStore{}
+		return d.CreateEmptyUserStore()
 	}
 
 	defer file.Close()
@@ -52,4 +52,11 @@ func (d *DataStore) ReadUserStore() *models.UserStore {
 	decoder.Decode(&userStore)
 
 	return &userStore
+}
+
+// Create empty user store
+func (d *DataStore) CreateEmptyUserStore() *models.UserStore {
+	return &models.UserStore{
+		Users: make(map[int64]models.UserData),
+	}
 }
