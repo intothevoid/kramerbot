@@ -17,14 +17,16 @@ var SID_OZBARGAIN ScraperID = 0
 
 type Scraper interface {
 	Scrape()
+	AutoScrape()
 }
 
 // Ozbargain scraper
 type OzBargainScraper struct {
-	BaseUrl string
-	Logger  *zap.Logger
-	Deals   []OzBargainDeal
-	SID     ScraperID // Scraper ID
+	BaseUrl        string
+	Logger         *zap.Logger
+	Deals          []OzBargainDeal
+	SID            ScraperID // Scraper ID
+	ScrapeInterval int       // Scrape interval
 }
 
 // Deal type
@@ -36,6 +38,3 @@ type OzBargainDeal struct {
 	DealAge  string `json:"dealage"`
 	DealType int    `json:"dealtype"`
 }
-
-// No of latest deals to send
-const NUM_DEALS_TO_SEND = 5

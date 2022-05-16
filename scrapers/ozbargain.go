@@ -13,7 +13,7 @@ import (
 // Scrape the url
 func (s *OzBargainScraper) Scrape() {
 	url := s.BaseUrl + "/deals"
-	s.Deals = []OzBargainDeal{}
+	s.Logger.Info("Scraping...", zap.String("url", s.BaseUrl))
 
 	// create a new collector
 	c := colly.NewCollector()
@@ -40,7 +40,7 @@ func (s *OzBargainScraper) Scrape() {
 			PostedOn: postedOn,
 			Upvotes:  upVotes,
 			DealAge:  s.GetDealAge(postedOn).String(),
-			DealType: int(REGULAR_DEAL), //s.GetDealType(dealTitle, upVotes),
+			DealType: int(REGULAR_DEAL),
 		}
 		s.Logger.Debug("Found deal", zap.String("title", deal.Title), zap.String("url", deal.Url), zap.String("time", deal.PostedOn))
 
@@ -50,6 +50,11 @@ func (s *OzBargainScraper) Scrape() {
 
 	// Start scraping
 	c.Visit(url)
+
+	// Keep deals length under 'MaxDeals'
+	if len(s.Deals) > MAX_DEALS_TO_STORE {
+		s.Deals = s.Deals[len(s.Deals)-MAX_DEALS_TO_STORE:]
+	}
 }
 
 // Calculate the time elapsed since the deal was posted
@@ -125,10 +130,24 @@ func (s *OzBargainScraper) FilterByKeywords(keywords []string) []OzBargainDeal {
 	return filteredDeals
 }
 
-// Get latest 5 deals from the list
-func (s *OzBargainScraper) GetLatestDeals() []OzBargainDeal {
-	if len(s.Deals) < 5 {
-		return []OzBargainDeal{}
+// Get 'count' deals from the list of deals
+func (s *OzBargainScraper) GetLatestDeals(count int) []OzBargainDeal {
+	if len(s.Deals) <= count {
+		return s.Deals
 	}
-	return s.Deals[:NUM_DEALS_TO_SEND]
+	return s.Deals[:count]
+}
+
+// go routine to auto scrape every X minutes
+func (s *OzBargainScraper) AutoScrape() {
+	// Scrape once before interval
+	s.Scrape()
+
+	// use timer to run every 'ScrapeInterval' minutes
+	t := time.NewTicker(time.Minute * time.Duration(s.ScrapeInterval))
+	go func() {
+		for range t.C {
+			s.Scrape()
+		}
+	}()
 }
