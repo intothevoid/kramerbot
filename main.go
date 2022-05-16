@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/intothevoid/cosmobot/scrapers"
-	"github.com/intothevoid/cosmobot/telegram"
-	"github.com/intothevoid/cosmobot/util"
+	"github.com/intothevoid/kramerbot/scrapers"
+	"github.com/intothevoid/kramerbot/telegram"
+	"github.com/intothevoid/kramerbot/util"
 )
 
 func main() {

@@ -1,4 +1,4 @@
-module github.com/intothevoid/cosmobot
+module github.com/intothevoid/kramerbot
 
 go 1.18
 

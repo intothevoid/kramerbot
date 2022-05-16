@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/intothevoid/cosmobot/scrapers"
-	"github.com/intothevoid/cosmobot/util"
+	"github.com/intothevoid/kramerbot/scrapers"
+	"github.com/intothevoid/kramerbot/util"
 )
 
 // Basic test to check that the scraper works

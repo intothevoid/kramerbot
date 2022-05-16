@@ -13,7 +13,7 @@ import (
 	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
-	"github.com/intothevoid/cosmobot/scrapers"
+	"github.com/intothevoid/kramerbot/scrapers"
 	"go.uber.org/zap"
 )
 
