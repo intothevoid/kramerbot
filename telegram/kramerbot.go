@@ -27,6 +27,9 @@ type KramerBot struct {
 	UserStore *models.UserStore
 }
 
+// Processing interval in minutes
+const PROCESSING_INTERVAL = 5
+
 // function to read token from environment variable
 func (k *KramerBot) GetToken() string {
 	// t.me/kramerbot
@@ -96,7 +99,10 @@ func (k *KramerBot) StartReceivingUpdates(s *scrapers.OzBargainScraper) {
 	}
 
 	// Start processing deals and scraping
-	k.StartProcessing()
+	// Run asyncronously to avoid blocking the main thread
+	go func() {
+		k.StartProcessing()
+	}()
 
 	// keep watching updates channel
 	for update := range updates {
@@ -242,7 +248,7 @@ func (k *KramerBot) StartProcessing() {
 	k.LoadUserStore()
 
 	// Begin timed processing and scraping
-	tick := time.NewTicker(time.Second * 30)
+	tick := time.NewTicker(time.Minute * PROCESSING_INTERVAL)
 	for range tick.C {
 		// Load deals from OzBargain
 		k.Scraper.Scrape()
