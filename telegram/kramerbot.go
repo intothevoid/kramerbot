@@ -125,20 +125,14 @@ func (k *KramerBot) StartReceivingUpdates(scraper scrapers.Scraper) {
 			continue
 		}
 
-		// User asked to watch 100+ upvotes deals
-		if strings.Contains(strings.ToLower(update.Message.Text), "watch100") {
-			k.Watch100Deals(update.Message.Chat)
-			continue
-		}
-
 		// Help command
 		if strings.Contains(strings.ToLower(update.Message.Text), "help") {
-			k.Help(update.Message.Chat.ID)
+			k.Help(update.Message.Chat)
 			continue
 		}
 
 		// Unknown command - show help banner
-		k.Help(update.Message.Chat.ID)
+		k.Help(update.Message.Chat)
 	}
 }
 
@@ -159,36 +153,17 @@ func (k *KramerBot) SendLatestDeals(chatID int64, s *scrapers.OzBargainScraper) 
 }
 
 // Function to display help message
-func (k *KramerBot) Help(chatID int64) {
+func (k *KramerBot) Help(chat *tgbotapi.Chat) {
 	// Show the help banner
-	k.SendMessage(chatID, "Giddyup! Available commands are: \n\n"+
+	k.SendMessage(chat.ID, fmt.Sprintf("Hi %s! Available commands are: \n\n"+
 		"/help - View this help message \n"+
 		"/latest - View the 5 latest deals on OzBargain\n"+
-		"/watchsuper - Watch out for deals with 50+ upvotes within the hour\n"+
 		"/watchgood - Watch out for deals with 25+ upvotes within the hour\n"+
-		"/watch100 - Watch out for deals with 100+ upvotes\n"+
+		"/watchsuper - Watch out for deals with 100+ upvotes within 24 hours\n"+
 		"/keywordwatch - Watch deals with specified keyword\n"+
 		"/keywordclear - Clear deals with specified keyword\n"+
 		"/keywordclearall - Clear deals with all watched keywords\n"+
-		"/kramerism - Get a Kramer quote from Seinfeld")
-}
-
-// Add watch to super deals by chat id
-func (k *KramerBot) WatchSuperDeals(chat *tgbotapi.Chat) {
-
-	// Check if key exists in user store
-	if _, ok := k.UserStore.Users[chat.ID]; ok {
-		// Key exists, add to watch list
-		userData := k.UserStore.Users[chat.ID]
-		userData.SuperDeals = true
-	} else {
-		// Key does not exist, create new user
-		userData := k.CreateUserData(chat.ID, chat.FirstName, "", false, false, true)
-		k.UserStore.Users[chat.ID] = userData
-	}
-
-	// Send message to user
-	k.SendMessage(chat.ID, fmt.Sprintf("%s, you are now added to the super deals watchlist.", chat.FirstName))
+		"/kramerism - Get a Kramer quote from Seinfeld", chat.FirstName))
 }
 
 // Add watch to good deals by chat id
@@ -201,45 +176,50 @@ func (k *KramerBot) WatchGoodDeals(chat *tgbotapi.Chat) {
 		userData.GoodDeals = true
 	} else {
 		// Key does not exist, create new user
-		userData := k.CreateUserData(chat.ID, chat.FirstName, "", false, true, false)
+		userData := k.CreateUserData(chat.ID, chat.FirstName, "", true, false)
 		k.UserStore.Users[chat.ID] = userData
 	}
+
+	// Save user store
+	k.SaveUserStore()
 
 	// Send message to user
 	k.SendMessage(chat.ID, fmt.Sprintf("%s, you are now added to the good deals watchlist.", chat.FirstName))
 }
 
 // Add watch to super deals by chat id
-func (k *KramerBot) Watch100Deals(chat *tgbotapi.Chat) {
+func (k *KramerBot) WatchSuperDeals(chat *tgbotapi.Chat) {
 
 	// Check if key exists in user store
 	if _, ok := k.UserStore.Users[chat.ID]; ok {
 		// Key exists, add to watch list
 		userData := k.UserStore.Users[chat.ID]
-		userData.Deals100 = true
+		userData.SuperDeals = true
 	} else {
 		// Key does not exist, create new user
-		userData := k.CreateUserData(chat.ID, chat.FirstName, "", true, false, false)
+		userData := k.CreateUserData(chat.ID, chat.FirstName, "", false, true)
 		k.UserStore.Users[chat.ID] = userData
 	}
 
+	// Save user store
+	k.SaveUserStore()
+
 	// Send message to user
-	k.SendMessage(chat.ID, fmt.Sprintf("%s, you are now added to the 100+ upvotes deals watchlist.", chat.FirstName))
+	k.SendMessage(chat.ID, fmt.Sprintf("%s, you are now added to the super deals watchlist.", chat.FirstName))
 }
 
 // Create user data from parameters passed in
-func (k *KramerBot) CreateUserData(chatID int64, username string, keywords string, deals100 bool,
-	goodDeals bool, superDeals bool) models.UserData {
+func (k *KramerBot) CreateUserData(chatID int64, username string, keywords string,
+	goodDeals bool, superDeals bool) *models.UserData {
 
 	userData := models.UserData{}
 	userData.ChatID = chatID
 	userData.Username = username
 	userData.Keywords = keywords
-	userData.Deals100 = deals100
 	userData.GoodDeals = goodDeals
 	userData.SuperDeals = superDeals
 
-	return userData
+	return &userData
 }
 
 // Function to load user store from file

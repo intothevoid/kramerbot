@@ -104,19 +104,14 @@ func (s *OzBargainScraper) GetDealType(deal OzBargainDeal) int {
 		s.Logger.Error("Error converting upvotes to int", zap.Error(err))
 	}
 
-	// 50+ upvotes within an hour
-	if duration.Hours() < 1.0 && upvotesInt >= 50 {
-		return int(SUPER_DEAL)
-	}
-
 	// 25+ upvotes within an hour
 	if duration.Hours() < 1.0 && upvotesInt >= 25 {
 		return int(GOOD_DEAL)
 	}
 
-	// 100+ upvotes
-	if upvotesInt >= 100 {
-		return int(HUNDRED_VOTES_DEAL)
+	// 100+ upvotes within 24 hours
+	if duration.Hours() < 24.0 && upvotesInt >= 100 {
+		return int(SUPER_DEAL)
 	}
 
 	// regular deal

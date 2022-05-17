@@ -57,6 +57,6 @@ func (d *DataStore) ReadUserStore() *models.UserStore {
 // Create empty user store
 func (d *DataStore) CreateEmptyUserStore() *models.UserStore {
 	return &models.UserStore{
-		Users: make(map[int64]models.UserData),
+		Users: make(map[int64]*models.UserData),
 	}
 }
