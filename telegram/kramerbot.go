@@ -248,6 +248,7 @@ func (k *KramerBot) StartProcessing() {
 	k.LoadUserStore()
 
 	// Begin timed processing and scraping
+	// tick := time.NewTicker(time.Second * 30)
 	tick := time.NewTicker(time.Minute * PROCESSING_INTERVAL)
 	for range tick.C {
 		// Load deals from OzBargain
@@ -264,7 +265,9 @@ func (k *KramerBot) StartProcessing() {
 				if user.GoodDeals && dealType == int(scrapers.GOOD_DEAL) && !DealSent(user, &deal) {
 					// User is subscribed to good deals, notify user
 					shortenedTitle := util.ShortenString(deal.Title, 40) + "..."
-					formattedDeal := fmt.Sprintf("<a href='%s' target='_blank'>%s</a>", deal.Url, shortenedTitle)
+					formattedDeal := fmt.Sprintf("<p>Good Deal Found!</p><a href='%s' target='_blank'>%s</a>", deal.Url, shortenedTitle)
+
+					k.Logger.Debug(fmt.Sprintf("Sending deal %s to user %s", shortenedTitle, user.Username))
 					k.SendHTMLMessage(user.ChatID, formattedDeal)
 
 					// Mark deal as sent
@@ -273,7 +276,9 @@ func (k *KramerBot) StartProcessing() {
 				if user.SuperDeals && dealType == int(scrapers.SUPER_DEAL) && !DealSent(user, &deal) {
 					// User is subscribed to good deals, notify user
 					shortenedTitle := util.ShortenString(deal.Title, 40) + "..."
-					formattedDeal := fmt.Sprintf("<a href='%s' target='_blank'>%s</a>", deal.Url, shortenedTitle)
+					formattedDeal := fmt.Sprintf("<p>Super Deal Found!</p><a href='%s' target='_blank'>%s</a>", deal.Url, shortenedTitle)
+
+					k.Logger.Debug(fmt.Sprintf("Sending deal %s to user %s", shortenedTitle, user.Username))
 					k.SendHTMLMessage(user.ChatID, formattedDeal)
 
 					// Mark deal as sent
