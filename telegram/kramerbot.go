@@ -23,7 +23,7 @@ type KramerBot struct {
 	Token     string
 	Logger    *zap.Logger
 	Bot       *tgbotapi.BotAPI
-	Scraper   scrapers.Scraper
+	Scraper   *scrapers.OzBargainScraper
 	UserStore *models.UserStore
 }
 
@@ -81,7 +81,7 @@ func (k *KramerBot) SendMarkdownMessage(chatID int64, text string) {
 }
 
 // start receiving updates from telegram
-func (k *KramerBot) StartReceivingUpdates(scraper scrapers.Scraper) {
+func (k *KramerBot) StartReceivingUpdates(s *scrapers.OzBargainScraper) {
 	// log start receiving updates
 	k.Logger.Info("Start receiving updates")
 
@@ -95,9 +95,8 @@ func (k *KramerBot) StartReceivingUpdates(scraper scrapers.Scraper) {
 		k.Logger.Fatal(err.Error())
 	}
 
-	// Start scraping
-	s := scraper.(*scrapers.OzBargainScraper)
-	s.AutoScrape()
+	// Start processing deals and scraping
+	k.StartProcessing()
 
 	// keep watching updates channel
 	for update := range updates {
@@ -234,4 +233,61 @@ func (k *KramerBot) SaveUserStore() {
 	// Save user store i.e. user data indexed by chat id
 	store := util.DataStore{Logger: k.Logger}
 	store.WriteUserStore(k.UserStore)
+}
+
+// Process deals returned by the scraper, check deal type and notify user
+// if they are subscribed to a particular deal type
+func (k *KramerBot) StartProcessing() {
+	// Load user store i.e. user data indexed by chat id
+	k.LoadUserStore()
+
+	// Begin timed processing and scraping
+	tick := time.NewTicker(time.Second * 30)
+	for range tick.C {
+		// Load deals from OzBargain
+		k.Scraper.Scrape()
+		deals := k.Scraper.GetData()
+		userdata := k.UserStore.Users
+
+		for _, deal := range deals {
+			// Check deal type
+			dealType := k.Scraper.GetDealType(deal)
+
+			// Go through all registered users and check deals they are subscribed to
+			for _, user := range userdata {
+				if user.GoodDeals && dealType == int(scrapers.GOOD_DEAL) && !DealSent(user, &deal) {
+					// User is subscribed to good deals, notify user
+					shortenedTitle := util.ShortenString(deal.Title, 40) + "..."
+					formattedDeal := fmt.Sprintf("<a href='%s' target='_blank'>%s</a>", deal.Url, shortenedTitle)
+					k.SendHTMLMessage(user.ChatID, formattedDeal)
+
+					// Mark deal as sent
+					user.DealsSent = append(user.DealsSent, deal.Id)
+				}
+				if user.SuperDeals && dealType == int(scrapers.SUPER_DEAL) && !DealSent(user, &deal) {
+					// User is subscribed to good deals, notify user
+					shortenedTitle := util.ShortenString(deal.Title, 40) + "..."
+					formattedDeal := fmt.Sprintf("<a href='%s' target='_blank'>%s</a>", deal.Url, shortenedTitle)
+					k.SendHTMLMessage(user.ChatID, formattedDeal)
+
+					// Mark deal as sent
+					user.DealsSent = append(user.DealsSent, deal.Id)
+				}
+			}
+		}
+
+		// Update user store
+		k.SaveUserStore()
+	}
+}
+
+// Check if the deal has already been sent to the user
+func DealSent(user *models.UserData, deal *scrapers.OzBargainDeal) bool {
+	// Check if deal.Id is in user.DealsSent
+	for _, dealId := range user.DealsSent {
+		if dealId == deal.Id {
+			return true
+		}
+	}
+	return false
 }

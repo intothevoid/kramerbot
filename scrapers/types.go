@@ -8,7 +8,6 @@ type DealType int
 var REGULAR_DEAL DealType = 0
 var SUPER_DEAL DealType = 1
 var GOOD_DEAL DealType = 2
-var HUNDRED_VOTES_DEAL DealType = 3
 
 // Scraper type
 type ScraperID int
@@ -18,6 +17,7 @@ var SID_OZBARGAIN ScraperID = 0
 type Scraper interface {
 	Scrape()
 	AutoScrape()
+	GetData() interface{}
 }
 
 // Ozbargain scraper

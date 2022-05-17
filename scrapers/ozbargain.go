@@ -152,3 +152,8 @@ func (s *OzBargainScraper) AutoScrape() {
 		}
 	}()
 }
+
+// Get scraper data
+func (s *OzBargainScraper) GetData() []OzBargainDeal {
+	return s.Deals
+}
