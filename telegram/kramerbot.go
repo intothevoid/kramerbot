@@ -169,7 +169,7 @@ func (k *KramerBot) SendLatestDeals(chatID int64, s *scrapers.OzBargainScraper) 
 // Function to display help message
 func (k *KramerBot) Help(chat *tgbotapi.Chat) {
 	// Send kramer's photo
-	fpath, _ := filepath.Abs("./static/kramer_icon.jpg")
+	fpath, _ := filepath.Abs("./static/kramer_drnostrand.jpg")
 	k.SendPhoto(chat.ID, fpath)
 
 	// Show the help banner
@@ -208,11 +208,38 @@ func (k *KramerBot) SendPhoto(chatID int64, fileName string) {
 		return
 	}
 
+	// Get filename from path
+	fname := filepath.Base(fileName)
+
 	photobytes := tgbotapi.FileBytes{
-		Name:  "kramer",
+		Name:  fname,
 		Bytes: filebytes,
 	}
 	msg := tgbotapi.NewPhotoUpload(chatID, photobytes)
+	k.Bot.Send(msg)
+}
+
+// Send a video to the user
+func (k *KramerBot) SendVideo(chatID int64, fileName string) {
+	// Convert to absolute path if relative path sent
+	if !filepath.IsAbs(fileName) {
+		fileName, _ = filepath.Abs(fileName)
+	}
+
+	filebytes, err := ioutil.ReadFile(fileName)
+	if err != nil {
+		k.Logger.Error("Unable to read file", zap.Error(err))
+		return
+	}
+
+	// Get filename from path
+	fname := filepath.Base(fileName)
+
+	photobytes := tgbotapi.FileBytes{
+		Name:  fname,
+		Bytes: filebytes,
+	}
+	msg := tgbotapi.NewVideoUpload(chatID, photobytes)
 	k.Bot.Send(msg)
 }
 
