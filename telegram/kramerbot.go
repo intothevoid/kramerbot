@@ -473,6 +473,25 @@ func (k *KramerBot) StartProcessing() {
 					user.DealsSent = append(user.DealsSent, deal.Id)
 					k.SaveUserStore()
 				}
+
+				// Check for watched keywords
+				for _, keyword := range user.Keywords {
+					if strings.Contains(strings.ToLower(deal.Title), strings.ToLower(keyword)) && !DealSent(user, &deal) {
+						// Deal contains keyword, notify user
+						shortenedTitle := util.ShortenString(deal.Title, 30) + "..."
+						formattedDeal := fmt.Sprintf(`👀<a href="%s" target="_blank">%s</a>`, deal.Url, shortenedTitle)
+
+						k.Logger.Debug(fmt.Sprintf("Sending deal %s to user %s", shortenedTitle, user.Username))
+						k.SendHTMLMessage(user.ChatID, formattedDeal)
+
+						// Mark deal as sent
+						user.DealsSent = append(user.DealsSent, deal.Id)
+						k.SaveUserStore()
+
+						// Break out of keyword loop
+						break
+					}
+				}
 			}
 		}
 	}
