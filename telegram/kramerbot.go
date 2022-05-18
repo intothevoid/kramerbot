@@ -309,7 +309,7 @@ func (k *KramerBot) StartProcessing() {
 			for _, user := range userdata {
 				if user.GoodDeals && dealType == int(scrapers.GOOD_DEAL) && !DealSent(user, &deal) {
 					// User is subscribed to good deals, notify user
-					shortenedTitle := util.ShortenString(deal.Title, 40) + "..."
+					shortenedTitle := util.ShortenString(deal.Title, 30) + "..."
 					formattedDeal := fmt.Sprintf(`🔥<a href="%s" target="_blank">%s</a>`, deal.Url, shortenedTitle)
 
 					k.Logger.Debug(fmt.Sprintf("Sending deal %s to user %s", shortenedTitle, user.Username))
@@ -317,10 +317,11 @@ func (k *KramerBot) StartProcessing() {
 
 					// Mark deal as sent
 					user.DealsSent = append(user.DealsSent, deal.Id)
+					k.SaveUserStore()
 				}
 				if user.SuperDeals && dealType == int(scrapers.SUPER_DEAL) && !DealSent(user, &deal) {
 					// User is subscribed to good deals, notify user
-					shortenedTitle := util.ShortenString(deal.Title, 40) + "..."
+					shortenedTitle := util.ShortenString(deal.Title, 30) + "..."
 					formattedDeal := fmt.Sprintf(`🔥🔥🔥<a href="%s" target="_blank">%s</a>`, deal.Url, shortenedTitle)
 
 					k.Logger.Debug(fmt.Sprintf("Sending deal %s to user %s", shortenedTitle, user.Username))
@@ -328,12 +329,10 @@ func (k *KramerBot) StartProcessing() {
 
 					// Mark deal as sent
 					user.DealsSent = append(user.DealsSent, deal.Id)
+					k.SaveUserStore()
 				}
 			}
 		}
-
-		// Update user store
-		k.SaveUserStore()
 	}
 }
 
