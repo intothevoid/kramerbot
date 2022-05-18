@@ -90,6 +90,10 @@ func (k *KramerBot) StartReceivingUpdates(s *scrapers.OzBargainScraper) {
 	// log start receiving updates
 	k.Logger.Info("Start receiving updates")
 
+	// Keyword mode is used for registering keywords to watch
+	var keywordMode bool = false
+	var keywordClearMode bool = false
+
 	// setup updates
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
@@ -115,6 +119,20 @@ func (k *KramerBot) StartReceivingUpdates(s *scrapers.OzBargainScraper) {
 
 		k.Logger.Info("Received message", zap.String("text", update.Message.Text), zap.Int64("chatID", update.Message.Chat.ID))
 
+		// if keyword mode is on, process keyword
+		if keywordMode {
+			k.ProcessKeyword(update.Message.Chat, update.Message.Text)
+			keywordMode = false
+			continue
+		}
+
+		// if keyword clear mode is on, process clear keyword
+		if keywordClearMode {
+			k.ProcessClearKeyword(update.Message.Chat, update.Message.Text)
+			keywordClearMode = false
+			continue
+		}
+
 		// User asked for latest deals
 		if strings.Contains(strings.ToLower(update.Message.Text), "latest") {
 			k.SendLatestDeals(update.Message.Chat.ID, s)
@@ -130,6 +148,30 @@ func (k *KramerBot) StartReceivingUpdates(s *scrapers.OzBargainScraper) {
 		// User asked to watch good deals i.e. 25+ upvotes within the hour
 		if strings.Contains(strings.ToLower(update.Message.Text), "watchgood") {
 			k.WatchGoodDeals(update.Message.Chat)
+			continue
+		}
+
+		// User asked to watch specific keyword
+		if strings.Contains(strings.ToLower(update.Message.Text), "watchkeyword") {
+			if !keywordMode {
+				k.SendMessage(update.Message.Chat.ID, "Enter keyword to watch. Example: 'headphone' or 'sennheiser'")
+				keywordMode = true
+			}
+			continue
+		}
+
+		// User asked to clear specific watched keyword
+		if strings.Contains(strings.ToLower(update.Message.Text), "clearkeyword") {
+			if !keywordClearMode {
+				k.SendMessage(update.Message.Chat.ID, "Enter keyword to clear. Example: 'headphone' or 'sennheiser'")
+				keywordClearMode = true
+			}
+			continue
+		}
+
+		// User asked to clear all watched keywords
+		if strings.Contains(strings.ToLower(update.Message.Text), "clearallkeywords") {
+			k.ProcessClearAllKeywords(update.Message.Chat)
 			continue
 		}
 
@@ -174,14 +216,14 @@ func (k *KramerBot) Help(chat *tgbotapi.Chat) {
 
 	// Show the help banner
 	k.SendMessage(chat.ID, fmt.Sprintf("Hi %s! Available commands are: \n\n"+
-		"/help - View this help message \n"+
-		"/latest - View the 5 latest deals on OzBargain\n"+
-		"/watchgood - Watch out for deals with 25+ upvotes within the hour\n"+
-		"/watchsuper - Watch out for deals with 100+ upvotes within 24 hours\n"+
-		"/keywordwatch - Watch deals with specified keyword\n"+
-		"/keywordclear - Clear deals with specified keyword\n"+
-		"/keywordclearall - Clear deals with all watched keywords\n"+
-		"/kramerism - Get a Kramer quote from Seinfeld", chat.FirstName))
+		"🙏 /help - View this help message \n"+
+		"📈 /latest - View the 5 latest deals on OzBargain\n"+
+		"🔥 /watchgood - Watch out for deals with 25+ upvotes within the hour\n"+
+		"🔥🔥 /watchsuper - Watch out for deals with 100+ upvotes within 24 hours\n"+
+		"👀 /watchkeyword - Watch deals with specified keywords\n"+
+		"⛔ /clearkeyword - Clear deals with specified keyword\n"+
+		"⛔ /clearallkeywords - Clear deals with all watched keywords\n"+
+		"🙃 /kramerism - Get a Kramer quote from Seinfeld", chat.FirstName))
 }
 
 // Send test message
@@ -243,6 +285,79 @@ func (k *KramerBot) SendVideo(chatID int64, fileName string) {
 	k.Bot.Send(msg)
 }
 
+// Process keyword watch request
+func (k *KramerBot) ProcessKeyword(chat *tgbotapi.Chat, keyword string) {
+	var keywords []string
+
+	// Check if key exists in user store
+	if _, ok := k.UserStore.Users[chat.ID]; ok {
+		// Key exists, add to watch list
+		userData := k.UserStore.Users[chat.ID]
+		userData.Keywords = append(userData.Keywords, keyword)
+
+		// For messaging the user
+		keywords = userData.Keywords
+	} else {
+		// Key does not exist, create new user data
+		userData := k.CreateUserData(chat.ID, chat.FirstName, keyword, false, false)
+		k.UserStore.Users[chat.ID] = userData
+
+		// For messaging the user
+		keywords = userData.Keywords
+	}
+
+	// Save user store
+	k.SaveUserStore()
+
+	k.SendMessage(chat.ID, fmt.Sprintf("Currently watching keywords: %s for user %s", keywords, chat.FirstName))
+}
+
+// Process clear keyword request
+func (k *KramerBot) ProcessClearKeyword(chat *tgbotapi.Chat, keyword string) {
+	// Check if key exists in user store
+	if _, ok := k.UserStore.Users[chat.ID]; ok {
+		// Key exists, add to watch list
+		userData := k.UserStore.Users[chat.ID]
+
+		// Delete keyword from userData
+		for i, v := range userData.Keywords {
+			if v == keyword {
+				userData.Keywords = append(userData.Keywords[:i], userData.Keywords[i+1:]...)
+			}
+		}
+	} else {
+		// User does not exist, nothing to clear
+		k.SendMessage(chat.ID, fmt.Sprintf("User data for %s not found. Nothing to clear", chat.FirstName))
+		return
+	}
+
+	// Save user store
+	k.SaveUserStore()
+
+	k.SendMessage(chat.ID, fmt.Sprintf("Cleared watched keyword: %s for user %s", keyword, chat.FirstName))
+}
+
+// Process clear all keywords request
+func (k *KramerBot) ProcessClearAllKeywords(chat *tgbotapi.Chat) {
+	// Check if key exists in user store
+	if _, ok := k.UserStore.Users[chat.ID]; ok {
+		// Key exists, add to watch list
+		userData := k.UserStore.Users[chat.ID]
+
+		// Delete keyword from userData
+		userData.Keywords = []string{}
+	} else {
+		// User does not exist, nothing to clear
+		k.SendMessage(chat.ID, fmt.Sprintf("User data for %s not found. Nothing to clear", chat.FirstName))
+		return
+	}
+
+	// Save user store
+	k.SaveUserStore()
+
+	k.SendMessage(chat.ID, fmt.Sprintf("Cleared all watched keywords for user %s", chat.FirstName))
+}
+
 // Add watch to good deals by chat id
 func (k *KramerBot) WatchGoodDeals(chat *tgbotapi.Chat) {
 
@@ -286,13 +401,13 @@ func (k *KramerBot) WatchSuperDeals(chat *tgbotapi.Chat) {
 }
 
 // Create user data from parameters passed in
-func (k *KramerBot) CreateUserData(chatID int64, username string, keywords string,
+func (k *KramerBot) CreateUserData(chatID int64, username string, keyword string,
 	goodDeals bool, superDeals bool) *models.UserData {
 
 	userData := models.UserData{}
 	userData.ChatID = chatID
 	userData.Username = username
-	userData.Keywords = keywords
+	userData.Keywords = append(userData.Keywords, keyword)
 	userData.GoodDeals = goodDeals
 	userData.SuperDeals = superDeals
 
