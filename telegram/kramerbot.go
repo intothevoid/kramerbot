@@ -8,7 +8,9 @@ package telegram
 // imports
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -101,6 +103,7 @@ func (k *KramerBot) StartReceivingUpdates(s *scrapers.OzBargainScraper) {
 	// Start processing deals and scraping
 	// Run asyncronously to avoid blocking the main thread
 	go func() {
+		k.Scraper.Scrape()
 		k.StartProcessing()
 	}()
 
@@ -127,6 +130,12 @@ func (k *KramerBot) StartReceivingUpdates(s *scrapers.OzBargainScraper) {
 		// User asked to watch good deals i.e. 25+ upvotes within the hour
 		if strings.Contains(strings.ToLower(update.Message.Text), "watchgood") {
 			k.WatchGoodDeals(update.Message.Chat)
+			continue
+		}
+
+		// Testing
+		if strings.Contains(strings.ToLower(update.Message.Text), "test") {
+			k.SendTestMessage(update.Message.Chat)
 			continue
 		}
 
@@ -159,6 +168,10 @@ func (k *KramerBot) SendLatestDeals(chatID int64, s *scrapers.OzBargainScraper) 
 
 // Function to display help message
 func (k *KramerBot) Help(chat *tgbotapi.Chat) {
+	// Send kramer's photo
+	fpath, _ := filepath.Abs("./static/kramer_icon.jpg")
+	k.SendPhoto(chat.ID, fpath)
+
 	// Show the help banner
 	k.SendMessage(chat.ID, fmt.Sprintf("Hi %s! Available commands are: \n\n"+
 		"/help - View this help message \n"+
@@ -169,6 +182,38 @@ func (k *KramerBot) Help(chat *tgbotapi.Chat) {
 		"/keywordclear - Clear deals with specified keyword\n"+
 		"/keywordclearall - Clear deals with all watched keywords\n"+
 		"/kramerism - Get a Kramer quote from Seinfeld", chat.FirstName))
+}
+
+// Send test message
+func (k *KramerBot) SendTestMessage(chat *tgbotapi.Chat) {
+
+	shortenedTitle := util.ShortenString("This is a test deal not a real deal... Beep Boop", 40) + "..."
+	dealUrl := "https://news.google.com.au"
+	formattedDeal := fmt.Sprintf(`<a href='%s' target='_blank'>%s</a>`, dealUrl, shortenedTitle)
+
+	k.Logger.Debug(fmt.Sprintf("Sending deal %s to user %s", shortenedTitle, chat.FirstName))
+	k.SendHTMLMessage(chat.ID, formattedDeal)
+}
+
+// Send a photo to the user
+func (k *KramerBot) SendPhoto(chatID int64, fileName string) {
+	// Convert to absolute path if relative path sent
+	if !filepath.IsAbs(fileName) {
+		fileName, _ = filepath.Abs(fileName)
+	}
+
+	filebytes, err := ioutil.ReadFile(fileName)
+	if err != nil {
+		k.Logger.Error("Unable to read file", zap.Error(err))
+		return
+	}
+
+	photobytes := tgbotapi.FileBytes{
+		Name:  "kramer",
+		Bytes: filebytes,
+	}
+	msg := tgbotapi.NewPhotoUpload(chatID, photobytes)
+	k.Bot.Send(msg)
 }
 
 // Add watch to good deals by chat id
@@ -248,7 +293,7 @@ func (k *KramerBot) StartProcessing() {
 	k.LoadUserStore()
 
 	// Begin timed processing and scraping
-	// tick := time.NewTicker(time.Second * 30)
+	// tick := time.NewTicker(time.Second * 60)
 	tick := time.NewTicker(time.Minute * PROCESSING_INTERVAL)
 	for range tick.C {
 		// Load deals from OzBargain
@@ -265,7 +310,7 @@ func (k *KramerBot) StartProcessing() {
 				if user.GoodDeals && dealType == int(scrapers.GOOD_DEAL) && !DealSent(user, &deal) {
 					// User is subscribed to good deals, notify user
 					shortenedTitle := util.ShortenString(deal.Title, 40) + "..."
-					formattedDeal := fmt.Sprintf("<p>Good Deal Found!</p><a href='%s' target='_blank'>%s</a>", deal.Url, shortenedTitle)
+					formattedDeal := fmt.Sprintf(`🔥<a href="%s" target="_blank">%s</a>`, deal.Url, shortenedTitle)
 
 					k.Logger.Debug(fmt.Sprintf("Sending deal %s to user %s", shortenedTitle, user.Username))
 					k.SendHTMLMessage(user.ChatID, formattedDeal)
@@ -276,7 +321,7 @@ func (k *KramerBot) StartProcessing() {
 				if user.SuperDeals && dealType == int(scrapers.SUPER_DEAL) && !DealSent(user, &deal) {
 					// User is subscribed to good deals, notify user
 					shortenedTitle := util.ShortenString(deal.Title, 40) + "..."
-					formattedDeal := fmt.Sprintf("<p>Super Deal Found!</p><a href='%s' target='_blank'>%s</a>", deal.Url, shortenedTitle)
+					formattedDeal := fmt.Sprintf(`🔥🔥🔥<a href="%s" target="_blank">%s</a>`, deal.Url, shortenedTitle)
 
 					k.Logger.Debug(fmt.Sprintf("Sending deal %s to user %s", shortenedTitle, user.Username))
 					k.SendHTMLMessage(user.ChatID, formattedDeal)
