@@ -360,23 +360,29 @@ func (k *KramerBot) ProcessClearAllKeywords(chat *tgbotapi.Chat) {
 
 // Add watch to good deals by chat id
 func (k *KramerBot) WatchGoodDeals(chat *tgbotapi.Chat) {
-
 	// Check if key exists in user store
 	if _, ok := k.UserStore.Users[chat.ID]; ok {
 		// Key exists, add to watch list
 		userData := k.UserStore.Users[chat.ID]
-		userData.GoodDeals = true
+		userData.GoodDeals = !userData.GoodDeals // toggle
+
+		// Send message to user
+		if userData.GoodDeals {
+			k.SendMessage(chat.ID, "You have been added to the good deals watchlist.")
+		} else {
+			k.SendMessage(chat.ID, "You have been removed from the good deals watchlist.")
+		}
 	} else {
 		// Key does not exist, create new user
 		userData := k.CreateUserData(chat.ID, chat.FirstName, "", true, false)
 		k.UserStore.Users[chat.ID] = userData
+
+		// Send message to user
+		k.SendMessage(chat.ID, "You have been added to the good deals watchlist.")
 	}
 
 	// Save user store
 	k.SaveUserStore()
-
-	// Send message to user
-	k.SendMessage(chat.ID, fmt.Sprintf("%s, you are now added to the good deals watchlist.", chat.FirstName))
 }
 
 // Add watch to super deals by chat id
@@ -386,18 +392,23 @@ func (k *KramerBot) WatchSuperDeals(chat *tgbotapi.Chat) {
 	if _, ok := k.UserStore.Users[chat.ID]; ok {
 		// Key exists, add to watch list
 		userData := k.UserStore.Users[chat.ID]
-		userData.SuperDeals = true
+		userData.SuperDeals = !userData.SuperDeals // toggle
+
+		// Send message to user
+		if userData.SuperDeals {
+			k.SendMessage(chat.ID, "You have been added to the super deals watchlist.")
+		} else {
+			k.SendMessage(chat.ID, "You have been removed from the super deals watchlist.")
+		}
 	} else {
 		// Key does not exist, create new user
 		userData := k.CreateUserData(chat.ID, chat.FirstName, "", false, true)
 		k.UserStore.Users[chat.ID] = userData
+		k.SendMessage(chat.ID, "You have been added to the super deals watchlist.")
 	}
 
 	// Save user store
 	k.SaveUserStore()
-
-	// Send message to user
-	k.SendMessage(chat.ID, fmt.Sprintf("%s, you are now added to the super deals watchlist.", chat.FirstName))
 }
 
 // Create user data from parameters passed in
