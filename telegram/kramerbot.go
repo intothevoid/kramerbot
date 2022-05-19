@@ -175,6 +175,13 @@ func (k *KramerBot) StartReceivingUpdates(s *scrapers.OzBargainScraper) {
 			continue
 		}
 
+		// User asked for a kramerism
+		if strings.Contains(strings.ToLower(update.Message.Text), "kramerism") {
+			kramerism := util.GetKramerism()
+			k.SendMessage(update.Message.Chat.ID, kramerism)
+			continue
+		}
+
 		// Testing
 		if strings.Contains(strings.ToLower(update.Message.Text), "test") {
 			k.SendTestMessage(update.Message.Chat)
@@ -198,8 +205,8 @@ func (k *KramerBot) SendLatestDeals(chatID int64, s *scrapers.OzBargainScraper) 
 
 	// Send latest deals to the user
 	for _, deal := range latestDeals {
-		shortenedTitle := util.ShortenString(deal.Title, 40) + "..."
-		formattedDeal := fmt.Sprintf("<a href='%s' target='_blank'>%s</a>", deal.Url, shortenedTitle)
+		shortenedTitle := util.ShortenString(deal.Title, 30) + "..."
+		formattedDeal := fmt.Sprintf("🆕<a href='%s' target='_blank'>%s</a>🔺%s", deal.Url, shortenedTitle, deal.Upvotes)
 
 		k.SendHTMLMessage(chatID, formattedDeal)
 
@@ -229,7 +236,7 @@ func (k *KramerBot) Help(chat *tgbotapi.Chat) {
 // Send test message
 func (k *KramerBot) SendTestMessage(chat *tgbotapi.Chat) {
 
-	shortenedTitle := util.ShortenString("This is a test deal not a real deal... Beep Boop", 40) + "..."
+	shortenedTitle := util.ShortenString("This is a test deal not a real deal... Beep Boop", 30) + "..."
 	dealUrl := "https://news.google.com.au"
 	formattedDeal := fmt.Sprintf(`<a href='%s' target='_blank'>%s</a>`, dealUrl, shortenedTitle)
 
@@ -463,7 +470,7 @@ func (k *KramerBot) StartProcessing() {
 				if user.GoodDeals && dealType == int(scrapers.GOOD_DEAL) && !DealSent(user, &deal) {
 					// User is subscribed to good deals, notify user
 					shortenedTitle := util.ShortenString(deal.Title, 30) + "..."
-					formattedDeal := fmt.Sprintf(`🔥<a href="%s" target="_blank">%s</a>`, deal.Url, shortenedTitle)
+					formattedDeal := fmt.Sprintf(`🔥<a href="%s" target="_blank">%s</a>🔺%s`, deal.Url, shortenedTitle, deal.Upvotes)
 
 					k.Logger.Debug(fmt.Sprintf("Sending deal %s to user %s", shortenedTitle, user.Username))
 					k.SendHTMLMessage(user.ChatID, formattedDeal)
@@ -475,7 +482,7 @@ func (k *KramerBot) StartProcessing() {
 				if user.SuperDeals && dealType == int(scrapers.SUPER_DEAL) && !DealSent(user, &deal) {
 					// User is subscribed to good deals, notify user
 					shortenedTitle := util.ShortenString(deal.Title, 30) + "..."
-					formattedDeal := fmt.Sprintf(`🔥🔥🔥<a href="%s" target="_blank">%s</a>`, deal.Url, shortenedTitle)
+					formattedDeal := fmt.Sprintf(`🔥🔥<a href="%s" target="_blank">%s</a>🔺%s`, deal.Url, shortenedTitle, deal.Upvotes)
 
 					k.Logger.Debug(fmt.Sprintf("Sending deal %s to user %s", shortenedTitle, user.Username))
 					k.SendHTMLMessage(user.ChatID, formattedDeal)
@@ -490,7 +497,7 @@ func (k *KramerBot) StartProcessing() {
 					if strings.Contains(strings.ToLower(deal.Title), strings.ToLower(keyword)) && !DealSent(user, &deal) {
 						// Deal contains keyword, notify user
 						shortenedTitle := util.ShortenString(deal.Title, 30) + "..."
-						formattedDeal := fmt.Sprintf(`👀<a href="%s" target="_blank">%s</a>`, deal.Url, shortenedTitle)
+						formattedDeal := fmt.Sprintf(`👀<a href="%s" target="_blank">%s</a>🔺%s`, deal.Url, shortenedTitle, deal.Upvotes)
 
 						k.Logger.Debug(fmt.Sprintf("Sending deal %s to user %s", shortenedTitle, user.Username))
 						k.SendHTMLMessage(user.ChatID, formattedDeal)
