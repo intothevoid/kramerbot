@@ -16,6 +16,10 @@ var kramerisms = []string{
 	"Because I'm like ice, buddy. When I don't like you, you've got problems.",
 	"Oh, Jerry, wake up to reality. It's military thing. They're probably creating a whole army of pig warriors.",
 	"Hey, Silvio, look at Jerry here, prancing around in his coat with his purse. Yup, he's a dandy. He's a real fancy boy.",
+	"Jerry, all these big companies, they write off everything.",
+	"You know, you really shouldn't brush 24 hours before seeing the dentist.",
+	"Oh, no, you got to eat before surgery. You need your strength.",
+	"Jerry, are you blind? He's a writer. He said his name was Sal Bass. Bass. Instead of salmon, he went with bass. He just substituted one fish for another.",
 }
 
 // Function to randomly select a kramerism
