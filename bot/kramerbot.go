@@ -34,7 +34,7 @@ func (k *KramerBot) GetToken() string {
 }
 
 // function to create a new bot
-func (k *KramerBot) NewBot() {
+func (k *KramerBot) NewBot(s *scrapers.OzBargainScraper) {
 	// If user has forgotten to set the token
 	if k.Token == "" {
 		k.Token = k.GetToken()
@@ -55,12 +55,15 @@ func (k *KramerBot) NewBot() {
 	k.BotApi = &tgbotapi.BotAPI{}
 	k.BotApi = bot
 
+	// Assign scraper
+	k.Scraper = s
+
 	// Load user store
 	k.LoadUserStore()
 }
 
 // start receiving updates from telegram
-func (k *KramerBot) StartBot(s *scrapers.OzBargainScraper) {
+func (k *KramerBot) StartBot() {
 	// log start receiving updates
 	k.Logger.Info("Start receiving updates")
 

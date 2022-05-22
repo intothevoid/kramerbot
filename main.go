@@ -21,9 +21,6 @@ func main() {
 		k.Logger.Fatal("Cannot proceed without a bot token")
 	}
 
-	// create a new bot
-	k.NewBot()
-
 	// create a scraper
 	scraper := new(scrapers.OzBargainScraper)
 	scraper.SID = scrapers.SID_OZBARGAIN
@@ -32,9 +29,9 @@ func main() {
 	scraper.Deals = []models.OzBargainDeal{}
 	scraper.ScrapeInterval = 5 // mins
 
-	// Assign scraper
-	k.Scraper = scraper
+	// create a new bot
+	k.NewBot(scraper)
 
 	// start receiving updates from telegram
-	k.StartBot(scraper)
+	k.StartBot()
 }
