@@ -1,5 +1,5 @@
 // package to wrap telegram bot api
-package telegram
+package bot
 
 // Telegram bot api
 // https://core.telegram.org/bots/api
@@ -16,6 +16,7 @@ import (
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/intothevoid/kramerbot/models"
+	"github.com/intothevoid/kramerbot/persist"
 	"github.com/intothevoid/kramerbot/scrapers"
 	"github.com/intothevoid/kramerbot/util"
 	"go.uber.org/zap"
@@ -435,14 +436,14 @@ func (k *KramerBot) CreateUserData(chatID int64, username string, keyword string
 // Function to load user store from file
 func (k *KramerBot) LoadUserStore() {
 	// Load user store i.e. user data indexed by chat id
-	store := util.DataStore{Logger: k.Logger}
+	store := persist.DataStore{Logger: k.Logger}
 	k.UserStore = store.ReadUserStore()
 }
 
 // Function to save user store to file
 func (k *KramerBot) SaveUserStore() {
 	// Save user store i.e. user data indexed by chat id
-	store := util.DataStore{Logger: k.Logger}
+	store := persist.DataStore{Logger: k.Logger}
 	store.WriteUserStore(k.UserStore)
 }
 
@@ -516,7 +517,7 @@ func (k *KramerBot) StartProcessing() {
 }
 
 // Check if the deal has already been sent to the user
-func DealSent(user *models.UserData, deal *scrapers.OzBargainDeal) bool {
+func DealSent(user *models.UserData, deal *models.OzBargainDeal) bool {
 	// Check if deal.Id is in user.DealsSent
 	for _, dealId := range user.DealsSent {
 		if dealId == deal.Id {

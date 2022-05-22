@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/intothevoid/kramerbot/models"
 	"github.com/intothevoid/kramerbot/scrapers"
 	"github.com/intothevoid/kramerbot/util"
 )
@@ -49,7 +50,7 @@ func TestIsSuperDeal(t *testing.T) {
 	s := new(scrapers.OzBargainScraper)
 
 	// create a new deal
-	deal1 := scrapers.OzBargainDeal{
+	deal1 := models.OzBargainDeal{
 		Title:    "Test deal",
 		Url:      "https://www.ozbargain.com.au/deals/test-deal",
 		PostedOn: "Neoika on 15/05/2022 - 14:38  kogan.com",
@@ -66,7 +67,7 @@ func TestIsSuperDeal(t *testing.T) {
 	}
 
 	// create a new deal
-	deal2 := scrapers.OzBargainDeal{
+	deal2 := models.OzBargainDeal{
 		Title:    "Test deal",
 		Url:      "https://www.ozbargain.com.au/deals/test-deal",
 		PostedOn: "Neoika on 15/05/2022 - 14:38  kogan.com",
@@ -83,7 +84,7 @@ func TestIsSuperDeal(t *testing.T) {
 	}
 
 	// create a new deal
-	deal3 := scrapers.OzBargainDeal{
+	deal3 := models.OzBargainDeal{
 		Title:    "Test deal",
 		Url:      "https://www.ozbargain.com.au/deals/test-deal",
 		PostedOn: "Neoika on 15/05/2022 - 14:38  kogan.com",
@@ -106,7 +107,7 @@ func TestFilter(t *testing.T) {
 	s := new(scrapers.OzBargainScraper)
 
 	// create a new deal
-	deal1 := scrapers.OzBargainDeal{
+	deal1 := models.OzBargainDeal{
 		Title:    "Test deal",
 		Url:      "https://www.ozbargain.com.au/deals/test-deal",
 		PostedOn: "Neoika on 15/05/2022 - 14:38  kogan.com",
@@ -114,7 +115,7 @@ func TestFilter(t *testing.T) {
 		DealAge:  "0h59m00s",
 	}
 
-	deal2 := scrapers.OzBargainDeal{
+	deal2 := models.OzBargainDeal{
 		Title:    "Test Beer Deal Weihenstephaner Schooner Cheap!",
 		Url:      "https://www.ozbargain.com.au/deals/test-deal-beer",
 		PostedOn: "intothevoid on 15/05/2022 - 14:38  danmurphys.com",
@@ -122,7 +123,7 @@ func TestFilter(t *testing.T) {
 		DealAge:  "5h59m00s",
 	}
 
-	s.Deals = []scrapers.OzBargainDeal{deal1, deal2}
+	s.Deals = []models.OzBargainDeal{deal1, deal2}
 
 	filtered := s.FilterByKeywords([]string{"w00t", "beer"})
 

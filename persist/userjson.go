@@ -1,4 +1,4 @@
-package util
+package persist
 
 import (
 	"encoding/json"

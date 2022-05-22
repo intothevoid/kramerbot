@@ -7,8 +7,23 @@ import (
 	"time"
 
 	"github.com/gocolly/colly"
+	"github.com/intothevoid/kramerbot/models"
 	"go.uber.org/zap"
 )
+
+// Scraper type
+type ScraperID int
+
+var SID_OZBARGAIN ScraperID = 0
+
+// Ozbargain scraper
+type OzBargainScraper struct {
+	BaseUrl        string
+	Logger         *zap.Logger
+	Deals          []models.OzBargainDeal
+	SID            ScraperID // Scraper ID
+	ScrapeInterval int       // Scrape interval
+}
 
 // Scrape the url
 func (s *OzBargainScraper) Scrape() {
@@ -39,7 +54,7 @@ func (s *OzBargainScraper) Scrape() {
 		upVotes := e.ChildText(".n-left .n-vote.n-deal.inact .nvb.voteup")
 
 		// populate the deal
-		deal := OzBargainDeal{
+		deal := models.OzBargainDeal{
 			Id:       dealID,
 			Title:    dealTitle,
 			Url:      dealURL,
@@ -88,7 +103,7 @@ func (s *OzBargainScraper) GetDealAge(postedOn string) time.Duration {
 }
 
 // Check if deal is a super deal, good deal or just a regular deal
-func (s *OzBargainScraper) GetDealType(deal OzBargainDeal) int {
+func (s *OzBargainScraper) GetDealType(deal models.OzBargainDeal) int {
 	upvotes := deal.Upvotes
 	dealAge := deal.DealAge
 
@@ -119,8 +134,8 @@ func (s *OzBargainScraper) GetDealType(deal OzBargainDeal) int {
 }
 
 // Filter list of deals by keywords
-func (s *OzBargainScraper) FilterByKeywords(keywords []string) []OzBargainDeal {
-	filteredDeals := []OzBargainDeal{}
+func (s *OzBargainScraper) FilterByKeywords(keywords []string) []models.OzBargainDeal {
+	filteredDeals := []models.OzBargainDeal{}
 	for _, deal := range s.Deals {
 		for _, keyword := range keywords {
 			if strings.Contains(strings.ToLower(deal.Title), strings.ToLower(keyword)) {
@@ -132,7 +147,7 @@ func (s *OzBargainScraper) FilterByKeywords(keywords []string) []OzBargainDeal {
 }
 
 // Get 'count' deals from the list of deals
-func (s *OzBargainScraper) GetLatestDeals(count int) []OzBargainDeal {
+func (s *OzBargainScraper) GetLatestDeals(count int) []models.OzBargainDeal {
 	if len(s.Deals) <= count {
 		return s.Deals
 	}
@@ -154,6 +169,6 @@ func (s *OzBargainScraper) AutoScrape() {
 }
 
 // Get scraper data
-func (s *OzBargainScraper) GetData() []OzBargainDeal {
+func (s *OzBargainScraper) GetData() []models.OzBargainDeal {
 	return s.Deals
 }
