@@ -36,5 +36,5 @@ func main() {
 	k.Scraper = scraper
 
 	// start receiving updates from telegram
-	k.StartReceivingUpdates(scraper)
+	k.StartBot(scraper)
 }
