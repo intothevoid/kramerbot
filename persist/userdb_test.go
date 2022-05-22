@@ -6,7 +6,6 @@ import (
 	"github.com/intothevoid/kramerbot/models"
 	"github.com/intothevoid/kramerbot/persist"
 	"github.com/mattn/go-sqlite3"
-	_ "github.com/mattn/go-sqlite3"
 	"go.uber.org/zap"
 )
 
@@ -17,7 +16,7 @@ import (
 // Test the persist.New() function
 func TestNew(t *testing.T) {
 	var logger = *zap.NewExample()
-	dbName := "./user_test.db"
+	dbName := "user_test.db"
 	udb := persist.CreateDatabaseConnection(dbName, &logger)
 
 	// Check database name
@@ -34,7 +33,7 @@ func TestNew(t *testing.T) {
 // Test UserDB.CreateTable() function
 func TestCreateTable(t *testing.T) {
 	var logger = *zap.NewExample()
-	dbName := "./user_test.db"
+	dbName := "user_test.db"
 	udb := persist.CreateDatabaseConnection(dbName, &logger)
 
 	// Create table
@@ -47,7 +46,7 @@ func TestCreateTable(t *testing.T) {
 // Test UserDB.AddUser() function
 func TestAddUser(t *testing.T) {
 	var logger = *zap.NewExample()
-	dbName := "./user_test.db"
+	dbName := "user_test.db"
 	udb := persist.CreateDatabaseConnection(dbName, &logger)
 
 	// Create table
@@ -87,7 +86,7 @@ func TestAddUser(t *testing.T) {
 // Test to get user from database
 func TestGetUser(t *testing.T) {
 	var logger = *zap.NewExample()
-	dbName := "./user_test.db"
+	dbName := "user_test.db"
 	udb := persist.CreateDatabaseConnection(dbName, &logger)
 
 	// Create table
@@ -147,7 +146,7 @@ func TestGetUser(t *testing.T) {
 // Test update user in database
 func TestUpdateUser(t *testing.T) {
 	var logger = *zap.NewExample()
-	dbName := "./user_test.db"
+	dbName := "user_test.db"
 	udb := persist.CreateDatabaseConnection(dbName, &logger)
 
 	// Create table
