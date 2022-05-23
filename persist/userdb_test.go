@@ -1,6 +1,8 @@
 package persist_test
 
 import (
+	"fmt"
+	"os"
 	"testing"
 
 	"github.com/intothevoid/kramerbot/models"
@@ -17,6 +19,7 @@ import (
 func TestNew(t *testing.T) {
 	var logger = *zap.NewExample()
 	dbName := "user_test.db"
+	defer DeleteDBFile(dbName)
 	udb := persist.CreateDatabaseConnection(dbName, &logger)
 
 	// Check database name
@@ -34,6 +37,7 @@ func TestNew(t *testing.T) {
 func TestCreateTable(t *testing.T) {
 	var logger = *zap.NewExample()
 	dbName := "user_test.db"
+	defer DeleteDBFile(dbName)
 	udb := persist.CreateDatabaseConnection(dbName, &logger)
 
 	// Create table
@@ -87,6 +91,7 @@ func TestAddUser(t *testing.T) {
 func TestGetUser(t *testing.T) {
 	var logger = *zap.NewExample()
 	dbName := "user_test.db"
+	defer DeleteDBFile(dbName)
 	udb := persist.CreateDatabaseConnection(dbName, &logger)
 
 	// Create table
@@ -147,6 +152,7 @@ func TestGetUser(t *testing.T) {
 func TestUpdateUser(t *testing.T) {
 	var logger = *zap.NewExample()
 	dbName := "user_test.db"
+	defer DeleteDBFile(dbName)
 	udb := persist.CreateDatabaseConnection(dbName, &logger)
 
 	// Create table
@@ -192,5 +198,13 @@ func TestUpdateUser(t *testing.T) {
 	_, err = udb.DB.Query(`SELECT * FROM users WHERE chat_id = ?`, user.ChatID)
 	if err != nil {
 		t.Errorf("Error querying database. Updated user not found: %s", err)
+	}
+}
+
+// Delete database file
+func DeleteDBFile(dbName string) {
+	err := os.Remove(dbName)
+	if err != nil {
+		fmt.Printf("Error deleting database file: %s", err)
 	}
 }
