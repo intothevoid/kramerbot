@@ -12,7 +12,7 @@ import (
 func MigrateUserStoreFromJsonToDatabase(logger *zap.Logger) error {
 	logger.Debug("Reading user store from file")
 
-	file, err := os.Open("user_store.json")
+	file, err := os.Open("../user_store.json")
 	if err != nil {
 		logger.Error(err.Error())
 
