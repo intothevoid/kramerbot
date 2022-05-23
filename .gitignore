@@ -21,3 +21,5 @@ persist/user_test.db
 persist/user.db
 persist/deals_test.db
 persist/deals.db
+users.db
+deals.db
