@@ -1,4 +1,4 @@
-package util
+package persist
 
 import (
 	"encoding/json"
@@ -8,12 +8,12 @@ import (
 	"go.uber.org/zap"
 )
 
-type DataStore struct {
+type DataStoreJson struct {
 	Logger *zap.Logger
 }
 
 // Function to write User store to a file
-func (d *DataStore) WriteUserStore(userStore *models.UserStore) {
+func (d *DataStoreJson) WriteUserStore(userStore *models.UserStore) error {
 	d.Logger.Debug("Writing user store to file")
 
 	// create the file
@@ -22,7 +22,7 @@ func (d *DataStore) WriteUserStore(userStore *models.UserStore) {
 		d.Logger.Error(err.Error())
 
 		file.Close()
-		return
+		return err
 	}
 
 	defer file.Close()
@@ -30,10 +30,12 @@ func (d *DataStore) WriteUserStore(userStore *models.UserStore) {
 	// write the user store to the file
 	encoder := json.NewEncoder(file)
 	encoder.Encode(userStore)
+
+	return nil
 }
 
 // Function to read User store from a file
-func (d *DataStore) ReadUserStore() *models.UserStore {
+func (d *DataStoreJson) ReadUserStore() (*models.UserStore, error) {
 	d.Logger.Debug("Reading user store from file")
 
 	file, err := os.Open("user_store.json")
@@ -41,7 +43,7 @@ func (d *DataStore) ReadUserStore() *models.UserStore {
 		d.Logger.Error(err.Error())
 
 		file.Close()
-		return d.CreateEmptyUserStore()
+		return d.CreateEmptyUserStore(), err
 	}
 
 	defer file.Close()
@@ -51,11 +53,11 @@ func (d *DataStore) ReadUserStore() *models.UserStore {
 	var userStore models.UserStore
 	decoder.Decode(&userStore)
 
-	return &userStore
+	return &userStore, nil
 }
 
 // Create empty user store
-func (d *DataStore) CreateEmptyUserStore() *models.UserStore {
+func (d *DataStoreJson) CreateEmptyUserStore() *models.UserStore {
 	return &models.UserStore{
 		Users: make(map[int64]*models.UserData),
 	}

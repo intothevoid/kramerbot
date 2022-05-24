@@ -5,6 +5,8 @@ go 1.18
 require (
 	github.com/go-telegram-bot-api/telegram-bot-api v4.6.4+incompatible
 	github.com/gocolly/colly v1.2.0
+	github.com/lib/pq v1.10.6
+	github.com/mattn/go-sqlite3 v1.14.13
 	go.uber.org/zap v1.21.0
 )
 

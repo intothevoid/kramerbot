@@ -1,14 +1,15 @@
 package main
 
 import (
+	"github.com/intothevoid/kramerbot/bot"
+	"github.com/intothevoid/kramerbot/models"
 	"github.com/intothevoid/kramerbot/scrapers"
-	"github.com/intothevoid/kramerbot/telegram"
 	"github.com/intothevoid/kramerbot/util"
 )
 
 func main() {
 	// create a new instance of our bot
-	k := new(telegram.KramerBot)
+	k := new(bot.KramerBot)
 
 	// initialise logger
 	k.Logger = util.SetupLogger()
@@ -20,20 +21,17 @@ func main() {
 		k.Logger.Fatal("Cannot proceed without a bot token")
 	}
 
-	// create a new bot
-	k.NewBot()
-
 	// create a scraper
 	scraper := new(scrapers.OzBargainScraper)
 	scraper.SID = scrapers.SID_OZBARGAIN
 	scraper.Logger = k.Logger
 	scraper.BaseUrl = scrapers.URL_OZBARGAIN
-	scraper.Deals = []scrapers.OzBargainDeal{}
+	scraper.Deals = []models.OzBargainDeal{}
 	scraper.ScrapeInterval = 5 // mins
 
-	// Assign scraper
-	k.Scraper = scraper
+	// create a new bot
+	k.NewBot(scraper)
 
 	// start receiving updates from telegram
-	k.StartReceivingUpdates(scraper)
+	k.StartBot()
 }
