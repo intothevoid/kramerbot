@@ -19,8 +19,8 @@ func TestMigrateUserStoreFromJsonToDatabase(t *testing.T) {
 	}
 
 	// Open database file
-	dbName := "user_test.db"
-	defer DeleteDBFile(dbName)
+	dbName := "users_test.db"
+	// defer DeleteDBFile(dbName)
 	udb := persist.CreateDatabaseConnection(dbName, &logger)
 
 	// Get count of users in database

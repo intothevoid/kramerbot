@@ -8,6 +8,7 @@ package bot
 // imports
 import (
 	"os"
+	"path"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/intothevoid/kramerbot/models"
@@ -60,8 +61,12 @@ func (k *KramerBot) NewBot(s *scrapers.OzBargainScraper) {
 	// Assign scraper
 	k.Scraper = s
 
+	// Get working directory
+	dbPath, _ := os.Getwd()
+	dbPath = path.Join(dbPath, "users.db")
+
 	// Set up data writer
-	k.DataWriter = persist.CreateDatabaseConnection("users.db", k.Logger)
+	k.DataWriter = persist.CreateDatabaseConnection(dbPath, k.Logger)
 
 	// Load user store
 	k.LoadUserStore()

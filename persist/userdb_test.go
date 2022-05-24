@@ -18,7 +18,7 @@ import (
 // Test the persist.New() function
 func TestNew(t *testing.T) {
 	var logger = *zap.NewExample()
-	dbName := "user_test.db"
+	dbName := "users_test.db"
 	defer DeleteDBFile(dbName)
 	udb := persist.CreateDatabaseConnection(dbName, &logger)
 
@@ -36,7 +36,7 @@ func TestNew(t *testing.T) {
 // Test UserDB.CreateTable() function
 func TestCreateTable(t *testing.T) {
 	var logger = *zap.NewExample()
-	dbName := "user_test.db"
+	dbName := "users_test.db"
 	defer DeleteDBFile(dbName)
 	udb := persist.CreateDatabaseConnection(dbName, &logger)
 
@@ -50,7 +50,7 @@ func TestCreateTable(t *testing.T) {
 // Test UserDB.AddUser() function
 func TestAddUser(t *testing.T) {
 	var logger = *zap.NewExample()
-	dbName := "user_test.db"
+	dbName := "users_test.db"
 	udb := persist.CreateDatabaseConnection(dbName, &logger)
 
 	// Create table
@@ -90,7 +90,7 @@ func TestAddUser(t *testing.T) {
 // Test to get user from database
 func TestGetUser(t *testing.T) {
 	var logger = *zap.NewExample()
-	dbName := "user_test.db"
+	dbName := "users_test.db"
 	defer DeleteDBFile(dbName)
 	udb := persist.CreateDatabaseConnection(dbName, &logger)
 
@@ -151,7 +151,7 @@ func TestGetUser(t *testing.T) {
 // Test update user in database
 func TestUpdateUser(t *testing.T) {
 	var logger = *zap.NewExample()
-	dbName := "user_test.db"
+	dbName := "users_test.db"
 	defer DeleteDBFile(dbName)
 	udb := persist.CreateDatabaseConnection(dbName, &logger)
 

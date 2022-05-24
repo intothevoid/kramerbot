@@ -17,9 +17,10 @@ kramerbot
 .DS_Store
 user_store.json
 log.json
-persist/user_test.db
-persist/user.db
+persist/users_test.db
+persist/users.db
 persist/deals_test.db
 persist/deals.db
 users.db
 deals.db
+users_test.db

@@ -28,7 +28,7 @@ func MigrateUserStoreFromJsonToDatabase(logger *zap.Logger) error {
 	decoder.Decode(&userStore)
 
 	// create database and table
-	dbName := "user_test.db"
+	dbName := "users_test.db"
 	udb := CreateDatabaseConnection(dbName, logger)
 
 	// Create table
