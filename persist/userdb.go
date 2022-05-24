@@ -165,7 +165,10 @@ func (udb *UserStoreDB) ReadUserStore() (*models.UserStore, error) {
 		return nil, err
 	}
 
-	userStore := &models.UserStore{}
+	userStore := &models.UserStore{
+		Users: make(map[int64]*models.UserData),
+	}
+
 	for rows.Next() {
 		user := &models.UserData{}
 		keywords := []byte{}
