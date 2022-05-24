@@ -10,20 +10,20 @@ import (
 	"go.uber.org/zap"
 )
 
-type UserDB struct {
+type UserStoreDB struct {
 	DB     *sql.DB
 	Name   string
 	Logger *zap.Logger
 }
 
 // Connect to the database
-func CreateDatabaseConnection(dbName string, logger *zap.Logger) *UserDB {
+func CreateDatabaseConnection(dbName string, logger *zap.Logger) *UserStoreDB {
 	db, err := sql.Open("sqlite3", dbName)
 	if err != nil {
 		panic(err)
 	}
 
-	return &UserDB{
+	return &UserStoreDB{
 		DB:     db,
 		Name:   dbName,
 		Logger: logger,
@@ -31,7 +31,7 @@ func CreateDatabaseConnection(dbName string, logger *zap.Logger) *UserDB {
 }
 
 // Close the database
-func (udb *UserDB) Close() {
+func (udb *UserStoreDB) Close() {
 	err := udb.DB.Close()
 	if err != nil {
 		udb.Logger.Error("Error closing database", zap.Error(err))
@@ -39,7 +39,7 @@ func (udb *UserDB) Close() {
 }
 
 // Create *models.UserData table in database
-func (udb *UserDB) CreateTable() error {
+func (udb *UserStoreDB) CreateTable() error {
 	_, err := udb.DB.Exec(`
 		CREATE TABLE IF NOT EXISTS users (
 			chat_id INTEGER PRIMARY KEY,
@@ -59,7 +59,7 @@ func (udb *UserDB) CreateTable() error {
 }
 
 // Add user to the database
-func (udb *UserDB) AddUser(user *models.UserData) error {
+func (udb *UserStoreDB) AddUser(user *models.UserData) error {
 	// Convert string array to bytes
 	// We do this as sqlite does not allow us to store string slices
 	// Instead we convert to JSON bytes and store in the database
@@ -89,7 +89,7 @@ func (udb *UserDB) AddUser(user *models.UserData) error {
 }
 
 // Update user in the database
-func (udb *UserDB) UpdateUser(user *models.UserData) error {
+func (udb *UserStoreDB) UpdateUser(user *models.UserData) error {
 	// Convert string array to bytes
 	// We do this as sqlite does not allow us to store string slices
 	// Instead we convert to JSON bytes and store in the database
@@ -119,7 +119,7 @@ func (udb *UserDB) UpdateUser(user *models.UserData) error {
 }
 
 // Delete user from the database
-func (udb *UserDB) DeleteUser(user *models.UserData) error {
+func (udb *UserStoreDB) DeleteUser(user *models.UserData) error {
 	_, err := udb.DB.Exec(`DELETE FROM users WHERE chat_id = ?`, user.ChatID)
 
 	if err != nil {
@@ -131,7 +131,7 @@ func (udb *UserDB) DeleteUser(user *models.UserData) error {
 }
 
 // Get user from the database by chat_id
-func (udb *UserDB) GetUser(chatID int64) (*models.UserData, error) {
+func (udb *UserStoreDB) GetUser(chatID int64) (*models.UserData, error) {
 	user := &models.UserData{}
 	keywords := []byte{}
 	dealsSent := []byte{}
@@ -155,4 +155,79 @@ func (udb *UserDB) GetUser(chatID int64) (*models.UserData, error) {
 	}
 
 	return user, nil
+}
+
+// Read all users from the database
+func (udb *UserStoreDB) ReadUserStore() (*models.UserStore, error) {
+	rows, err := udb.DB.Query(`Select * from users`)
+	if err != nil {
+		udb.Logger.Error("Error getting all users", zap.Error(err))
+		return nil, err
+	}
+
+	userStore := &models.UserStore{}
+	for rows.Next() {
+		user := &models.UserData{}
+		keywords := []byte{}
+		dealsSent := []byte{}
+
+		err = rows.Scan(
+			&user.ChatID, &user.Username, &user.GoodDeals, &user.SuperDeals, &keywords, &dealsSent,
+		)
+		if err != nil {
+			udb.Logger.Error("Error getting user", zap.Error(err))
+			return nil, err
+		}
+
+		// Bytes to string array - keywords
+		if err := json.Unmarshal([]byte(keywords), &user.Keywords); err != nil {
+			udb.Logger.Error("Error unmarshalling user keywords", zap.Error(err))
+		}
+
+		// Bytes to string array - dealsSent
+		if err := json.Unmarshal([]byte(dealsSent), &user.DealsSent); err != nil {
+			udb.Logger.Error("Error unmarshalling user deals sent", zap.Error(err))
+		}
+
+		userStore.Users[user.ChatID] = user
+
+	}
+
+	return userStore, nil
+}
+
+// Write *models.UserStore to the database
+func (udb *UserStoreDB) WriteUserStore(userStore *models.UserStore) error {
+	for _, user := range userStore.Users {
+		// Convert string array to bytes
+		// We do this as sqlite does not allow us to store string slices
+		// Instead we convert to JSON bytes and store in the database
+		keywords, err := json.Marshal(user.Keywords)
+		if err != nil {
+			udb.Logger.Error("Error marshalling user keywords", zap.Error(err))
+		}
+
+		dealsSent, err := json.Marshal(user.DealsSent)
+		if err != nil {
+			udb.Logger.Error("Error marshalling user deals sent", zap.Error(err))
+		}
+
+		_, err = udb.DB.Exec(`
+			INSERT INTO users (
+				chat_id, username, good_deals, super_deals, keywords, deals_sent
+			) VALUES (?, ?, ?, ?, ?, ?)
+			ON CONFLICT(chat_id) DO UPDATE SET
+				username = ?, good_deals = ?, super_deals = ?, keywords = ?, deals_sent = ?
+			`,
+			user.ChatID, user.Username, user.GoodDeals, user.SuperDeals, keywords, dealsSent,
+			user.Username, user.GoodDeals, user.SuperDeals, keywords, dealsSent,
+		)
+
+		if err != nil {
+			udb.Logger.Error("Error adding user", zap.String("error", err.Error()))
+			return err
+		}
+	}
+
+	return nil
 }

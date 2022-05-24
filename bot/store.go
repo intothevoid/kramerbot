@@ -2,7 +2,6 @@ package bot
 
 import (
 	"github.com/intothevoid/kramerbot/models"
-	"github.com/intothevoid/kramerbot/persist"
 )
 
 // Create user data from parameters passed in
@@ -22,15 +21,17 @@ func (k *KramerBot) CreateUserData(chatID int64, username string, keyword string
 // Function to load user store from file
 func (k *KramerBot) LoadUserStore() {
 	// Load user store i.e. user data indexed by chat id
-	store := persist.DataStore{Logger: k.Logger}
-	k.UserStore = store.ReadUserStore()
+	if k.DataWriter != nil {
+		k.UserStore, _ = k.DataWriter.ReadUserStore()
+	}
 }
 
 // Function to save user store to file
 func (k *KramerBot) SaveUserStore() {
 	// Save user store i.e. user data indexed by chat id
-	store := persist.DataStore{Logger: k.Logger}
-	store.WriteUserStore(k.UserStore)
+	if k.DataWriter != nil {
+		k.DataWriter.WriteUserStore(k.UserStore)
+	}
 }
 
 // Check if the deal has already been sent to the user

@@ -11,16 +11,18 @@ import (
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/intothevoid/kramerbot/models"
+	"github.com/intothevoid/kramerbot/persist"
 	"github.com/intothevoid/kramerbot/scrapers"
 	"go.uber.org/zap"
 )
 
 type KramerBot struct {
-	Token     string
-	Logger    *zap.Logger
-	BotApi    *tgbotapi.BotAPI
-	Scraper   *scrapers.OzBargainScraper
-	UserStore *models.UserStore
+	Token      string
+	Logger     *zap.Logger
+	BotApi     *tgbotapi.BotAPI
+	Scraper    *scrapers.OzBargainScraper
+	UserStore  *models.UserStore
+	DataWriter *persist.UserStoreDB
 }
 
 // Processing interval in minutes
@@ -57,6 +59,9 @@ func (k *KramerBot) NewBot(s *scrapers.OzBargainScraper) {
 
 	// Assign scraper
 	k.Scraper = s
+
+	// Set up data writer
+	k.DataWriter = persist.CreateDatabaseConnection("users.db", k.Logger)
 
 	// Load user store
 	k.LoadUserStore()
