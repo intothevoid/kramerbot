@@ -1,12 +1,10 @@
 package bot
 
 import (
-	"fmt"
 	"strings"
 	"time"
 
 	"github.com/intothevoid/kramerbot/scrapers"
-	"github.com/intothevoid/kramerbot/util"
 )
 
 // Process deals returned by the scraper, check deal type and notify user
@@ -32,42 +30,17 @@ func (k *KramerBot) StartProcessing() {
 			for _, user := range userdata {
 				if user.GoodDeals && dealType == int(scrapers.GOOD_DEAL) && !DealSent(user, &deal) {
 					// User is subscribed to good deals, notify user
-					shortenedTitle := util.ShortenString(deal.Title, 30) + "..."
-					formattedDeal := fmt.Sprintf(`🔥<a href="%s" target="_blank">%s</a>🔺%s`, deal.Url, shortenedTitle, deal.Upvotes)
-
-					k.Logger.Debug(fmt.Sprintf("Sending deal %s to user %s", shortenedTitle, user.Username))
-					k.SendHTMLMessage(user.ChatID, formattedDeal)
-
-					// Mark deal as sent
-					user.DealsSent = append(user.DealsSent, deal.Id)
-					k.SaveUserStore()
+					k.SendGoodDeal(user, &deal)
 				}
 				if user.SuperDeals && dealType == int(scrapers.SUPER_DEAL) && !DealSent(user, &deal) {
 					// User is subscribed to good deals, notify user
-					shortenedTitle := util.ShortenString(deal.Title, 30) + "..."
-					formattedDeal := fmt.Sprintf(`🔥🔥<a href="%s" target="_blank">%s</a>🔺%s`, deal.Url, shortenedTitle, deal.Upvotes)
-
-					k.Logger.Debug(fmt.Sprintf("Sending deal %s to user %s", shortenedTitle, user.Username))
-					k.SendHTMLMessage(user.ChatID, formattedDeal)
-
-					// Mark deal as sent
-					user.DealsSent = append(user.DealsSent, deal.Id)
-					k.SaveUserStore()
+					k.SendSuperDeal(user, &deal)
 				}
-
 				// Check for watched keywords
 				for _, keyword := range user.Keywords {
 					if strings.Contains(strings.ToLower(deal.Title), strings.ToLower(keyword)) && !DealSent(user, &deal) {
 						// Deal contains keyword, notify user
-						shortenedTitle := util.ShortenString(deal.Title, 30) + "..."
-						formattedDeal := fmt.Sprintf(`👀<a href="%s" target="_blank">%s</a>🔺%s`, deal.Url, shortenedTitle, deal.Upvotes)
-
-						k.Logger.Debug(fmt.Sprintf("Sending deal %s to user %s", shortenedTitle, user.Username))
-						k.SendHTMLMessage(user.ChatID, formattedDeal)
-
-						// Mark deal as sent
-						user.DealsSent = append(user.DealsSent, deal.Id)
-						k.SaveUserStore()
+						k.SendWatchedDeal(user, &deal)
 
 						// Break out of keyword loop
 						break
