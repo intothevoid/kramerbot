@@ -6,6 +6,7 @@ import (
 	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
+	"github.com/intothevoid/kramerbot/models"
 	"github.com/intothevoid/kramerbot/scrapers"
 	"github.com/intothevoid/kramerbot/util"
 )
@@ -178,5 +179,44 @@ func (k *KramerBot) WatchSuperDeals(chat *tgbotapi.Chat) {
 	}
 
 	// Save user store
+	k.SaveUserStore()
+}
+
+// Send good deal message to user
+func (k *KramerBot) SendGoodDeal(user *models.UserData, deal *models.OzBargainDeal) {
+	shortenedTitle := util.ShortenString(deal.Title, 30) + "..."
+	formattedDeal := fmt.Sprintf(`🔥<a href="%s" target="_blank">%s</a>🔺%s`, deal.Url, shortenedTitle, deal.Upvotes)
+
+	k.Logger.Debug(fmt.Sprintf("Sending good deal %s to user %s", shortenedTitle, user.Username))
+	k.SendHTMLMessage(user.ChatID, formattedDeal)
+
+	// Mark deal as sent
+	user.DealsSent = append(user.DealsSent, deal.Id)
+	k.SaveUserStore()
+}
+
+// Send super deal to user
+func (k *KramerBot) SendSuperDeal(user *models.UserData, deal *models.OzBargainDeal) {
+	shortenedTitle := util.ShortenString(deal.Title, 30) + "..."
+	formattedDeal := fmt.Sprintf(`🔥🔥<a href="%s" target="_blank">%s</a>🔺%s`, deal.Url, shortenedTitle, deal.Upvotes)
+
+	k.Logger.Debug(fmt.Sprintf("Sending super deal %s to user %s", shortenedTitle, user.Username))
+	k.SendHTMLMessage(user.ChatID, formattedDeal)
+
+	// Mark deal as sent
+	user.DealsSent = append(user.DealsSent, deal.Id)
+	k.SaveUserStore()
+}
+
+// Send watched deal to user
+func (k *KramerBot) SendWatchedDeal(user *models.UserData, deal *models.OzBargainDeal) {
+	shortenedTitle := util.ShortenString(deal.Title, 30) + "..."
+	formattedDeal := fmt.Sprintf(`👀<a href="%s" target="_blank">%s</a>🔺%s`, deal.Url, shortenedTitle, deal.Upvotes)
+
+	k.Logger.Debug(fmt.Sprintf("Sending watched deal %s to user %s", shortenedTitle, user.Username))
+	k.SendHTMLMessage(user.ChatID, formattedDeal)
+
+	// Mark deal as sent
+	user.DealsSent = append(user.DealsSent, deal.Id)
 	k.SaveUserStore()
 }
