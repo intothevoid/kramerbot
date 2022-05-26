@@ -8,12 +8,12 @@ import (
 	"go.uber.org/zap"
 )
 
-type DataStoreJson struct {
+type UserStoreJson struct {
 	Logger *zap.Logger
 }
 
 // Function to write User store to a file
-func (d *DataStoreJson) WriteUserStore(userStore *models.UserStore) error {
+func (d *UserStoreJson) WriteUserStore(userStore *models.UserStore) error {
 	d.Logger.Debug("Writing user store to file")
 
 	// create the file
@@ -35,7 +35,7 @@ func (d *DataStoreJson) WriteUserStore(userStore *models.UserStore) error {
 }
 
 // Function to read User store from a file
-func (d *DataStoreJson) ReadUserStore() (*models.UserStore, error) {
+func (d *UserStoreJson) ReadUserStore() (*models.UserStore, error) {
 	d.Logger.Debug("Reading user store from file")
 
 	file, err := os.Open("user_store.json")
@@ -57,7 +57,7 @@ func (d *DataStoreJson) ReadUserStore() (*models.UserStore, error) {
 }
 
 // Create empty user store
-func (d *DataStoreJson) CreateEmptyUserStore() *models.UserStore {
+func (d *UserStoreJson) CreateEmptyUserStore() *models.UserStore {
 	return &models.UserStore{
 		Users: make(map[int64]*models.UserData),
 	}

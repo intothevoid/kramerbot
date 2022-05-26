@@ -35,13 +35,13 @@ func (k *KramerBot) Help(chat *tgbotapi.Chat) {
 
 	// Show the help banner
 	k.SendMessage(chat.ID, fmt.Sprintf("Hi %s! Available commands are: \n\n"+
-		"🙏 /help - View this help message \n"+
-		"📈 /latest - View the 5 latest deals on OzBargain\n"+
-		"🔥 /watchgood - Watch out for deals with 25+ upvotes within the hour\n"+
-		"🔥🔥 /watchsuper - Watch out for deals with 100+ upvotes within 24 hours\n"+
-		"👀 /watchkeyword - Watch deals with specified keywords\n"+
-		"⛔ /clearkeyword - Clear deals with specified keyword\n"+
-		"⛔ /clearallkeywords - Clear deals with all watched keywords\n"+
+		"🙏 /help - View this help message \n\n"+
+		"📈 /latest - View the 5 latest deals on OzBargain\n\n"+
+		"🔥 /watchgood - Watch out for deals with 25+ upvotes within the hour\n\n"+
+		"🔥🔥 /watchsuper - Watch out for deals with 100+ upvotes within 24 hours\n\n"+
+		"👀 /watchkeyword - Watch deals with specified keywords\n\n"+
+		"⛔ /clearkeyword - Clear deals with specified keyword\n\n"+
+		"⛔ /clearallkeywords - Clear deals with all watched keywords\n\n"+
 		"🙃 /kramerism - Get a Kramer quote from Seinfeld", chat.FirstName))
 }
 
