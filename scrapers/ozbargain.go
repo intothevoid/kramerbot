@@ -1,6 +1,7 @@
 package scrapers
 
 import (
+	"errors"
 	"regexp"
 	"strconv"
 	"strings"
@@ -18,15 +19,28 @@ var SID_OZBARGAIN ScraperID = 0
 
 // Ozbargain scraper
 type OzBargainScraper struct {
-	BaseUrl        string
-	Logger         *zap.Logger
-	Deals          []models.OzBargainDeal
-	SID            ScraperID // Scraper ID
-	ScrapeInterval int       // Scrape interval
+	BaseUrl         string
+	Logger          *zap.Logger
+	Deals           []models.OzBargainDeal
+	SID             ScraperID // Scraper ID
+	ScrapeInterval  int       // Scrape interval
+	MaxDealsToStore int       // Max. no. of deals to have in memory
+}
+
+// Check initialisation
+func (s *OzBargainScraper) CheckInit() bool {
+	if s.ScrapeInterval == 0 || s.MaxDealsToStore == 0 || s.BaseUrl == "" || s.Logger == nil {
+		return false
+	}
+	return true
 }
 
 // Scrape the url
-func (s *OzBargainScraper) Scrape() {
+func (s *OzBargainScraper) Scrape() error {
+	if !s.CheckInit() {
+		return errors.New("Scraper not initialized correctly. Ensure all fields are set")
+	}
+
 	url := s.BaseUrl + "/deals"
 	s.Logger.Info("Scraping...", zap.String("url", s.BaseUrl))
 
@@ -73,9 +87,11 @@ func (s *OzBargainScraper) Scrape() {
 	c.Visit(url)
 
 	// Keep deals length under 'MaxDeals'
-	if len(s.Deals) > MAX_DEALS_TO_STORE {
-		s.Deals = s.Deals[len(s.Deals)-MAX_DEALS_TO_STORE:]
+	if len(s.Deals) > s.MaxDealsToStore {
+		s.Deals = s.Deals[len(s.Deals)-s.MaxDealsToStore:]
 	}
+
+	return nil
 }
 
 // Calculate the time elapsed since the deal was posted
@@ -157,13 +173,19 @@ func (s *OzBargainScraper) GetLatestDeals(count int) []models.OzBargainDeal {
 // go routine to auto scrape every X minutes
 func (s *OzBargainScraper) AutoScrape() {
 	// Scrape once before interval
-	s.Scrape()
+	err := s.Scrape()
+	if err != nil {
+		s.Logger.Error("Error scraping", zap.Error(err))
+	}
 
 	// use timer to run every 'ScrapeInterval' minutes
 	t := time.NewTicker(time.Minute * time.Duration(s.ScrapeInterval))
 	go func() {
 		for range t.C {
-			s.Scrape()
+			err := s.Scrape()
+			if err != nil {
+				s.Logger.Error("Error scraping", zap.Error(err))
+			}
 		}
 	}()
 }

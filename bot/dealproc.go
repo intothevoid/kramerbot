@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/intothevoid/kramerbot/scrapers"
+	"go.uber.org/zap"
 )
 
 // Process deals returned by the scraper, check deal type and notify user
@@ -15,10 +16,14 @@ func (k *KramerBot) StartProcessing() {
 
 	// Begin timed processing and scraping
 	// tick := time.NewTicker(time.Second * 60)
-	tick := time.NewTicker(time.Minute * PROCESSING_INTERVAL)
+	tick := time.NewTicker(time.Minute * time.Duration(k.Scraper.ScrapeInterval))
 	for range tick.C {
 		// Load deals from OzBargain
-		k.Scraper.Scrape()
+		err := k.Scraper.Scrape()
+		if err != nil {
+			k.Logger.Error("Error scraping deals", zap.Error(err))
+			return
+		}
 		deals := k.Scraper.GetData()
 		userdata := k.UserStore.Users
 
