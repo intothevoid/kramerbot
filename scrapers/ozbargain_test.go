@@ -7,6 +7,7 @@ import (
 	"github.com/intothevoid/kramerbot/models"
 	"github.com/intothevoid/kramerbot/scrapers"
 	"github.com/intothevoid/kramerbot/util"
+	"go.uber.org/zap/zapcore"
 )
 
 // Basic test to check that the scraper works
@@ -14,14 +15,25 @@ func TestScrape(t *testing.T) {
 	// create a new scraper
 	ozbScraper := new(scrapers.OzBargainScraper)
 
+	// dummy config
+	config, err := util.SetupConfig("../config.yaml")
+	if err != nil {
+		t.Error("Error setting up config")
+	}
+
 	// initialise logger
 	t.Log("Initialising logger")
-	ozbScraper.Logger = util.SetupLogger()
+	ozbScraper.Logger = util.SetupLogger(zapcore.Level(config.GetInt("log_level")), config.GetBool("log_to_file"))
 	ozbScraper.BaseUrl = "https://www.ozbargain.com.au/"
+	ozbScraper.ScrapeInterval = config.GetInt("scrapers.ozbargain.scrape_interval")
+	ozbScraper.MaxDealsToStore = config.GetInt("scrapers.ozbargain.max_stored_deals")
 
 	// Start scraping
 	t.Log("Scraping URL " + ozbScraper.BaseUrl)
-	ozbScraper.Scrape()
+	err = ozbScraper.Scrape()
+	if err != nil {
+		t.Error("Error scraping.", err.Error())
+	}
 
 	if len(ozbScraper.Deals) == 0 {
 		t.Error("No deals found")

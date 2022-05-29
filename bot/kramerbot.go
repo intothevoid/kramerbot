@@ -14,6 +14,7 @@ import (
 	"github.com/intothevoid/kramerbot/models"
 	"github.com/intothevoid/kramerbot/persist"
 	"github.com/intothevoid/kramerbot/scrapers"
+	"github.com/spf13/viper"
 	"go.uber.org/zap"
 )
 
@@ -24,10 +25,8 @@ type KramerBot struct {
 	Scraper    *scrapers.OzBargainScraper
 	UserStore  *models.UserStore
 	DataWriter *persist.UserStoreDB
+	Config     *viper.Viper
 }
-
-// Processing interval in minutes
-const PROCESSING_INTERVAL = 5
 
 // function to read token from environment variable
 func (k *KramerBot) GetToken() string {
@@ -90,7 +89,6 @@ func (k *KramerBot) StartBot() {
 	// Start processing deals and scraping
 	// Run asyncronously to avoid blocking the main thread
 	go func() {
-		k.Scraper.Scrape()
 		k.StartProcessing()
 	}()
 

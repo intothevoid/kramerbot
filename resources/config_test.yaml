@@ -1,0 +1,13 @@
+# levels
+# debug = -1
+# info = 0
+# warn = 1
+# error = 2
+log_level: 1
+
+log_to_file: true
+
+scrapers:
+  ozbargain:
+    scrape_interval: 50
+    max_stored_deals: 999
