@@ -77,6 +77,12 @@ func (k *KramerBot) BotProc(updates tgbotapi.UpdatesChannel) {
 			continue
 		}
 
+		// User requested current status
+		if strings.Contains(strings.ToLower(update.Message.Text), "status") {
+			k.SendStatus(update.Message.Chat)
+			continue
+		}
+
 		// User asked for a kramerism
 		if strings.Contains(strings.ToLower(update.Message.Text), "kramerism") {
 			kramerism := util.GetKramerism()

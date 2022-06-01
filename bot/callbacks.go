@@ -42,6 +42,7 @@ func (k *KramerBot) Help(chat *tgbotapi.Chat) {
 		"👀 /watchkeyword - Watch deals with specified keywords\n\n"+
 		"⛔ /clearkeyword - Clear deals with specified keyword\n\n"+
 		"⛔ /clearallkeywords - Clear deals with all watched keywords\n\n"+
+		"👨‍🦰 /status - Get the current user status\n\n"+
 		"🙃 /kramerism - Get a Kramer quote from Seinfeld", chat.FirstName))
 }
 
@@ -193,6 +194,27 @@ func (k *KramerBot) SendGoodDeal(user *models.UserData, deal *models.OzBargainDe
 	// Mark deal as sent
 	user.DealsSent = append(user.DealsSent, deal.Id)
 	k.SaveUserStore()
+}
+
+// Send user their current configured settings / status
+func (k *KramerBot) SendStatus(chat *tgbotapi.Chat) {
+	// Check if key exists in user store
+	if _, ok := k.UserStore.Users[chat.ID]; ok {
+		// Key exists, add to watch list
+		user := k.UserStore.Users[chat.ID]
+		getTruth := func(set bool) string {
+			if set {
+				return "yes"
+			}
+			return "no"
+		}
+		userDetails := fmt.Sprintf("👨‍🦰👩‍🦰 %s\n\nGoodDeals: %s\nSuperDeals: %s\nWatched: %s\nDeals sent: %d", user.GetUsername(),
+			getTruth(user.GetGoodDeals()), getTruth(user.GetSuperDeals()), user.GetKeywords(), len(user.GetDealsSent()))
+
+		k.SendHTMLMessage(user.ChatID, userDetails)
+	} else {
+		k.SendHTMLMessage(chat.ID, "This is embarassing. I could not find your details.")
+	}
 }
 
 // Send super deal to user
