@@ -2,27 +2,28 @@ package util
 
 import (
 	"bytes"
+	"io/ioutil"
 	"net/http"
+
+	"go.uber.org/zap"
 )
 
 // Send a post request to the webhook
-func SendPostRequest(url string, jsonBody string) {
+func SendPostRequest(url string, jsonBody []byte) {
 	// Create a request
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer([]byte(jsonBody)))
-	if err != nil {
-		panic(err)
-	}
-
 	// Set headers
-	req.Header.Set("Content-Type", "application/json")
+	resp, err := http.Post(url, "application/json", bytes.NewBuffer(jsonBody))
 
-	// Send request
-	client := &http.Client{}
-	resp, err := client.Do(req)
 	if err != nil {
-		panic(err)
+		zap.L().Error(err.Error())
 	}
 
-	// Close body
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		zap.L().Error(err.Error())
+	}
+
+	zap.L().Debug("Response from pipup", zap.String("body", string(body)))
+
 	defer resp.Body.Close()
 }
