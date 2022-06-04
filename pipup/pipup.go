@@ -10,8 +10,9 @@ import (
 )
 
 type Pipup struct {
-	Config *viper.Viper
-	Logger *zap.Logger
+	Config   *viper.Viper
+	Logger   *zap.Logger
+	Username string
 }
 
 /* Sample POST request from CURL -
@@ -21,8 +22,23 @@ curl -X POST -H "Content-Type: application/json" -d '{"title": "Kramerbot",
 "http://192.168.1.10:7979/notify"
 */
 
+// Create a new pipup instance
+func New(config *viper.Viper, logger *zap.Logger) *Pipup {
+	return &Pipup{
+		Config:   config,
+		Logger:   logger,
+		Username: config.GetString("pipup.username"),
+	}
+}
+
 // Create and send sample notification via post.go
 func (p *Pipup) SendMediaMessage(message string, title string) {
+	// Do not send message if pipup is disabled
+	enabled := p.Config.GetBool("pipup.enabled")
+	if !enabled {
+		return
+	}
+
 	duration := p.Config.GetInt("pipup.duration")
 	position := p.Config.GetInt("pipup.position")
 	mediaUri := p.Config.GetString("pipup.media_uri")
@@ -66,6 +82,12 @@ func (p *Pipup) SendMediaMessage(message string, title string) {
 
 // Send a simple message
 func (p *Pipup) SendMessage(message string, title string) {
+	// Do not send message if pipup is disabled
+	enabled := p.Config.GetBool("pipup.enabled")
+	if !enabled {
+		return
+	}
+
 	duration := p.Config.GetInt("pipup.duration")
 	position := p.Config.GetInt("pipup.position")
 	baseUrl := p.Config.GetString("pipup.base_url")

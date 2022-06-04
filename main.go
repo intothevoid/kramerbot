@@ -28,8 +28,7 @@ func main() {
 	k.Logger = util.SetupLogger(zapcore.Level(appconf.GetInt("log_level")), appconf.GetBool("log_to_file"))
 
 	// Android TV notifications via Pipup
-	pp := &pipup.Pipup{Config: k.Config, Logger: k.Logger}
-	k.Pipup = pp
+	k.Pipup = pipup.New(k.Config, k.Logger)
 
 	// Get the token for the telegram bot api
 	// it is safer to keep the token in an environment variable

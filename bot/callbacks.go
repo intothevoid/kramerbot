@@ -3,6 +3,7 @@ package bot
 import (
 	"fmt"
 	"path/filepath"
+	"strings"
 	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
@@ -191,6 +192,11 @@ func (k *KramerBot) SendGoodDeal(user *models.UserData, deal *models.OzBargainDe
 	k.Logger.Debug(fmt.Sprintf("Sending good deal %s to user %s", shortenedTitle, user.Username))
 	k.SendHTMLMessage(user.ChatID, formattedDeal)
 
+	// Send android notification if username is set
+	if strings.ToLower(user.Username) == k.Pipup.Username {
+		k.Pipup.SendMediaMessage(formattedDeal, "Kramerbot")
+	}
+
 	// Mark deal as sent
 	user.DealsSent = append(user.DealsSent, deal.Id)
 	k.SaveUserStore()
@@ -225,6 +231,11 @@ func (k *KramerBot) SendSuperDeal(user *models.UserData, deal *models.OzBargainD
 	k.Logger.Debug(fmt.Sprintf("Sending super deal %s to user %s", shortenedTitle, user.Username))
 	k.SendHTMLMessage(user.ChatID, formattedDeal)
 
+	// Send android notification if username is set
+	if strings.ToLower(user.Username) == k.Pipup.Username {
+		k.Pipup.SendMediaMessage(formattedDeal, "Kramerbot")
+	}
+
 	// Mark deal as sent
 	user.DealsSent = append(user.DealsSent, deal.Id)
 	k.SaveUserStore()
@@ -237,6 +248,11 @@ func (k *KramerBot) SendWatchedDeal(user *models.UserData, deal *models.OzBargai
 
 	k.Logger.Debug(fmt.Sprintf("Sending watched deal %s to user %s", shortenedTitle, user.Username))
 	k.SendHTMLMessage(user.ChatID, formattedDeal)
+
+	// Send android notification if username is set
+	if strings.ToLower(user.Username) == k.Pipup.Username {
+		k.Pipup.SendMediaMessage(formattedDeal, "Kramerbot")
+	}
 
 	// Mark deal as sent
 	user.DealsSent = append(user.DealsSent, deal.Id)
