@@ -2,6 +2,7 @@ package pipup
 
 import (
 	"encoding/json"
+	"strings"
 
 	"github.com/intothevoid/kramerbot/models"
 	"github.com/intothevoid/kramerbot/util"
@@ -42,6 +43,7 @@ func (p *Pipup) SendMediaMessage(message string, title string) {
 	duration := p.Config.GetInt("pipup.duration")
 	position := p.Config.GetInt("pipup.position")
 	mediaUri := p.Config.GetString("pipup.media_uri")
+	mediaType := strings.ToLower(p.Config.GetString("pipup.media_type"))
 	imageWidth := p.Config.GetInt("pipup.image_width")
 	baseUrl := p.Config.GetString("pipup.base_url")
 	title_color := p.Config.GetString("pipup.title_color")
@@ -50,22 +52,67 @@ func (p *Pipup) SendMediaMessage(message string, title string) {
 	background_color := p.Config.GetString("pipup.background_color")
 	title_size := p.Config.GetInt("pipup.title_size")
 
-	toast := &models.PipupToast{
-		Title:    title,
-		Message:  message,
-		Duration: duration,
-		Position: position,
-		Media: &models.PipupMedia{
-			Image: &models.PipupImage{
-				Uri:   mediaUri,
-				Width: imageWidth,
+	// Initialise toast
+	toast := &models.PipupToast{}
+
+	if mediaType == "image" {
+		toast = &models.PipupToast{
+			Title:    title,
+			Message:  message,
+			Duration: duration,
+			Position: position,
+			Media: &models.PipupImage{
+				Image: &models.PipupUri{
+					Uri:   mediaUri,
+					Width: imageWidth,
+				},
 			},
-		},
-		TitleColor:      title_color,
-		TitleSize:       title_size,
-		MessageColor:    message_color,
-		MessageSize:     message_size,
-		BackgroundColor: background_color,
+			TitleColor:      title_color,
+			TitleSize:       title_size,
+			MessageColor:    message_color,
+			MessageSize:     message_size,
+			BackgroundColor: background_color,
+		}
+	}
+
+	if mediaType == "video" {
+		toast = &models.PipupToast{
+			Title:    title,
+			Message:  message,
+			Duration: duration,
+			Position: position,
+			Media: &models.PipupVideo{
+				Video: &models.PipupUri{
+					Uri:   mediaUri,
+					Width: imageWidth,
+				},
+			},
+			TitleColor:      title_color,
+			TitleSize:       title_size,
+			MessageColor:    message_color,
+			MessageSize:     message_size,
+			BackgroundColor: background_color,
+		}
+	}
+
+	if mediaType == "web" {
+		toast = &models.PipupToast{
+			Title:    title,
+			Message:  message,
+			Duration: duration,
+			Position: position,
+			Media: &models.PipupWeb{
+				Web: &models.PipupUri{
+					Uri:   mediaUri,
+					Width: imageWidth,
+				},
+			},
+			TitleColor:      title_color,
+			TitleSize:       title_size,
+			MessageColor:    message_color,
+			MessageSize:     message_size,
+			BackgroundColor: background_color,
+		}
 	}
 
 	// Create json message

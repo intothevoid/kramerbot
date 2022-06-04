@@ -17,14 +17,22 @@ type PipupToast struct {
 	MessageColor    string      `json:"messageColor"`
 	MessageSize     int         `json:"messageSize"`
 	BackgroundColor string      `json:"backgroundColor"`
-	Media           *PipupMedia `json:"media"`
-}
-
-type PipupMedia struct {
-	Image *PipupImage `json:"image"`
+	Media           interface{} `json:"media"`
 }
 
 type PipupImage struct {
+	Image *PipupUri `json:"image"`
+}
+
+type PipupVideo struct {
+	Video *PipupUri `json:"video"`
+}
+
+type PipupWeb struct {
+	Web *PipupUri `json:"web"`
+}
+
+type PipupUri struct {
 	Uri   string `json:"uri"`
 	Width int    `json:"width"`
 }
