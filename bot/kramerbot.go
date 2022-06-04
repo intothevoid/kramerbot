@@ -13,6 +13,7 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/intothevoid/kramerbot/models"
 	"github.com/intothevoid/kramerbot/persist"
+	"github.com/intothevoid/kramerbot/pipup"
 	"github.com/intothevoid/kramerbot/scrapers"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
@@ -25,6 +26,7 @@ type KramerBot struct {
 	Scraper    *scrapers.OzBargainScraper
 	UserStore  *models.UserStore
 	DataWriter *persist.UserStoreDB
+	Pipup      *pipup.Pipup
 	Config     *viper.Viper
 }
 

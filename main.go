@@ -5,6 +5,7 @@ import (
 
 	"github.com/intothevoid/kramerbot/bot"
 	"github.com/intothevoid/kramerbot/models"
+	"github.com/intothevoid/kramerbot/pipup"
 	"github.com/intothevoid/kramerbot/scrapers"
 	"github.com/intothevoid/kramerbot/util"
 	"go.uber.org/zap/zapcore"
@@ -25,6 +26,10 @@ func main() {
 
 	// initialise logger
 	k.Logger = util.SetupLogger(zapcore.Level(appconf.GetInt("log_level")), appconf.GetBool("log_to_file"))
+
+	// Android TV notifications via Pipup
+	pp := &pipup.Pipup{Config: k.Config, Logger: k.Logger}
+	k.Pipup = pp
 
 	// Get the token for the telegram bot api
 	// it is safer to keep the token in an environment variable

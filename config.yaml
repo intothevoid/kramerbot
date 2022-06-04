@@ -4,10 +4,28 @@
 # warn = 1
 # error = 2
 log_level: -1
-
 log_to_file: true
 
+# scraper config
 scrapers:
   ozbargain:
     scrape_interval: 5
     max_stored_deals: 250
+
+# notifications for android tv
+pipup:
+  enabled: true
+  base_url: http://192.168.1.10:7979/notify
+  duration: 5
+  media_uri: https://i.ebayimg.com/images/g/arUAAOSwMUVfB1Ve/s-l640.jpg
+  image_width: 200
+  position: 2
+  title_color: "#000000"
+  title_size: 20
+  message_color: "#000000"
+  message_size: 12
+  background_color: "#ffffff"
+  good_deals: true
+  super_deals: true
+  watched_keywords:
+    ["camera", "audio", "sennheiser", "hifiman", "focal", "ps5", "xbox"]
