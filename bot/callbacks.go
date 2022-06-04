@@ -50,9 +50,9 @@ func (k *KramerBot) Help(chat *tgbotapi.Chat) {
 // Send test message
 func (k *KramerBot) SendTestMessage(chat *tgbotapi.Chat) {
 
-	shortenedTitle := util.ShortenString("This is a test deal not a real deal... Beep Boop", 30) + "..."
+	shortenedTitle := util.ShortenString("🔥 This is a test deal not a real deal... Beep Boop", 30) + "..."
 	dealUrl := "https://news.google.com.au"
-	formattedDeal := fmt.Sprintf(`<a href='%s' target='_blank'>%s</a>`, dealUrl, shortenedTitle)
+	formattedDeal := fmt.Sprintf(`🔥<a href='%s' target='_blank'>%s</a>`, dealUrl, shortenedTitle)
 
 	k.Logger.Debug(fmt.Sprintf("Sending deal %s to user %s", shortenedTitle, chat.FirstName))
 	k.SendHTMLMessage(chat.ID, formattedDeal)
@@ -82,7 +82,7 @@ func (k *KramerBot) ProcessKeyword(chat *tgbotapi.Chat, keyword string) {
 	// Save user store
 	k.SaveUserStore()
 
-	k.SendMessage(chat.ID, fmt.Sprintf("Currently watching keywords: %s for user %s", keywords, chat.FirstName))
+	k.SendMessage(chat.ID, fmt.Sprintf("👀 Currently watching keywords: %s for user %s", keywords, chat.FirstName))
 }
 
 // Process clear keyword request
@@ -107,7 +107,7 @@ func (k *KramerBot) ProcessClearKeyword(chat *tgbotapi.Chat, keyword string) {
 	// Save user store
 	k.SaveUserStore()
 
-	k.SendMessage(chat.ID, fmt.Sprintf("Cleared watched keyword: %s for user %s", keyword, chat.FirstName))
+	k.SendMessage(chat.ID, fmt.Sprintf("👀 Cleared watched keyword: %s for user %s", keyword, chat.FirstName))
 }
 
 // Process clear all keywords request
@@ -128,7 +128,7 @@ func (k *KramerBot) ProcessClearAllKeywords(chat *tgbotapi.Chat) {
 	// Save user store
 	k.SaveUserStore()
 
-	k.SendMessage(chat.ID, fmt.Sprintf("Cleared all watched keywords for user %s", chat.FirstName))
+	k.SendMessage(chat.ID, fmt.Sprintf("👀 Cleared all watched keywords for user %s", chat.FirstName))
 }
 
 // Add watch to good deals by chat id
@@ -141,9 +141,9 @@ func (k *KramerBot) WatchGoodDeals(chat *tgbotapi.Chat) {
 
 		// Send message to user
 		if userData.GoodDeals {
-			k.SendMessage(chat.ID, "You have been added to the good deals watchlist.")
+			k.SendMessage(chat.ID, "🔥 You have been added to the good deals watchlist.")
 		} else {
-			k.SendMessage(chat.ID, "You have been removed from the good deals watchlist.")
+			k.SendMessage(chat.ID, "🔥 You have been removed from the good deals watchlist.")
 		}
 	} else {
 		// Key does not exist, create new user
@@ -151,7 +151,7 @@ func (k *KramerBot) WatchGoodDeals(chat *tgbotapi.Chat) {
 		k.UserStore.Users[chat.ID] = userData
 
 		// Send message to user
-		k.SendMessage(chat.ID, "You have been added to the good deals watchlist.")
+		k.SendMessage(chat.ID, "🔥 You have been added to the good deals watchlist.")
 	}
 
 	// Save user store
@@ -169,15 +169,15 @@ func (k *KramerBot) WatchSuperDeals(chat *tgbotapi.Chat) {
 
 		// Send message to user
 		if userData.SuperDeals {
-			k.SendMessage(chat.ID, "You have been added to the super deals watchlist.")
+			k.SendMessage(chat.ID, "🔥🔥 You have been added to the super deals watchlist.")
 		} else {
-			k.SendMessage(chat.ID, "You have been removed from the super deals watchlist.")
+			k.SendMessage(chat.ID, "🔥🔥 You have been removed from the super deals watchlist.")
 		}
 	} else {
 		// Key does not exist, create new user
 		userData := k.CreateUserData(chat.ID, chat.FirstName, "", false, true)
 		k.UserStore.Users[chat.ID] = userData
-		k.SendMessage(chat.ID, "You have been added to the super deals watchlist.")
+		k.SendMessage(chat.ID, "🔥🔥 You have been added to the super deals watchlist.")
 	}
 
 	// Save user store
@@ -188,7 +188,7 @@ func (k *KramerBot) WatchSuperDeals(chat *tgbotapi.Chat) {
 func (k *KramerBot) SendGoodDeal(user *models.UserData, deal *models.OzBargainDeal) {
 	shortenedTitle := util.ShortenString(deal.Title, 30) + "..."
 	formattedDeal := fmt.Sprintf(`🔥<a href="%s" target="_blank">%s</a>🔺%s`, deal.Url, shortenedTitle, deal.Upvotes)
-	textDeal := fmt.Sprintf(`👀 %s 🔺%s`, shortenedTitle, deal.Upvotes)
+	textDeal := fmt.Sprintf(`🔥 %s 🔺%s`, shortenedTitle, deal.Upvotes)
 
 	k.Logger.Debug(fmt.Sprintf("Sending good deal %s to user %s", shortenedTitle, user.Username))
 	k.SendHTMLMessage(user.ChatID, formattedDeal)
@@ -215,7 +215,7 @@ func (k *KramerBot) SendStatus(chat *tgbotapi.Chat) {
 			}
 			return "no"
 		}
-		userDetails := fmt.Sprintf("👨‍🦰👩‍🦰 %s\n\nGoodDeals: %s\nSuperDeals: %s\nWatched: %s\nDeals sent: %d", user.GetUsername(),
+		userDetails := fmt.Sprintf("👨‍🦰👩‍🦰 %s\n\n🔥GoodDeals: %s\n🔥🔥SuperDeals: %s\n👀Watched: %s\n⏰Deals sent: %d", user.GetUsername(),
 			getTruth(user.GetGoodDeals()), getTruth(user.GetSuperDeals()), user.GetKeywords(), len(user.GetDealsSent()))
 
 		k.SendHTMLMessage(user.ChatID, userDetails)
@@ -228,7 +228,7 @@ func (k *KramerBot) SendStatus(chat *tgbotapi.Chat) {
 func (k *KramerBot) SendSuperDeal(user *models.UserData, deal *models.OzBargainDeal) {
 	shortenedTitle := util.ShortenString(deal.Title, 30) + "..."
 	formattedDeal := fmt.Sprintf(`🔥🔥<a href="%s" target="_blank">%s</a>🔺%s`, deal.Url, shortenedTitle, deal.Upvotes)
-	textDeal := fmt.Sprintf(`👀 %s 🔺%s`, shortenedTitle, deal.Upvotes)
+	textDeal := fmt.Sprintf(`🔥🔥 %s 🔺%s`, shortenedTitle, deal.Upvotes)
 
 	k.Logger.Debug(fmt.Sprintf("Sending super deal %s to user %s", shortenedTitle, user.Username))
 	k.SendHTMLMessage(user.ChatID, formattedDeal)
