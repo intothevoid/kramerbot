@@ -17,12 +17,13 @@ pipup:
   enabled: true
   username: username # Deals of this username will be sent to android tv
   base_url: http://192.168.1.10:7979/notify # pipup url
-  duration: 5
-  media_uri: https://i.ebayimg.com/images/g/arUAAOSwMUVfB1Ve/s-l640.jpg
+  duration: 10
+  media_type: video # possible options are video, image and web
+  media_uri: https://media4.giphy.com/media/hKA6krgH9ywRa/giphy.mp4
   image_width: 200
   position: 2
-  title_color: "#000000"
-  title_size: 20
-  message_color: "#000000"
+  title_color: "#ffffff"
+  title_size: 14
+  message_color: "#ffffff"
   message_size: 12
-  background_color: "#ffffff"
+  background_color: "#000000"
