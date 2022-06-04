@@ -188,13 +188,14 @@ func (k *KramerBot) WatchSuperDeals(chat *tgbotapi.Chat) {
 func (k *KramerBot) SendGoodDeal(user *models.UserData, deal *models.OzBargainDeal) {
 	shortenedTitle := util.ShortenString(deal.Title, 30) + "..."
 	formattedDeal := fmt.Sprintf(`🔥<a href="%s" target="_blank">%s</a>🔺%s`, deal.Url, shortenedTitle, deal.Upvotes)
+	textDeal := fmt.Sprintf(`👀 %s 🔺%s`, shortenedTitle, deal.Upvotes)
 
 	k.Logger.Debug(fmt.Sprintf("Sending good deal %s to user %s", shortenedTitle, user.Username))
 	k.SendHTMLMessage(user.ChatID, formattedDeal)
 
 	// Send android notification if username is set
-	if strings.ToLower(user.Username) == k.Pipup.Username {
-		k.Pipup.SendMediaMessage(formattedDeal, "Kramerbot")
+	if strings.EqualFold(user.Username, k.Pipup.Username) {
+		k.Pipup.SendMediaMessage(textDeal, "Kramerbot")
 	}
 
 	// Mark deal as sent
@@ -227,13 +228,14 @@ func (k *KramerBot) SendStatus(chat *tgbotapi.Chat) {
 func (k *KramerBot) SendSuperDeal(user *models.UserData, deal *models.OzBargainDeal) {
 	shortenedTitle := util.ShortenString(deal.Title, 30) + "..."
 	formattedDeal := fmt.Sprintf(`🔥🔥<a href="%s" target="_blank">%s</a>🔺%s`, deal.Url, shortenedTitle, deal.Upvotes)
+	textDeal := fmt.Sprintf(`👀 %s 🔺%s`, shortenedTitle, deal.Upvotes)
 
 	k.Logger.Debug(fmt.Sprintf("Sending super deal %s to user %s", shortenedTitle, user.Username))
 	k.SendHTMLMessage(user.ChatID, formattedDeal)
 
 	// Send android notification if username is set
-	if strings.ToLower(user.Username) == k.Pipup.Username {
-		k.Pipup.SendMediaMessage(formattedDeal, "Kramerbot")
+	if strings.EqualFold(user.Username, k.Pipup.Username) {
+		k.Pipup.SendMediaMessage(textDeal, "Kramerbot")
 	}
 
 	// Mark deal as sent
@@ -245,13 +247,14 @@ func (k *KramerBot) SendSuperDeal(user *models.UserData, deal *models.OzBargainD
 func (k *KramerBot) SendWatchedDeal(user *models.UserData, deal *models.OzBargainDeal) {
 	shortenedTitle := util.ShortenString(deal.Title, 30) + "..."
 	formattedDeal := fmt.Sprintf(`👀<a href="%s" target="_blank">%s</a>🔺%s`, deal.Url, shortenedTitle, deal.Upvotes)
+	textDeal := fmt.Sprintf(`👀 %s 🔺%s`, shortenedTitle, deal.Upvotes)
 
 	k.Logger.Debug(fmt.Sprintf("Sending watched deal %s to user %s", shortenedTitle, user.Username))
 	k.SendHTMLMessage(user.ChatID, formattedDeal)
 
 	// Send android notification if username is set
-	if strings.ToLower(user.Username) == k.Pipup.Username {
-		k.Pipup.SendMediaMessage(formattedDeal, "Kramerbot")
+	if strings.EqualFold(user.Username, k.Pipup.Username) {
+		k.Pipup.SendMediaMessage(textDeal, "Kramerbot")
 	}
 
 	// Mark deal as sent
