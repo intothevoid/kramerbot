@@ -15,7 +15,8 @@ scrapers:
 # notifications for android tv
 pipup:
   enabled: true
-  base_url: http://192.168.1.10:7979/notify
+  username: username # Deals of this username will be sent to android tv
+  base_url: http://192.168.1.10:7979/notify # pipup url
   duration: 5
   media_uri: https://i.ebayimg.com/images/g/arUAAOSwMUVfB1Ve/s-l640.jpg
   image_width: 200
@@ -25,7 +26,3 @@ pipup:
   message_color: "#000000"
   message_size: 12
   background_color: "#ffffff"
-  good_deals: true
-  super_deals: true
-  watched_keywords:
-    ["camera", "audio", "sennheiser", "hifiman", "focal", "ps5", "xbox"]
