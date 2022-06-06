@@ -15,15 +15,16 @@ func SendPostRequest(url string, jsonBody []byte) {
 	resp, err := http.Post(url, "application/json", bytes.NewBuffer(jsonBody))
 
 	if err != nil {
-		zap.L().Error(err.Error())
+		Logger.Error(err.Error())
+		return
 	}
+	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		zap.L().Error(err.Error())
+		Logger.Error(err.Error())
+		return
 	}
 
-	zap.L().Debug("Response from pipup", zap.String("body", string(body)))
-
-	defer resp.Body.Close()
+	Logger.Debug("Response from pipup", zap.String("body", string(body)))
 }

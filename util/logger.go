@@ -8,6 +8,8 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
+var Logger *zap.Logger
+
 // function to setup the logger
 func SetupLogger(logLevel zapcore.Level, fileMode bool) *zap.Logger {
 	// configure the logger
@@ -38,8 +40,8 @@ func SetupLogger(logLevel zapcore.Level, fileMode bool) *zap.Logger {
 	}
 
 	// create the logger
-	logger := zap.New(core, zap.AddCaller(), zap.AddCallerSkip(1))
+	Logger = zap.New(core, zap.AddCaller(), zap.AddCallerSkip(1))
 
 	// return the logger
-	return logger
+	return Logger
 }
