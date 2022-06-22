@@ -1,4 +1,4 @@
-FROM golang:latest
+FROM golang:alpine
 
 # Set the working directory
 WORKDIR /kramerbot
@@ -7,6 +7,6 @@ WORKDIR /kramerbot
 ADD . /kramerbot
 
 # Build the bot
-RUN go build .
+RUN CGO_ENABLED=0 go build .
 
 ENTRYPOINT [ "./kramerbot" ]
