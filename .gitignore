@@ -24,3 +24,4 @@ persist/deals.db
 users.db
 deals.db
 users_test.db
+token.env
