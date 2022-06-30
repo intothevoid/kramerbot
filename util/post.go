@@ -26,5 +26,5 @@ func SendPostRequest(url string, jsonBody []byte) {
 		return
 	}
 
-	Logger.Debug("Response from pipup", zap.String("body", string(body)))
+	Logger.Debug("Response from post request", zap.String("url", url), zap.String("body", string(body)))
 }
