@@ -61,12 +61,13 @@ func TestAddUser(t *testing.T) {
 
 	// Add user
 	user := &models.UserData{
-		ChatID:     123456789,
-		Username:   "test_user",
-		GoodDeals:  false,
-		SuperDeals: false,
-		Keywords:   []string{"test", "test2"},
-		DealsSent:  []string{"120", "122"},
+		ChatID:       123456789,
+		Username:     "test_user",
+		GoodDeals:    false,
+		SuperDeals:   false,
+		Keywords:     []string{"test", "test2"},
+		DealsSent:    []string{"120", "122"},
+		DealsCounter: 2,
 	}
 
 	err = udb.AddUser(user)
@@ -102,12 +103,13 @@ func TestGetUser(t *testing.T) {
 
 	// Add user2
 	user2 := &models.UserData{
-		ChatID:     007,
-		Username:   "bond",
-		GoodDeals:  true,
-		SuperDeals: false,
-		Keywords:   []string{"james", "bond"},
-		DealsSent:  []string{"007", "mi5"},
+		ChatID:       007,
+		Username:     "bond",
+		GoodDeals:    true,
+		SuperDeals:   false,
+		Keywords:     []string{"james", "bond"},
+		DealsSent:    []string{"007", "mi5"},
+		DealsCounter: 2,
 	}
 
 	err = udb.AddUser(user2)
@@ -146,6 +148,9 @@ func TestGetUser(t *testing.T) {
 	if len(user.DealsSent) != 2 {
 		t.Errorf("Expected user deals_sent to have length 2, got %d", len(user.DealsSent))
 	}
+	if user.DealsCounter != 2 {
+		t.Errorf("Expected user chat_id to be %d, got %d", 007, user.ChatID)
+	}
 }
 
 // Test update user in database
@@ -163,12 +168,13 @@ func TestUpdateUser(t *testing.T) {
 
 	// Add user
 	user := &models.UserData{
-		ChatID:     123456789,
-		Username:   "test_user",
-		GoodDeals:  false,
-		SuperDeals: false,
-		Keywords:   []string{"test", "test2"},
-		DealsSent:  []string{"120", "122"},
+		ChatID:       123456789,
+		Username:     "test_user",
+		GoodDeals:    false,
+		SuperDeals:   false,
+		Keywords:     []string{"test", "test2"},
+		DealsSent:    []string{"120", "122"},
+		DealsCounter: 2,
 	}
 
 	err = udb.AddUser(user)
@@ -188,6 +194,7 @@ func TestUpdateUser(t *testing.T) {
 	user.Keywords = []string{"test", "test2", "test3"}
 	user.DealsSent = []string{"120", "122", "123"}
 	user.Username = "test_user_updated"
+	user.DealsCounter = 5
 
 	err = udb.UpdateUser(user)
 	if err != nil {

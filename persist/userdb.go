@@ -47,7 +47,8 @@ func (udb *UserStoreDB) CreateTable() error {
 			good_deals INTEGER,
 			super_deals INTEGER,
 			keywords BLOB,
-			deals_sent BLOB
+			deals_sent BLOB,
+			deals_counter INTEGER
 			);
 		`)
 
@@ -75,9 +76,9 @@ func (udb *UserStoreDB) AddUser(user *models.UserData) error {
 
 	_, err = udb.DB.Exec(`
 		INSERT INTO users (
-				chat_id, username, good_deals, super_deals, keywords, deals_sent
-			) VALUES (?, ?, ?, ?, ?, ?)`,
-		user.ChatID, user.Username, user.GoodDeals, user.SuperDeals, keywords, dealsSent,
+				chat_id, username, good_deals, super_deals, keywords, deals_sent, deals_counter
+			) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+		user.ChatID, user.Username, user.GoodDeals, user.SuperDeals, keywords, dealsSent, user.DealsCounter,
 	)
 
 	if err != nil {
@@ -105,9 +106,9 @@ func (udb *UserStoreDB) UpdateUser(user *models.UserData) error {
 
 	_, err = udb.DB.Exec(`
 		UPDATE users SET
-			username = ?, good_deals = ?, super_deals = ?, keywords = ?, deals_sent = ?
+			username = ?, good_deals = ?, super_deals = ?, keywords = ?, deals_sent = ?, deals_counter = ?
 		WHERE chat_id = ?`,
-		user.Username, user.GoodDeals, user.SuperDeals, keywords, dealsSent, user.ChatID,
+		user.Username, user.GoodDeals, user.SuperDeals, keywords, dealsSent, user.DealsCounter, user.ChatID,
 	)
 
 	if err != nil {
@@ -137,7 +138,7 @@ func (udb *UserStoreDB) GetUser(chatID int64) (*models.UserData, error) {
 	dealsSent := []byte{}
 
 	err := udb.DB.QueryRow(`SELECT * FROM users WHERE chat_id = ?`, chatID).Scan(
-		&user.ChatID, &user.Username, &user.GoodDeals, &user.SuperDeals, &keywords, &dealsSent,
+		&user.ChatID, &user.Username, &user.GoodDeals, &user.SuperDeals, &keywords, &dealsSent, &user.DealsCounter,
 	)
 	if err != nil {
 		udb.Logger.Error("Error getting user", zap.Error(err))
@@ -175,7 +176,7 @@ func (udb *UserStoreDB) ReadUserStore() (*models.UserStore, error) {
 		dealsSent := []byte{}
 
 		err = rows.Scan(
-			&user.ChatID, &user.Username, &user.GoodDeals, &user.SuperDeals, &keywords, &dealsSent,
+			&user.ChatID, &user.Username, &user.GoodDeals, &user.SuperDeals, &keywords, &dealsSent, &user.DealsCounter,
 		)
 		if err != nil {
 			udb.Logger.Error("Error getting user", zap.Error(err))
@@ -217,13 +218,13 @@ func (udb *UserStoreDB) WriteUserStore(userStore *models.UserStore) error {
 
 		_, err = udb.DB.Exec(`
 			INSERT INTO users (
-				chat_id, username, good_deals, super_deals, keywords, deals_sent
-			) VALUES (?, ?, ?, ?, ?, ?)
+				chat_id, username, good_deals, super_deals, keywords, deals_sent, deals_counter
+			) VALUES (?, ?, ?, ?, ?, ?, ?)
 			ON CONFLICT(chat_id) DO UPDATE SET
-				username = ?, good_deals = ?, super_deals = ?, keywords = ?, deals_sent = ?
+				username = ?, good_deals = ?, super_deals = ?, keywords = ?, deals_sent = ?, deals_counter = ?
 			`,
-			user.ChatID, user.Username, user.GoodDeals, user.SuperDeals, keywords, dealsSent,
-			user.Username, user.GoodDeals, user.SuperDeals, keywords, dealsSent,
+			user.ChatID, user.Username, user.GoodDeals, user.SuperDeals, keywords, dealsSent, user.DealsCounter,
+			user.Username, user.GoodDeals, user.SuperDeals, keywords, dealsSent, user.DealsCounter,
 		)
 
 		if err != nil {
