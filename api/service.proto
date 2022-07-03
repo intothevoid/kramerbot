@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package api;
+option go_package = "api/protos";
+
+message UserDetailsRequest {
+    int64 chatid = 1;
+} 
+
+message UserDetailsResponse {
+    int64 chatid = 1;
+    string username = 2;
+    bool gooddeals = 3;
+    bool superdeals= 4;
+    string keywords = 5;
+    string dealssent = 6;
+}
+
+service KramerService {
+    rpc GetUserDetails (UserDetailsRequest) returns (UserDetailsResponse);
+}
