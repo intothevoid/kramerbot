@@ -47,13 +47,14 @@ sudo docker build -t kramerbot:latest .
 Create a token.env file with your Telegram API token (used in step below) -
 
 ```
-TELEGRAM_TOKEN_API=<token>
+TELEGRAM_TOKEN_API=<your_token>
+GIN_MODE=release
 ```
 
 To deploy your container, use the command -
 
 ```
-sudo docker run -d --rm --name kramerbot --env-file=token.env kramerbot:latest
+sudo docker run -d --rm --name kramerbot --env-file=token.env -p 8080:8080 kramerbot:latest
 ```
 
 <img src="https://raw.githubusercontent.com/intothevoid/kramerbot/main/static/about.jpeg" width="50%" height="50%"></img>
