@@ -15,6 +15,17 @@ A Telegram bot to get you the latest deals from websites like https://www.ozbarg
 5. Keep track of deals already sent to avoid duplicate sending
 6. Supports scraping www.ozbargain.com.au (more scrapers to be added)
 7. Supports Android TV notifications
+8. API to access user and deal data
+
+## API
+
+The following API endpoints are available -
+
+```
+/users - Get user data for all users
+/users/:chatid - Get user data by chat id
+/deals - Get deal data for latest deals by the scraper
+```
 
 ## Deployment
 
