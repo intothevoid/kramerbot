@@ -6,6 +6,9 @@
 log_level: -1
 log_to_file: true
 
+ginserver:
+  port: 8080
+
 # scraper config
 scrapers:
   ozbargain:
