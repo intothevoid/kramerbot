@@ -12,9 +12,6 @@ import (
 	"go.uber.org/zap"
 )
 
-// Scraper type
-type ScraperID int
-
 var SID_OZBARGAIN ScraperID = 0
 
 // Ozbargain scraper

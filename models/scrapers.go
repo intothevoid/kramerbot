@@ -1,6 +1,6 @@
 package models
 
-// Deal type
+// Ozbargain deal type
 type OzBargainDeal struct {
 	Id       string `json:"id"`
 	Title    string `json:"title"`
@@ -9,6 +9,16 @@ type OzBargainDeal struct {
 	Upvotes  string `json:"upvotes"`
 	DealAge  string `json:"dealage"`
 	DealType int    `json:"dealtype"`
+}
+
+// Camel Camel Camel deal type
+type CamCamCamDeal struct {
+	Id        string `json:"id"`
+	Title     string `json:"title"`
+	Url       string `json:"url"`
+	Published string `json:"time"`
+	Image     string `json:"image"`
+	DealType  string `json:"dealtype"`
 }
 
 // Setters and getters for OzBargainDeal
