@@ -37,7 +37,7 @@ func (k *KramerBot) BotProc(updates tgbotapi.UpdatesChannel) {
 
 		// User asked for latest deals
 		if strings.Contains(strings.ToLower(update.Message.Text), "latest") {
-			k.SendLatestDeals(update.Message.Chat.ID, k.Scraper)
+			k.SendLatestDeals(update.Message.Chat.ID, k.OzbScraper)
 			continue
 		}
 
