@@ -14,6 +14,12 @@ scrapers:
   ozbargain:
     scrape_interval: 5
     max_stored_deals: 250
+  amazon:
+    scrape_interval: 5
+    max_stored_deals: 250
+    urls:
+      - "https://au.camelcamelcamel.com/top_drops/feed?t=daily&"
+      - "https://au.camelcamelcamel.com/top_drops/feed?t=weekly&"
 
 # notifications for android tv
 pipup:

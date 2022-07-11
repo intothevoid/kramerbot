@@ -10,6 +10,8 @@ import (
 	"go.uber.org/zap"
 )
 
+var SID_CCC_AMAZON ScraperID = 1
+
 // Camel Camel Camel - Amazon scraper
 type CamCamCamScraper struct {
 	BaseUrl         []string               // Urls to scrape

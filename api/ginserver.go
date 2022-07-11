@@ -12,7 +12,8 @@ import (
 
 type GinServer struct {
 	UserStoreDB *persist.UserStoreDB
-	Scraper     *scrapers.OzBargainScraper
+	OzbScraper  *scrapers.OzBargainScraper
+	CCCScraper  *scrapers.CamCamCamScraper
 	Config      *viper.Viper
 }
 
@@ -64,7 +65,10 @@ func (gs *GinServer) getUserById(c *gin.Context) {
 
 func (gs *GinServer) getDeals(c *gin.Context) {
 	// get deals
-	deals := gs.Scraper.GetData()
+
+	var deals = map[string]interface{}{}
+	deals["OZB"] = gs.OzbScraper.GetData()
+	deals["AMZ"] = gs.CCCScraper.GetData()
 
 	if len(deals) > 0 {
 		c.JSON(http.StatusOK, gin.H{"deals": deals})
