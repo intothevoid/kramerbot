@@ -38,9 +38,11 @@ func (k *KramerBot) Help(chat *tgbotapi.Chat) {
 	k.SendMessage(chat.ID, fmt.Sprintf("Hi %s! Available commands are: \n\n"+
 		"🙏 /help - View this help message \n\n"+
 		"📈 /latest - View the 5 latest deals on OzBargain\n\n"+
-		"🔥 /watchgood - Watch out for deals with 25+ upvotes within the hour\n\n"+
-		"🔥🔥 /watchsuper - Watch out for deals with 100+ upvotes within 24 hours\n\n"+
-		"👀 /watchkeyword - Watch deals with specified keywords\n\n"+
+		"🔥 /watchgood - Ozbargain: Watch out for deals with 25+ upvotes within the hour\n\n"+
+		"🔥🔥 /watchsuper - Ozbargain: Watch out for deals with 100+ upvotes within 24 hours\n\n"+
+		"🔥 /amazondaily - Amazon: Watch out for top daily Amazon deals\n\n"+
+		"🔥🔥 /amazonweekly - Amazon: Watch out for top weekly Amazon deals\n\n"+
+		"👀 /watchkeyword - Watch deals with specified keywords across Ozbargain and Amazon\n\n"+
 		"⛔ /clearkeyword - Clear deals with specified keyword\n\n"+
 		"⛔ /clearallkeywords - Clear deals with all watched keywords\n\n"+
 		"👨‍🦰 /status - Get the current user status\n\n"+
@@ -72,7 +74,7 @@ func (k *KramerBot) ProcessKeyword(chat *tgbotapi.Chat, keyword string) {
 		keywords = userData.Keywords
 	} else {
 		// Key does not exist, create new user data
-		userData := k.CreateUserData(chat.ID, chat.FirstName, keyword, false, false)
+		userData := k.CreateUserData(chat.ID, chat.FirstName, keyword, false, false, false, false)
 		k.UserStore.Users[chat.ID] = userData
 
 		// For messaging the user
@@ -131,8 +133,8 @@ func (k *KramerBot) ProcessClearAllKeywords(chat *tgbotapi.Chat) {
 	k.SendMessage(chat.ID, fmt.Sprintf("👀 Cleared all watched keywords for user %s", chat.FirstName))
 }
 
-// Add watch to good deals by chat id
-func (k *KramerBot) WatchGoodDeals(chat *tgbotapi.Chat) {
+// Add watch to OZB good deals by chat id
+func (k *KramerBot) WatchOzbGoodDeals(chat *tgbotapi.Chat) {
 	// Check if key exists in user store
 	if _, ok := k.UserStore.Users[chat.ID]; ok {
 		// Key exists, add to watch list
@@ -147,7 +149,7 @@ func (k *KramerBot) WatchGoodDeals(chat *tgbotapi.Chat) {
 		}
 	} else {
 		// Key does not exist, create new user
-		userData := k.CreateUserData(chat.ID, chat.FirstName, "", true, false)
+		userData := k.CreateUserData(chat.ID, chat.FirstName, "", true, false, false, false)
 		k.UserStore.Users[chat.ID] = userData
 
 		// Send message to user
@@ -158,8 +160,8 @@ func (k *KramerBot) WatchGoodDeals(chat *tgbotapi.Chat) {
 	k.SaveUserStore()
 }
 
-// Add watch to super deals by chat id
-func (k *KramerBot) WatchSuperDeals(chat *tgbotapi.Chat) {
+// Add watch to OZB super deals by chat id
+func (k *KramerBot) WatchOzbSuperDeals(chat *tgbotapi.Chat) {
 
 	// Check if key exists in user store
 	if _, ok := k.UserStore.Users[chat.ID]; ok {
@@ -175,7 +177,7 @@ func (k *KramerBot) WatchSuperDeals(chat *tgbotapi.Chat) {
 		}
 	} else {
 		// Key does not exist, create new user
-		userData := k.CreateUserData(chat.ID, chat.FirstName, "", false, true)
+		userData := k.CreateUserData(chat.ID, chat.FirstName, "", false, true, false, false)
 		k.UserStore.Users[chat.ID] = userData
 		k.SendMessage(chat.ID, "🔥🔥 You have been added to the super deals watchlist.")
 	}
@@ -184,8 +186,8 @@ func (k *KramerBot) WatchSuperDeals(chat *tgbotapi.Chat) {
 	k.SaveUserStore()
 }
 
-// Send good deal message to user
-func (k *KramerBot) SendGoodDeal(user *models.UserData, deal *models.OzBargainDeal) {
+// Send OZB good deal message to user
+func (k *KramerBot) SendOzbGoodDeal(user *models.UserData, deal *models.OzBargainDeal) {
 	shortenedTitle := util.ShortenString(deal.Title, 30) + "..."
 	formattedDeal := fmt.Sprintf(`🔥<a href="%s" target="_blank">%s</a>🔺%s`, deal.Url, shortenedTitle, deal.Upvotes)
 	textDeal := fmt.Sprintf(`🔥 %s 🔺%s`, shortenedTitle, deal.Upvotes)
@@ -224,8 +226,8 @@ func (k *KramerBot) SendStatus(chat *tgbotapi.Chat) {
 	}
 }
 
-// Send super deal to user
-func (k *KramerBot) SendSuperDeal(user *models.UserData, deal *models.OzBargainDeal) {
+// Send OZB super deal to user
+func (k *KramerBot) SendOzbSuperDeal(user *models.UserData, deal *models.OzBargainDeal) {
 	shortenedTitle := util.ShortenString(deal.Title, 30) + "..."
 	formattedDeal := fmt.Sprintf(`🔥🔥<a href="%s" target="_blank">%s</a>🔺%s`, deal.Url, shortenedTitle, deal.Upvotes)
 	textDeal := fmt.Sprintf(`🔥🔥 %s 🔺%s`, shortenedTitle, deal.Upvotes)
@@ -243,7 +245,15 @@ func (k *KramerBot) SendSuperDeal(user *models.UserData, deal *models.OzBargainD
 	k.SaveUserStore()
 }
 
-// Send watched deal to user
+func (k *KramerBot) SendAmzDailyDeal(user *models.UserData, deal *models.CamCamCamDeal) {
+	k.Logger.Info("Not implemented")
+}
+
+func (k *KramerBot) SendAmzWeeklyDeal(user *models.UserData, deal *models.CamCamCamDeal) {
+	k.Logger.Info("Not implemented")
+}
+
+// Send watched deal to user (across OZB and AMZ)
 func (k *KramerBot) SendWatchedDeal(user *models.UserData, deal *models.OzBargainDeal) {
 	shortenedTitle := util.ShortenString(deal.Title, 30) + "..."
 	formattedDeal := fmt.Sprintf(`👀<a href="%s" target="_blank">%s</a>🔺%s`, deal.Url, shortenedTitle, deal.Upvotes)

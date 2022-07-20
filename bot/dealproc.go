@@ -44,19 +44,19 @@ func (k *KramerBot) processOzbargainDeals() {
 
 		// Go through all registered users and check deals they are subscribed to
 		for _, user := range userdata {
-			if user.OzbGood && dealType == int(scrapers.GOOD_DEAL) && !DealSent(user, &deal) {
+			if user.OzbGood && dealType == int(scrapers.GOOD_DEAL) && !OzbDealSent(user, &deal) {
 				// User is subscribed to good deals, notify user
-				k.SendGoodDeal(user, &deal)
+				k.SendOzbGoodDeal(user, &deal)
 			}
 
-			if user.OzbSuper && dealType == int(scrapers.SUPER_DEAL) && !DealSent(user, &deal) {
+			if user.OzbSuper && dealType == int(scrapers.SUPER_DEAL) && !OzbDealSent(user, &deal) {
 				// User is subscribed to super deals, notify user
-				k.SendSuperDeal(user, &deal)
+				k.SendOzbSuperDeal(user, &deal)
 			}
 
 			// Check for watched keywords
 			for _, keyword := range user.Keywords {
-				if strings.Contains(strings.ToLower(deal.Title), strings.ToLower(keyword)) && !DealSent(user, &deal) {
+				if strings.Contains(strings.ToLower(deal.Title), strings.ToLower(keyword)) && !OzbDealSent(user, &deal) {
 					// Deal contains keyword, notify user
 					k.SendWatchedDeal(user, &deal)
 
@@ -77,33 +77,33 @@ func (k *KramerBot) processCCCDeals() {
 
 	// Load deals from OzBargain
 	deals := k.CCCScraper.GetData()
-	// userdata := k.UserStore.Users
+	userdata := k.UserStore.Users
 
 	for _, deal := range deals {
 		k.Logger.Debug("Amazon deal found", zap.Any("deal", deal))
 
-		// // Go through all registered users and check deals they are subscribed to
-		// for _, user := range userdata {
-		// 	if user.GoodDeals && dealType == int(scrapers.GOOD_DEAL) && !DealSent(user, &deal) {
-		// 		// User is subscribed to good deals, notify user
-		// 		k.SendGoodDeal(user, &deal)
-		// 	}
+		// Go through all registered users and check deals they are subscribed to
+		for _, user := range userdata {
+			if user.AmzDaily && !AmzDealSent(user, &deal) {
+				// User is subscribed to AMZ daily deals, notify user
+				k.SendAmzDailyDeal(user, &deal)
+			}
 
-		// 	if user.SuperDeals && dealType == int(scrapers.SUPER_DEAL) && !DealSent(user, &deal) {
-		// 		// User is subscribed to super deals, notify user
-		// 		k.SendSuperDeal(user, &deal)
-		// 	}
+			if user.AmzWeekly && !AmzDealSent(user, &deal) {
+				// User is subscribed to AMZ weekly deals, notify user
+				k.SendAmzWeeklyDeal(user, &deal)
+			}
 
-		// 	// Check for watched keywords
-		// 	for _, keyword := range user.Keywords {
-		// 		if strings.Contains(strings.ToLower(deal.Title), strings.ToLower(keyword)) && !DealSent(user, &deal) {
-		// 			// Deal contains keyword, notify user
-		// 			k.SendWatchedDeal(user, &deal)
+			// Check for watched keywords
+			for _, keyword := range user.Keywords {
+				if strings.Contains(strings.ToLower(deal.Title), strings.ToLower(keyword)) && !AmzDealSent(user, &deal) {
+					// Deal contains keyword, notify user
+					// k.SendWatchedDeal(user, &deal)
 
-		// 			// Break out of keyword loop
-		// 			break
-		// 		}
-		// 	}
-		// }
+					// Break out of keyword loop
+					break
+				}
+			}
+		}
 	}
 }

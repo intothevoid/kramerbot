@@ -43,13 +43,13 @@ func (k *KramerBot) BotProc(updates tgbotapi.UpdatesChannel) {
 
 		// User asked to watch super deals i.e. 50+ upvotes within the hour
 		if strings.Contains(strings.ToLower(update.Message.Text), "watchsuper") {
-			k.WatchSuperDeals(update.Message.Chat)
+			k.WatchOzbSuperDeals(update.Message.Chat)
 			continue
 		}
 
 		// User asked to watch good deals i.e. 25+ upvotes within the hour
 		if strings.Contains(strings.ToLower(update.Message.Text), "watchgood") {
-			k.WatchGoodDeals(update.Message.Chat)
+			k.WatchOzbGoodDeals(update.Message.Chat)
 			continue
 		}
 
