@@ -84,7 +84,7 @@ func (udb *UserStoreDB) AddUser(user *models.UserData) error {
 	_, err = udb.DB.Exec(`
 		INSERT INTO users (
 				chat_id, username, ozb_good, ozb_super, keywords, ozb_sent, amz_daily, amz_weekly, amz_sent
-			) VALUES (?, ?, ?, ?, ?, ?)`,
+			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		user.ChatID, user.Username, user.OzbGood, user.OzbSuper, keywords, ozbSent, user.AmzDaily, user.AmzWeekly, amzSent,
 	)
 
@@ -248,7 +248,7 @@ func (udb *UserStoreDB) WriteUserStore(userStore *models.UserStore) error {
 		_, err = udb.DB.Exec(`
 			INSERT INTO users (
 				chat_id, username, ozb_good, ozb_super, keywords, ozb_sent, amz_daily, amz_weekly, amz_sent
-			) VALUES (?, ?, ?, ?, ?, ?)
+			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 			ON CONFLICT(chat_id) DO UPDATE SET
 				username = ?, ozb_good = ?, ozb_super = ?, keywords = ?, ozb_sent = ?, amz_daily =?, amz_weekly =?, amz_sent =?
 			`,
