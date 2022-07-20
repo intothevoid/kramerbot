@@ -137,10 +137,10 @@ func (k *KramerBot) WatchGoodDeals(chat *tgbotapi.Chat) {
 	if _, ok := k.UserStore.Users[chat.ID]; ok {
 		// Key exists, add to watch list
 		userData := k.UserStore.Users[chat.ID]
-		userData.GoodDeals = !userData.GoodDeals // toggle
+		userData.OzbGood = !userData.OzbGood // toggle
 
 		// Send message to user
-		if userData.GoodDeals {
+		if userData.OzbGood {
 			k.SendMessage(chat.ID, "🔥 You have been added to the good deals watchlist.")
 		} else {
 			k.SendMessage(chat.ID, "🔥 You have been removed from the good deals watchlist.")
@@ -165,10 +165,10 @@ func (k *KramerBot) WatchSuperDeals(chat *tgbotapi.Chat) {
 	if _, ok := k.UserStore.Users[chat.ID]; ok {
 		// Key exists, add to watch list
 		userData := k.UserStore.Users[chat.ID]
-		userData.SuperDeals = !userData.SuperDeals // toggle
+		userData.OzbSuper = !userData.OzbSuper // toggle
 
 		// Send message to user
-		if userData.SuperDeals {
+		if userData.OzbSuper {
 			k.SendMessage(chat.ID, "🔥🔥 You have been added to the super deals watchlist.")
 		} else {
 			k.SendMessage(chat.ID, "🔥🔥 You have been removed from the super deals watchlist.")
@@ -199,7 +199,7 @@ func (k *KramerBot) SendGoodDeal(user *models.UserData, deal *models.OzBargainDe
 	}
 
 	// Mark deal as sent
-	user.DealsSent = append(user.DealsSent, deal.Id)
+	user.OzbSent = append(user.OzbSent, deal.Id)
 	k.SaveUserStore()
 }
 
@@ -216,7 +216,7 @@ func (k *KramerBot) SendStatus(chat *tgbotapi.Chat) {
 			return "no"
 		}
 		userDetails := fmt.Sprintf("👨‍🦰👩‍🦰 %s\n\n🔥GoodDeals: %s\n🔥🔥SuperDeals: %s\n👀Watched: %s\n⏰Deals sent: %d", user.GetUsername(),
-			getTruth(user.GetGoodDeals()), getTruth(user.GetSuperDeals()), user.GetKeywords(), len(user.GetDealsSent()))
+			getTruth(user.GetOzbGood()), getTruth(user.GetOzbSuper()), user.GetKeywords(), len(user.GetOzbSent()))
 
 		k.SendHTMLMessage(user.ChatID, userDetails)
 	} else {
@@ -239,7 +239,7 @@ func (k *KramerBot) SendSuperDeal(user *models.UserData, deal *models.OzBargainD
 	}
 
 	// Mark deal as sent
-	user.DealsSent = append(user.DealsSent, deal.Id)
+	user.OzbSent = append(user.OzbSent, deal.Id)
 	k.SaveUserStore()
 }
 
@@ -258,6 +258,6 @@ func (k *KramerBot) SendWatchedDeal(user *models.UserData, deal *models.OzBargai
 	}
 
 	// Mark deal as sent
-	user.DealsSent = append(user.DealsSent, deal.Id)
+	user.OzbSent = append(user.OzbSent, deal.Id)
 	k.SaveUserStore()
 }

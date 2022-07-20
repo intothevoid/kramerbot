@@ -44,12 +44,12 @@ func (k *KramerBot) processOzbargainDeals() {
 
 		// Go through all registered users and check deals they are subscribed to
 		for _, user := range userdata {
-			if user.GoodDeals && dealType == int(scrapers.GOOD_DEAL) && !DealSent(user, &deal) {
+			if user.OzbGood && dealType == int(scrapers.GOOD_DEAL) && !DealSent(user, &deal) {
 				// User is subscribed to good deals, notify user
 				k.SendGoodDeal(user, &deal)
 			}
 
-			if user.SuperDeals && dealType == int(scrapers.SUPER_DEAL) && !DealSent(user, &deal) {
+			if user.OzbSuper && dealType == int(scrapers.SUPER_DEAL) && !DealSent(user, &deal) {
 				// User is subscribed to super deals, notify user
 				k.SendSuperDeal(user, &deal)
 			}

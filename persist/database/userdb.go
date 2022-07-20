@@ -44,10 +44,13 @@ func (udb *UserStoreDB) CreateTable() error {
 		CREATE TABLE IF NOT EXISTS users (
 			chat_id INTEGER PRIMARY KEY,
 			username TEXT,
-			good_deals INTEGER,
-			super_deals INTEGER,
+			ozb_good INTEGER,
+			ozb_super INTEGER,
 			keywords BLOB,
-			deals_sent BLOB
+			ozb_sent BLOB,
+			amz_daily INTEGER,
+			amz_weekly INTEGER,
+			amz_sent BLOB
 			);
 		`)
 
@@ -68,16 +71,21 @@ func (udb *UserStoreDB) AddUser(user *models.UserData) error {
 		udb.Logger.Error("Error marshalling user keywords", zap.Error(err))
 	}
 
-	dealsSent, err := json.Marshal(user.DealsSent)
+	ozbSent, err := json.Marshal(user.OzbSent)
 	if err != nil {
-		udb.Logger.Error("Error marshalling user deals sent", zap.Error(err))
+		udb.Logger.Error("Error marshalling OZB deals sent", zap.Error(err))
+	}
+
+	amzSent, err := json.Marshal(user.AmzSent)
+	if err != nil {
+		udb.Logger.Error("Error marshalling AMZ deals sent", zap.Error(err))
 	}
 
 	_, err = udb.DB.Exec(`
 		INSERT INTO users (
-				chat_id, username, good_deals, super_deals, keywords, deals_sent
+				chat_id, username, ozb_good, ozb_super, keywords, ozb_sent, amz_daily, amz_weekly, amz_sent
 			) VALUES (?, ?, ?, ?, ?, ?)`,
-		user.ChatID, user.Username, user.GoodDeals, user.SuperDeals, keywords, dealsSent,
+		user.ChatID, user.Username, user.OzbGood, user.OzbSuper, keywords, ozbSent, user.AmzDaily, user.AmzWeekly, amzSent,
 	)
 
 	if err != nil {
@@ -98,16 +106,21 @@ func (udb *UserStoreDB) UpdateUser(user *models.UserData) error {
 		udb.Logger.Error("Error marshalling user keywords", zap.Error(err))
 	}
 
-	dealsSent, err := json.Marshal(user.DealsSent)
+	ozbSent, err := json.Marshal(user.OzbSent)
 	if err != nil {
-		udb.Logger.Error("Error marshalling user deals sent", zap.Error(err))
+		udb.Logger.Error("Error marshalling OZB deals sent", zap.Error(err))
+	}
+
+	amzSent, err := json.Marshal(user.AmzSent)
+	if err != nil {
+		udb.Logger.Error("Error marshalling AMZ deals sent", zap.Error(err))
 	}
 
 	_, err = udb.DB.Exec(`
 		UPDATE users SET
-			username = ?, good_deals = ?, super_deals = ?, keywords = ?, deals_sent = ?
+			username = ?, ozb_good = ?, ozb_super = ?, keywords = ?, ozb_sent = ?, amz_daily =?, amz_weekly =?, amz_sent =?
 		WHERE chat_id = ?`,
-		user.Username, user.GoodDeals, user.SuperDeals, keywords, dealsSent, user.ChatID,
+		user.Username, user.OzbGood, user.OzbSuper, keywords, ozbSent, user.AmzDaily, user.AmzWeekly, amzSent, user.ChatID,
 	)
 
 	if err != nil {
@@ -134,10 +147,11 @@ func (udb *UserStoreDB) DeleteUser(user *models.UserData) error {
 func (udb *UserStoreDB) GetUser(chatID int64) (*models.UserData, error) {
 	user := &models.UserData{}
 	keywords := []byte{}
-	dealsSent := []byte{}
+	ozbSent := []byte{}
+	amzSent := []byte{}
 
 	err := udb.DB.QueryRow(`SELECT * FROM users WHERE chat_id = ?`, chatID).Scan(
-		&user.ChatID, &user.Username, &user.GoodDeals, &user.SuperDeals, &keywords, &dealsSent,
+		&user.ChatID, &user.Username, &user.OzbGood, &user.OzbSuper, &keywords, &ozbSent, &user.AmzDaily, &user.AmzWeekly, &amzSent,
 	)
 	if err != nil {
 		udb.Logger.Error("Error getting user", zap.Error(err))
@@ -149,9 +163,14 @@ func (udb *UserStoreDB) GetUser(chatID int64) (*models.UserData, error) {
 		udb.Logger.Error("Error unmarshalling user keywords", zap.Error(err))
 	}
 
-	// Bytes to string array - dealsSent
-	if err := json.Unmarshal([]byte(dealsSent), &user.DealsSent); err != nil {
-		udb.Logger.Error("Error unmarshalling user deals sent", zap.Error(err))
+	// Bytes to string array - OZB deals sent
+	if err := json.Unmarshal([]byte(ozbSent), &user.OzbSent); err != nil {
+		udb.Logger.Error("Error unmarshalling OZB deals sent", zap.Error(err))
+	}
+
+	// Bytes to string array - AMZ deals sent
+	if err := json.Unmarshal([]byte(amzSent), &user.AmzSent); err != nil {
+		udb.Logger.Error("Error unmarshalling AMZ deals sent", zap.Error(err))
 	}
 
 	return user, nil
@@ -172,10 +191,11 @@ func (udb *UserStoreDB) ReadUserStore() (*models.UserStore, error) {
 	for rows.Next() {
 		user := &models.UserData{}
 		keywords := []byte{}
-		dealsSent := []byte{}
+		ozbSent := []byte{}
+		amzSent := []byte{}
 
 		err = rows.Scan(
-			&user.ChatID, &user.Username, &user.GoodDeals, &user.SuperDeals, &keywords, &dealsSent,
+			&user.ChatID, &user.Username, &user.OzbGood, &user.OzbSuper, &keywords, &ozbSent, &user.AmzDaily, &user.AmzWeekly, &amzSent,
 		)
 		if err != nil {
 			udb.Logger.Error("Error getting user", zap.Error(err))
@@ -187,9 +207,14 @@ func (udb *UserStoreDB) ReadUserStore() (*models.UserStore, error) {
 			udb.Logger.Error("Error unmarshalling user keywords", zap.Error(err))
 		}
 
-		// Bytes to string array - dealsSent
-		if err := json.Unmarshal([]byte(dealsSent), &user.DealsSent); err != nil {
-			udb.Logger.Error("Error unmarshalling user deals sent", zap.Error(err))
+		// Bytes to string array - OZB deals sent
+		if err := json.Unmarshal([]byte(ozbSent), &user.OzbSent); err != nil {
+			udb.Logger.Error("Error unmarshalling OZB deals sent", zap.Error(err))
+		}
+
+		// Bytes to string array - AMZ deals sent
+		if err := json.Unmarshal([]byte(amzSent), &user.AmzSent); err != nil {
+			udb.Logger.Error("Error unmarshalling AMZ deals sent", zap.Error(err))
 		}
 
 		userStore.Users[user.ChatID] = user
@@ -210,20 +235,25 @@ func (udb *UserStoreDB) WriteUserStore(userStore *models.UserStore) error {
 			udb.Logger.Error("Error marshalling user keywords", zap.Error(err))
 		}
 
-		dealsSent, err := json.Marshal(user.DealsSent)
+		ozbSent, err := json.Marshal(user.OzbSent)
 		if err != nil {
-			udb.Logger.Error("Error marshalling user deals sent", zap.Error(err))
+			udb.Logger.Error("Error marshalling OZB deals sent", zap.Error(err))
+		}
+
+		amzSent, err := json.Marshal(user.AmzSent)
+		if err != nil {
+			udb.Logger.Error("Error marshalling AMZ deals sent", zap.Error(err))
 		}
 
 		_, err = udb.DB.Exec(`
 			INSERT INTO users (
-				chat_id, username, good_deals, super_deals, keywords, deals_sent
+				chat_id, username, ozb_good, ozb_super, keywords, ozb_sent, amz_daily, amz_weekly, amz_sent
 			) VALUES (?, ?, ?, ?, ?, ?)
 			ON CONFLICT(chat_id) DO UPDATE SET
-				username = ?, good_deals = ?, super_deals = ?, keywords = ?, deals_sent = ?
+				username = ?, ozb_good = ?, ozb_super = ?, keywords = ?, ozb_sent = ?, amz_daily =?, amz_weekly =?, amz_sent =?
 			`,
-			user.ChatID, user.Username, user.GoodDeals, user.SuperDeals, keywords, dealsSent,
-			user.Username, user.GoodDeals, user.SuperDeals, keywords, dealsSent,
+			user.ChatID, user.Username, user.OzbGood, user.OzbSuper, keywords, ozbSent, user.AmzDaily, user.AmzWeekly, amzSent,
+			user.Username, user.OzbGood, user.OzbSuper, keywords, ozbSent, user.AmzDaily, user.AmzWeekly, amzSent,
 		)
 
 		if err != nil {

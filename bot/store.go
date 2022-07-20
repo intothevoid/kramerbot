@@ -12,8 +12,8 @@ func (k *KramerBot) CreateUserData(chatID int64, username string, keyword string
 	userData.ChatID = chatID
 	userData.Username = username
 	userData.Keywords = append(userData.Keywords, keyword)
-	userData.GoodDeals = goodDeals
-	userData.SuperDeals = superDeals
+	userData.OzbGood = goodDeals
+	userData.OzbSuper = superDeals
 
 	return &userData
 }
@@ -37,7 +37,7 @@ func (k *KramerBot) SaveUserStore() {
 // Check if the deal has already been sent to the user
 func DealSent(user *models.UserData, deal *models.OzBargainDeal) bool {
 	// Check if deal.Id is in user.DealsSent
-	for _, dealId := range user.DealsSent {
+	for _, dealId := range user.OzbSent {
 		if dealId == deal.Id {
 			return true
 		}
