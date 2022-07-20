@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"testing"
 
-	"github.com/intothevoid/kramerbot/persist"
+	persist "github.com/intothevoid/kramerbot/persist/database"
 	"go.uber.org/zap"
 )
 

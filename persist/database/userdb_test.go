@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/intothevoid/kramerbot/models"
-	"github.com/intothevoid/kramerbot/persist"
+	persist "github.com/intothevoid/kramerbot/persist/database"
 	"github.com/mattn/go-sqlite3"
 	"go.uber.org/zap"
 )

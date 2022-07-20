@@ -5,7 +5,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/intothevoid/kramerbot/persist"
+	persist "github.com/intothevoid/kramerbot/persist/database"
 	"github.com/intothevoid/kramerbot/scrapers"
 	"github.com/spf13/viper"
 )

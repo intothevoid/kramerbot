@@ -13,7 +13,7 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/intothevoid/kramerbot/api"
 	"github.com/intothevoid/kramerbot/models"
-	"github.com/intothevoid/kramerbot/persist"
+	persist "github.com/intothevoid/kramerbot/persist/database"
 	"github.com/intothevoid/kramerbot/pipup"
 	"github.com/intothevoid/kramerbot/scrapers"
 	"github.com/spf13/viper"
