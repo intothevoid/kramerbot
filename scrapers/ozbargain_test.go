@@ -70,9 +70,9 @@ func TestIsSuperDeal(t *testing.T) {
 		DealAge:  "0h59m00s",
 	}
 
-	if s.GetDealType(deal1) == int(scrapers.SUPER_DEAL) {
+	if s.GetDealType(deal1) == int(scrapers.OZB_SUPER) {
 		t.Log("Deal1 is a super deal")
-	} else if s.GetDealType(deal1) == int(scrapers.GOOD_DEAL) {
+	} else if s.GetDealType(deal1) == int(scrapers.OZB_GOOD) {
 		t.Log("Deal1 is a good deal")
 	} else {
 		t.Log("Deal1 is a regular deal")
@@ -87,9 +87,9 @@ func TestIsSuperDeal(t *testing.T) {
 		DealAge:  "0h59m00s",
 	}
 
-	if s.GetDealType(deal2) == int(scrapers.SUPER_DEAL) {
+	if s.GetDealType(deal2) == int(scrapers.OZB_SUPER) {
 		t.Log("Deal2 is a super deal")
-	} else if s.GetDealType(deal2) == int(scrapers.GOOD_DEAL) {
+	} else if s.GetDealType(deal2) == int(scrapers.OZB_GOOD) {
 		t.Log("Deal2 is a good deal")
 	} else {
 		t.Log("Deal2 is a regular deal")
@@ -104,9 +104,9 @@ func TestIsSuperDeal(t *testing.T) {
 		DealAge:  "0h25m00s",
 	}
 
-	if s.GetDealType(deal3) == int(scrapers.SUPER_DEAL) {
+	if s.GetDealType(deal3) == int(scrapers.OZB_SUPER) {
 		t.Log("Deal3 is a super deal")
-	} else if s.GetDealType(deal2) == int(scrapers.GOOD_DEAL) {
+	} else if s.GetDealType(deal2) == int(scrapers.OZB_GOOD) {
 		t.Log("Deal3 is a good deal")
 	} else {
 		t.Log("Deal3 is a regular deal")

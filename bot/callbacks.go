@@ -10,6 +10,7 @@ import (
 	"github.com/intothevoid/kramerbot/models"
 	"github.com/intothevoid/kramerbot/scrapers"
 	"github.com/intothevoid/kramerbot/util"
+	"go.uber.org/zap"
 )
 
 // Function to send latest deals i.e. NUM_DEALS_TO_SEND
@@ -40,8 +41,8 @@ func (k *KramerBot) Help(chat *tgbotapi.Chat) {
 		"📈 /latest - View the 5 latest deals on OzBargain\n\n"+
 		"🔥 /watchgood - Ozbargain: Watch out for deals with 25+ upvotes within the hour\n\n"+
 		"🔥🔥 /watchsuper - Ozbargain: Watch out for deals with 100+ upvotes within 24 hours\n\n"+
-		"🔥 /amazondaily - Amazon: Watch out for top daily Amazon deals\n\n"+
-		"🔥🔥 /amazonweekly - Amazon: Watch out for top weekly Amazon deals\n\n"+
+		"🅰️ /amazondaily - Amazon: Watch out for top daily Amazon deals\n\n"+
+		"🅰️ /amazonweekly - Amazon: Watch out for top weekly Amazon deals\n\n"+
 		"👀 /watchkeyword - Watch deals with specified keywords across Ozbargain and Amazon\n\n"+
 		"⛔ /clearkeyword - Clear deals with specified keyword\n\n"+
 		"⛔ /clearallkeywords - Clear deals with all watched keywords\n\n"+
@@ -135,51 +136,94 @@ func (k *KramerBot) ProcessClearAllKeywords(chat *tgbotapi.Chat) {
 
 // Add watch to OZB good deals by chat id
 func (k *KramerBot) WatchOzbGoodDeals(chat *tgbotapi.Chat) {
-	// Check if key exists in user store
-	if _, ok := k.UserStore.Users[chat.ID]; ok {
-		// Key exists, add to watch list
-		userData := k.UserStore.Users[chat.ID]
-		userData.OzbGood = !userData.OzbGood // toggle
-
-		// Send message to user
-		if userData.OzbGood {
-			k.SendMessage(chat.ID, "🔥 You have been added to the good deals watchlist.")
-		} else {
-			k.SendMessage(chat.ID, "🔥 You have been removed from the good deals watchlist.")
-		}
-	} else {
-		// Key does not exist, create new user
-		userData := k.CreateUserData(chat.ID, chat.FirstName, "", true, false, false, false)
-		k.UserStore.Users[chat.ID] = userData
-
-		// Send message to user
-		k.SendMessage(chat.ID, "🔥 You have been added to the good deals watchlist.")
-	}
-
-	// Save user store
-	k.SaveUserStore()
+	k.watchDeal(chat, scrapers.OZB_GOOD)
 }
 
 // Add watch to OZB super deals by chat id
 func (k *KramerBot) WatchOzbSuperDeals(chat *tgbotapi.Chat) {
+	k.watchDeal(chat, scrapers.OZB_SUPER)
+}
 
+// Add watch to AMZ daily deals by chat id
+func (k *KramerBot) WatchAmzDailyDeals(chat *tgbotapi.Chat) {
+	k.watchDeal(chat, scrapers.AMZ_DAILY)
+}
+
+// Add watch to AMZ weekly deals by chat id
+func (k *KramerBot) WatchAmzWeeklyDeals(chat *tgbotapi.Chat) {
+	k.watchDeal(chat, scrapers.AMZ_WEEKLY)
+}
+
+// Helper function to watch deal
+func (k *KramerBot) watchDeal(chat *tgbotapi.Chat, dealType scrapers.DealType) {
 	// Check if key exists in user store
 	if _, ok := k.UserStore.Users[chat.ID]; ok {
 		// Key exists, add to watch list
 		userData := k.UserStore.Users[chat.ID]
-		userData.OzbSuper = !userData.OzbSuper // toggle
+		var message string
+		var added bool
+
+		switch dealType {
+		case scrapers.OZB_GOOD:
+			userData.OzbGood = !userData.OzbGood // toggle
+			added = userData.OzbGood
+			message = " 🔥 ozbargain good deals list."
+		case scrapers.OZB_SUPER:
+			userData.OzbSuper = !userData.OzbSuper
+			added = userData.OzbSuper
+			message = " 🔥🔥 ozbargain super deals"
+		case scrapers.AMZ_DAILY:
+			userData.AmzDaily = !userData.AmzDaily
+			added = userData.AmzDaily
+			message = " 🅰️ amazon daily deals list."
+		case scrapers.AMZ_WEEKLY:
+			userData.AmzWeekly = !userData.AmzWeekly
+			added = userData.AmzWeekly
+			message = " 🅰️ amazon weekly deals list."
+		default:
+			k.Logger.Error("Invalid deal type passed in", zap.Any("dealtype", dealType))
+			k.SendMessage(chat.ID, "There was an error adding / deleting you from the list.")
+			return
+		}
 
 		// Send message to user
-		if userData.OzbSuper {
-			k.SendMessage(chat.ID, "🔥🔥 You have been added to the super deals watchlist.")
+		if added {
+			k.SendMessage(chat.ID, "You have been added to the "+message)
 		} else {
-			k.SendMessage(chat.ID, "🔥🔥 You have been removed from the super deals watchlist.")
+			k.SendMessage(chat.ID, "You have been removed from the"+message)
 		}
 	} else {
+		var message string
+		var ozbGood bool
+		var ozbSuper bool
+		var amzDaily bool
+		var amzWeekly bool
+
+		switch dealType {
+		case scrapers.OZB_GOOD:
+			ozbGood = true
+			message = " 🔥 ozbargain good deals list."
+		case scrapers.OZB_SUPER:
+			ozbSuper = true
+			message = " 🔥🔥 ozbargain super deals"
+		case scrapers.AMZ_DAILY:
+			amzDaily = true
+			message = " 🅰️ amazon daily deals list."
+		case scrapers.AMZ_WEEKLY:
+			amzWeekly = true
+			message = " 🅰️ amazon weekly deals list."
+		default:
+			k.Logger.Error("Invalid deal type passed in", zap.Any("dealtype", dealType))
+			k.SendMessage(chat.ID, "There was an error adding / deleting you from the list.")
+			return
+		}
+
 		// Key does not exist, create new user
-		userData := k.CreateUserData(chat.ID, chat.FirstName, "", false, true, false, false)
+		userData := k.CreateUserData(chat.ID, chat.FirstName, "", ozbGood, ozbSuper, amzDaily, amzWeekly)
 		k.UserStore.Users[chat.ID] = userData
-		k.SendMessage(chat.ID, "🔥🔥 You have been added to the super deals watchlist.")
+
+		// Send message to user
+		k.SendMessage(chat.ID, "You have been added to the "+message)
 	}
 
 	// Save user store

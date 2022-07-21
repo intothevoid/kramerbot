@@ -39,17 +39,19 @@ func (k *KramerBot) processOzbargainDeals() {
 	userdata := k.UserStore.Users
 
 	for _, deal := range deals {
+		k.Logger.Debug("Ozbargain deal found", zap.Any("deal", deal))
+
 		// Check deal type
 		dealType := k.OzbScraper.GetDealType(deal)
 
 		// Go through all registered users and check deals they are subscribed to
 		for _, user := range userdata {
-			if user.OzbGood && dealType == int(scrapers.GOOD_DEAL) && !OzbDealSent(user, &deal) {
+			if user.OzbGood && dealType == int(scrapers.OZB_GOOD) && !OzbDealSent(user, &deal) {
 				// User is subscribed to good deals, notify user
 				k.SendOzbGoodDeal(user, &deal)
 			}
 
-			if user.OzbSuper && dealType == int(scrapers.SUPER_DEAL) && !OzbDealSent(user, &deal) {
+			if user.OzbSuper && dealType == int(scrapers.OZB_SUPER) && !OzbDealSent(user, &deal) {
 				// User is subscribed to super deals, notify user
 				k.SendOzbSuperDeal(user, &deal)
 			}

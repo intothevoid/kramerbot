@@ -47,9 +47,21 @@ func (k *KramerBot) BotProc(updates tgbotapi.UpdatesChannel) {
 			continue
 		}
 
-		// User asked to watch good deals i.e. 25+ upvotes within the hour
+		// User asked to watch good OZB deals i.e. 25+ upvotes within the hour
 		if strings.Contains(strings.ToLower(update.Message.Text), "watchgood") {
 			k.WatchOzbGoodDeals(update.Message.Chat)
+			continue
+		}
+
+		// User asked to watch daily AMZ deals i.e. 25+ upvotes within the hour
+		if strings.Contains(strings.ToLower(update.Message.Text), "amzdaily") {
+			k.WatchAmzDailyDeals(update.Message.Chat)
+			continue
+		}
+
+		// User asked to watch weekly AMZ deals i.e. 25+ upvotes within the hour
+		if strings.Contains(strings.ToLower(update.Message.Text), "amzweekly") {
+			k.WatchAmzWeeklyDeals(update.Message.Chat)
 			continue
 		}
 

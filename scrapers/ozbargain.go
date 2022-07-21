@@ -72,7 +72,7 @@ func (s *OzBargainScraper) Scrape() error {
 			PostedOn: postedOn,
 			Upvotes:  upVotes,
 			DealAge:  s.GetDealAge(postedOn).String(),
-			DealType: int(REGULAR_DEAL),
+			DealType: int(OZB_REG),
 		}
 		s.Logger.Debug("Found deal", zap.String("title", deal.Title), zap.String("url", deal.Url), zap.String("time", deal.PostedOn))
 
@@ -134,16 +134,16 @@ func (s *OzBargainScraper) GetDealType(deal models.OzBargainDeal) int {
 
 	// 25+ upvotes within an hour
 	if duration.Hours() < 1.0 && upvotesInt >= 25 {
-		return int(GOOD_DEAL)
+		return int(OZB_GOOD)
 	}
 
 	// 100+ upvotes within 24 hours
 	if duration.Hours() < 24.0 && upvotesInt >= 100 {
-		return int(SUPER_DEAL)
+		return int(OZB_SUPER)
 	}
 
 	// regular deal
-	return int(REGULAR_DEAL)
+	return int(OZB_REG)
 }
 
 // Filter list of deals by keywords
