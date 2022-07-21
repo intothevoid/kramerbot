@@ -289,21 +289,32 @@ func (k *KramerBot) SendOzbSuperDeal(user *models.UserData, deal *models.OzBarga
 	k.SaveUserStore()
 }
 
-func (k *KramerBot) SendAmzDailyDeal(user *models.UserData, deal *models.CamCamCamDeal) {
-	k.Logger.Info("Not implemented")
+func (k *KramerBot) SendAmzDeal(user *models.UserData, deal *models.CamCamCamDeal) {
+	dealType := deal.DealType
+	shortenedTitle := util.ShortenString(deal.Title, 30) + "..."
+	formattedDeal := fmt.Sprintf(`🅰️<a href="%s" target="_blank">%s</a>`, deal.Url, shortenedTitle)
+	textDeal := fmt.Sprintf(`🅰️ %s`, shortenedTitle)
+
+	k.Logger.Debug(fmt.Sprintf("Sending Amazon %s deal %s to user %s", dealType, shortenedTitle, user.Username))
+	k.SendHTMLMessage(user.ChatID, formattedDeal)
+
+	// Send android notification if username is set
+	if strings.EqualFold(user.Username, k.Pipup.Username) {
+		k.Pipup.SendMediaMessage(textDeal, "Kramerbot")
+	}
+
+	// Mark deal as sent
+	user.AmzSent = append(user.AmzSent, deal.Id)
+	k.SaveUserStore()
 }
 
-func (k *KramerBot) SendAmzWeeklyDeal(user *models.UserData, deal *models.CamCamCamDeal) {
-	k.Logger.Info("Not implemented")
-}
-
-// Send watched deal to user (across OZB and AMZ)
-func (k *KramerBot) SendWatchedDeal(user *models.UserData, deal *models.OzBargainDeal) {
+// Send OZB watched deal to user
+func (k *KramerBot) SendOzbWatchedDeal(user *models.UserData, deal *models.OzBargainDeal) {
 	shortenedTitle := util.ShortenString(deal.Title, 30) + "..."
 	formattedDeal := fmt.Sprintf(`👀<a href="%s" target="_blank">%s</a>🔺%s`, deal.Url, shortenedTitle, deal.Upvotes)
 	textDeal := fmt.Sprintf(`👀 %s 🔺%s`, shortenedTitle, deal.Upvotes)
 
-	k.Logger.Debug(fmt.Sprintf("Sending watched deal %s to user %s", shortenedTitle, user.Username))
+	k.Logger.Debug(fmt.Sprintf("Sending watched Ozbargain deal %s to user %s", shortenedTitle, user.Username))
 	k.SendHTMLMessage(user.ChatID, formattedDeal)
 
 	// Send android notification if username is set
@@ -313,5 +324,24 @@ func (k *KramerBot) SendWatchedDeal(user *models.UserData, deal *models.OzBargai
 
 	// Mark deal as sent
 	user.OzbSent = append(user.OzbSent, deal.Id)
+	k.SaveUserStore()
+}
+
+// Send AMZ watched deal to user
+func (k *KramerBot) SendAmzWatchedDeal(user *models.UserData, deal *models.CamCamCamDeal) {
+	shortenedTitle := util.ShortenString(deal.Title, 30) + "..."
+	formattedDeal := fmt.Sprintf(`👀<a href="%s" target="_blank">%s</a>`, deal.Url, shortenedTitle)
+	textDeal := fmt.Sprintf(`👀 %s`, shortenedTitle)
+
+	k.Logger.Debug(fmt.Sprintf("Sending watched Amazon deal %s to user %s", shortenedTitle, user.Username))
+	k.SendHTMLMessage(user.ChatID, formattedDeal)
+
+	// Send android notification if username is set
+	if strings.EqualFold(user.Username, k.Pipup.Username) {
+		k.Pipup.SendMediaMessage(textDeal, "Kramerbot")
+	}
+
+	// Mark deal as sent
+	user.AmzSent = append(user.AmzSent, deal.Id)
 	k.SaveUserStore()
 }

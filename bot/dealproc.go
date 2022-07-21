@@ -15,16 +15,23 @@ func (k *KramerBot) StartProcessing() {
 	k.LoadUserStore()
 
 	// Begin timed processing and scraping
-	// tick := time.NewTicker(time.Second * 60)
-	tick := time.NewTicker(time.Minute * time.Duration(k.OzbScraper.ScrapeInterval))
-	for range tick.C {
+	go func() {
+		// ozbTick := time.NewTicker(time.Second * 60)
+		ozbTick := time.NewTicker(time.Minute * time.Duration(k.OzbScraper.ScrapeInterval))
+		for range ozbTick.C {
+			// Process Ozbargain deals
+			k.processOzbargainDeals()
+		}
+	}()
 
-		// Process Ozbargain deals
-		k.processOzbargainDeals()
-
-		// Process Camel camel camel (Amazon) deals
-		k.processCCCDeals()
-	}
+	go func() {
+		// amzTick := time.NewTicker(time.Second * 60)
+		amzTick := time.NewTicker(time.Minute * time.Duration(k.CCCScraper.ScrapeInterval))
+		for range amzTick.C {
+			// Process Camel camel camel (Amazon) deals
+			k.processCCCDeals()
+		}
+	}()
 }
 
 func (k *KramerBot) processOzbargainDeals() {
@@ -60,7 +67,7 @@ func (k *KramerBot) processOzbargainDeals() {
 			for _, keyword := range user.Keywords {
 				if strings.Contains(strings.ToLower(deal.Title), strings.ToLower(keyword)) && !OzbDealSent(user, &deal) {
 					// Deal contains keyword, notify user
-					k.SendWatchedDeal(user, &deal)
+					k.SendOzbWatchedDeal(user, &deal)
 
 					// Break out of keyword loop
 					break
@@ -88,19 +95,19 @@ func (k *KramerBot) processCCCDeals() {
 		for _, user := range userdata {
 			if user.AmzDaily && !AmzDealSent(user, &deal) {
 				// User is subscribed to AMZ daily deals, notify user
-				k.SendAmzDailyDeal(user, &deal)
+				k.SendAmzDeal(user, &deal)
 			}
 
 			if user.AmzWeekly && !AmzDealSent(user, &deal) {
 				// User is subscribed to AMZ weekly deals, notify user
-				k.SendAmzWeeklyDeal(user, &deal)
+				k.SendAmzDeal(user, &deal)
 			}
 
 			// Check for watched keywords
 			for _, keyword := range user.Keywords {
 				if strings.Contains(strings.ToLower(deal.Title), strings.ToLower(keyword)) && !AmzDealSent(user, &deal) {
 					// Deal contains keyword, notify user
-					// k.SendWatchedDeal(user, &deal)
+					k.SendAmzWatchedDeal(user, &deal)
 
 					// Break out of keyword loop
 					break
