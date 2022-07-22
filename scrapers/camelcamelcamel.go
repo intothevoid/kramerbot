@@ -67,7 +67,6 @@ func (s *CamCamCamScraper) Scrape() error {
 				Image:     imgurl,
 				DealType:  int(dtype),
 			}
-			s.Logger.Debug("Found deal", zap.String("title", amzDeal.Title), zap.String("url", amzDeal.Url), zap.String("time", amzDeal.Published))
 
 			// create item list
 			s.Deals = append(s.Deals, amzDeal)
@@ -91,10 +90,10 @@ func (*CamCamCamScraper) getImageUrlFromDeal(deal *gofeed.Item) string {
 }
 
 func (*CamCamCamScraper) getDealTypeFromURL(currUrl string) DealType {
-	if strings.Contains("daily", currUrl) {
+	if strings.Contains(currUrl, "daily") {
 		return AMZ_DAILY
 	}
-	if strings.Contains("weekly", currUrl) {
+	if strings.Contains(currUrl, "weekly") {
 		return AMZ_WEEKLY
 	}
 	return UNKNOWN

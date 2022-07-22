@@ -11,9 +11,6 @@ import (
 // Process deals returned by the scraper, check deal type and notify user
 // if they are subscribed to a particular deal type
 func (k *KramerBot) StartProcessing() {
-	// Load user store i.e. user data indexed by chat id
-	k.LoadUserStore()
-
 	// Begin timed processing and scraping
 	go func() {
 		// ozbTick := time.NewTicker(time.Second * 60)
@@ -46,7 +43,7 @@ func (k *KramerBot) processOzbargainDeals() {
 	userdata := k.UserStore.Users
 
 	for _, deal := range deals {
-		k.Logger.Debug("Ozbargain deal found", zap.Any("deal", deal))
+		k.Logger.Debug("Ozbargain deal", zap.Any("deal", deal))
 
 		// Check deal type
 		dealType := k.OzbScraper.GetDealType(deal)
@@ -89,22 +86,28 @@ func (k *KramerBot) processCCCDeals() {
 	userdata := k.UserStore.Users
 
 	for _, deal := range deals {
-		k.Logger.Debug("Amazon deal found", zap.Any("deal", deal))
+		k.Logger.Debug("Amazon deal", zap.Any("deal", deal))
 
 		// Go through all registered users and check deals they are subscribed to
 		for _, user := range userdata {
-			if user.AmzDaily && !AmzDealSent(user, &deal) {
+			if user.AmzDaily && deal.DealType == int(scrapers.AMZ_DAILY) && !AmzDealSent(user, &deal) {
 				// User is subscribed to AMZ daily deals, notify user
 				k.SendAmzDeal(user, &deal)
 			}
 
-			if user.AmzWeekly && !AmzDealSent(user, &deal) {
+			if user.AmzWeekly && deal.DealType == int(scrapers.AMZ_WEEKLY) && !AmzDealSent(user, &deal) {
 				// User is subscribed to AMZ weekly deals, notify user
 				k.SendAmzDeal(user, &deal)
 			}
 
 			// Check for watched keywords
 			for _, keyword := range user.Keywords {
+				// If keyword is empty or only contains spaces
+				keyword = strings.TrimSpace(keyword)
+				if len(keyword) == 0 {
+					continue
+				}
+
 				if strings.Contains(strings.ToLower(deal.Title), strings.ToLower(keyword)) && !AmzDealSent(user, &deal) {
 					// Deal contains keyword, notify user
 					k.SendAmzWatchedDeal(user, &deal)
