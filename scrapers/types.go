@@ -4,7 +4,8 @@ package scrapers
 type DealType int
 
 const (
-	OZB_REG DealType = iota
+	UNKNOWN DealType = iota
+	OZB_REG
 	OZB_SUPER
 	OZB_GOOD
 	AMZ_DAILY

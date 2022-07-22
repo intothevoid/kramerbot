@@ -7,6 +7,7 @@ import (
 
 	"github.com/intothevoid/kramerbot/models"
 	"github.com/intothevoid/kramerbot/util"
+	"github.com/mmcdole/gofeed"
 	"go.uber.org/zap"
 )
 
@@ -37,6 +38,9 @@ func (s *CamCamCamScraper) Scrape() error {
 	}
 
 	for _, currUrl := range s.BaseUrl {
+		// Get deal type from URL
+		dtype := s.getDealTypeFromURL(currUrl)
+
 		// Scrape RSS feed
 		parser := util.RssParser{
 			Url:    currUrl,
@@ -51,19 +55,22 @@ func (s *CamCamCamScraper) Scrape() error {
 		// Loop through deals
 		for _, deal := range feed.Items {
 
-			// populate the deal
-			deal := models.CamCamCamDeal{
+			// Handle missing image url
+			imgurl := s.getImageUrlFromDeal(deal)
+
+			// populate the amzDeal
+			amzDeal := models.CamCamCamDeal{
 				Id:        deal.GUID,
 				Title:     deal.Title,
 				Url:       deal.Link,
 				Published: deal.Published,
-				Image:     deal.Image.URL,
-				DealType:  feed.Title,
+				Image:     imgurl,
+				DealType:  int(dtype),
 			}
-			s.Logger.Debug("Found deal", zap.String("title", deal.Title), zap.String("url", deal.Url), zap.String("time", deal.Published))
+			s.Logger.Debug("Found deal", zap.String("title", amzDeal.Title), zap.String("url", amzDeal.Url), zap.String("time", amzDeal.Published))
 
 			// create item list
-			s.Deals = append(s.Deals, deal)
+			s.Deals = append(s.Deals, amzDeal)
 		}
 	}
 
@@ -73,6 +80,24 @@ func (s *CamCamCamScraper) Scrape() error {
 	}
 
 	return nil
+}
+
+func (*CamCamCamScraper) getImageUrlFromDeal(deal *gofeed.Item) string {
+	if deal.Image == nil {
+		return ""
+	} else {
+		return string(deal.Image.URL)
+	}
+}
+
+func (*CamCamCamScraper) getDealTypeFromURL(currUrl string) DealType {
+	if strings.Contains("daily", currUrl) {
+		return AMZ_DAILY
+	}
+	if strings.Contains("weekly", currUrl) {
+		return AMZ_WEEKLY
+	}
+	return UNKNOWN
 }
 
 // Filter list of deals by keywords

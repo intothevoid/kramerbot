@@ -18,7 +18,7 @@ type CamCamCamDeal struct {
 	Url       string `json:"url"`
 	Published string `json:"time"`
 	Image     string `json:"image"`
-	DealType  string `json:"dealtype"`
+	DealType  int    `json:"dealtype"`
 }
 
 // Setters and getters for OzBargainDeal

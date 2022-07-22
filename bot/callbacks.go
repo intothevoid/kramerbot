@@ -290,7 +290,16 @@ func (k *KramerBot) SendOzbSuperDeal(user *models.UserData, deal *models.OzBarga
 }
 
 func (k *KramerBot) SendAmzDeal(user *models.UserData, deal *models.CamCamCamDeal) {
-	dealType := deal.DealType
+	dealType := ""
+
+	// Get deal type
+	if deal.DealType == int(scrapers.AMZ_DAILY) {
+		dealType = "top daily deal"
+	}
+	if deal.DealType == int(scrapers.AMZ_WEEKLY) {
+		dealType = "top weekly deal"
+	}
+
 	shortenedTitle := util.ShortenString(deal.Title, 30) + "..."
 	formattedDeal := fmt.Sprintf(`🅰️<a href="%s" target="_blank">%s</a>`, deal.Url, shortenedTitle)
 	textDeal := fmt.Sprintf(`🅰️ %s`, shortenedTitle)
