@@ -20,6 +20,8 @@ scrapers:
     urls:
       - "https://au.camelcamelcamel.com/top_drops/feed?t=daily&"
       - "https://au.camelcamelcamel.com/top_drops/feed?t=weekly&"
+    # Set target price drop percentage. Only deals that meet target sent to user
+    target_price_drop: 20
 
 # notifications for android tv
 pipup:
