@@ -85,17 +85,23 @@ func (k *KramerBot) processCCCDeals() {
 	deals := k.CCCScraper.GetData()
 	userdata := k.UserStore.Users
 
+	// Get price drop target from configuration
+	priceDropTarget := k.Config.GetInt("scrapers.amazon.target_price_drop")
+
 	for _, deal := range deals {
 		k.Logger.Debug("Amazon deal", zap.Any("deal", deal))
 
+		// Check if percentage drop meets target
+		priceDropTargetMet := k.CCCScraper.IsTargetDropGreater(&deal, priceDropTarget)
+
 		// Go through all registered users and check deals they are subscribed to
 		for _, user := range userdata {
-			if user.AmzDaily && deal.DealType == int(scrapers.AMZ_DAILY) && !AmzDealSent(user, &deal) {
+			if user.AmzDaily && priceDropTargetMet && deal.DealType == int(scrapers.AMZ_DAILY) && !AmzDealSent(user, &deal) {
 				// User is subscribed to AMZ daily deals, notify user
 				k.SendAmzDeal(user, &deal)
 			}
 
-			if user.AmzWeekly && deal.DealType == int(scrapers.AMZ_WEEKLY) && !AmzDealSent(user, &deal) {
+			if user.AmzWeekly && priceDropTargetMet && deal.DealType == int(scrapers.AMZ_WEEKLY) && !AmzDealSent(user, &deal) {
 				// User is subscribed to AMZ weekly deals, notify user
 				k.SendAmzDeal(user, &deal)
 			}
