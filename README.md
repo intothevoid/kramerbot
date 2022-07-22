@@ -13,9 +13,10 @@ A Telegram bot to get you the latest deals from websites like https://www.ozbarg
 3. Subscribe to good deals, super deals or setup your own custom deals by watching specific keywords
 4. User data is written to a Sqlite database for easy migration
 5. Keep track of deals already sent to avoid duplicate sending
-6. Supports scraping www.ozbargain.com.au (more scrapers to be added)
-7. Supports Android TV notifications
-8. API to access user and deal data
+6. Supports scraping www.ozbargain.com.au - Good and super deals
+7. Supports scraping www.amazon.com.au (via Camel Camel Camel RSS) - Top daily and weekly deals
+8. Supports Android TV notifications
+9. API to access user and deal data
 
 ## API
 
