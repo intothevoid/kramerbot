@@ -39,17 +39,26 @@ func main() {
 		k.Logger.Fatal("Cannot proceed without a bot token")
 	}
 
-	// create a scraper
-	scraper := new(scrapers.OzBargainScraper)
-	scraper.SID = scrapers.SID_OZBARGAIN
-	scraper.Logger = k.Logger
-	scraper.BaseUrl = scrapers.URL_OZBARGAIN
-	scraper.Deals = []models.OzBargainDeal{}
-	scraper.ScrapeInterval = k.Config.GetInt("scrapers.ozbargain.scrape_interval")   // mins
-	scraper.MaxDealsToStore = k.Config.GetInt("scrapers.ozbargain.max_stored_deals") // max. no. of deals to store
+	// Create Ozbargain ozbscraper
+	ozbscraper := new(scrapers.OzBargainScraper)
+	ozbscraper.SID = scrapers.SID_OZBARGAIN
+	ozbscraper.Logger = k.Logger
+	ozbscraper.BaseUrl = scrapers.URL_OZBARGAIN
+	ozbscraper.Deals = []models.OzBargainDeal{}
+	ozbscraper.ScrapeInterval = k.Config.GetInt("scrapers.ozbargain.scrape_interval")   // mins
+	ozbscraper.MaxDealsToStore = k.Config.GetInt("scrapers.ozbargain.max_stored_deals") // max. no. of deals to store
+
+	// Create camel camel camel (amazon) scraper
+	cccscraper := new(scrapers.CamCamCamScraper)
+	cccscraper.SID = scrapers.SID_CCC_AMAZON
+	cccscraper.Logger = k.Logger
+	cccscraper.BaseUrl = k.Config.GetStringSlice("scrapers.amazon.urls")
+	cccscraper.Deals = []models.CamCamCamDeal{}
+	cccscraper.ScrapeInterval = k.Config.GetInt("scrapers.amazon.scrape_interval")   // mins
+	cccscraper.MaxDealsToStore = k.Config.GetInt("scrapers.amazon.max_stored_deals") // max. no. of deals to store
 
 	// create a new bot
-	k.NewBot(scraper)
+	k.NewBot(ozbscraper, cccscraper)
 
 	// start receiving updates from telegram
 	k.StartBot()

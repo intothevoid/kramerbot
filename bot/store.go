@@ -6,14 +6,16 @@ import (
 
 // Create user data from parameters passed in
 func (k *KramerBot) CreateUserData(chatID int64, username string, keyword string,
-	goodDeals bool, superDeals bool) *models.UserData {
+	ozbGood bool, ozbSuper bool, amzDaily bool, amzWeekly bool) *models.UserData {
 
 	userData := models.UserData{}
 	userData.ChatID = chatID
 	userData.Username = username
 	userData.Keywords = append(userData.Keywords, keyword)
-	userData.GoodDeals = goodDeals
-	userData.SuperDeals = superDeals
+	userData.OzbGood = ozbGood
+	userData.OzbSuper = ozbSuper
+	userData.AmzDaily = amzDaily
+	userData.AmzWeekly = amzWeekly
 
 	return &userData
 }
@@ -34,10 +36,21 @@ func (k *KramerBot) SaveUserStore() {
 	}
 }
 
-// Check if the deal has already been sent to the user
-func DealSent(user *models.UserData, deal *models.OzBargainDeal) bool {
+// Check if the OZB deal has already been sent to the user
+func OzbDealSent(user *models.UserData, deal *models.OzBargainDeal) bool {
 	// Check if deal.Id is in user.DealsSent
-	for _, dealId := range user.DealsSent {
+	for _, dealId := range user.OzbSent {
+		if dealId == deal.Id {
+			return true
+		}
+	}
+	return false
+}
+
+// Check if the AMZ deal has already been sent to the user
+func AmzDealSent(user *models.UserData, deal *models.CamCamCamDeal) bool {
+	// Check if deal.Id is in user.DealsSent
+	for _, dealId := range user.AmzSent {
 		if dealId == deal.Id {
 			return true
 		}

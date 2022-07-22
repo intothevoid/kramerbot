@@ -13,7 +13,7 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/intothevoid/kramerbot/api"
 	"github.com/intothevoid/kramerbot/models"
-	"github.com/intothevoid/kramerbot/persist"
+	persist "github.com/intothevoid/kramerbot/persist/database"
 	"github.com/intothevoid/kramerbot/pipup"
 	"github.com/intothevoid/kramerbot/scrapers"
 	"github.com/spf13/viper"
@@ -24,7 +24,8 @@ type KramerBot struct {
 	Token      string
 	Logger     *zap.Logger
 	BotApi     *tgbotapi.BotAPI
-	Scraper    *scrapers.OzBargainScraper
+	OzbScraper *scrapers.OzBargainScraper
+	CCCScraper *scrapers.CamCamCamScraper
 	UserStore  *models.UserStore
 	DataWriter *persist.UserStoreDB
 	Pipup      *pipup.Pipup
@@ -40,7 +41,7 @@ func (k *KramerBot) GetToken() string {
 }
 
 // function to create a new bot
-func (k *KramerBot) NewBot(s *scrapers.OzBargainScraper) {
+func (k *KramerBot) NewBot(ozbs *scrapers.OzBargainScraper, cccs *scrapers.CamCamCamScraper) {
 	// If user has forgotten to set the token
 	if k.Token == "" {
 		k.Token = k.GetToken()
@@ -61,8 +62,9 @@ func (k *KramerBot) NewBot(s *scrapers.OzBargainScraper) {
 	k.BotApi = &tgbotapi.BotAPI{}
 	k.BotApi = bot
 
-	// Assign scraper
-	k.Scraper = s
+	// Assign scrapers
+	k.OzbScraper = ozbs
+	k.CCCScraper = cccs
 
 	// Get working directory
 	dbPath, _ := os.Getwd()
@@ -77,7 +79,8 @@ func (k *KramerBot) NewBot(s *scrapers.OzBargainScraper) {
 	// Initialise API server
 	k.ApiServer = &api.GinServer{
 		UserStoreDB: k.DataWriter,
-		Scraper:     k.Scraper,
+		OzbScraper:  k.OzbScraper,
+		CCCScraper:  k.CCCScraper,
 		Config:      k.Config,
 	}
 	go k.ApiServer.StartServer()

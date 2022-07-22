@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/intothevoid/kramerbot/models"
-	"github.com/intothevoid/kramerbot/persist"
+	persist "github.com/intothevoid/kramerbot/persist/database"
 	"github.com/mattn/go-sqlite3"
 	"go.uber.org/zap"
 )
@@ -61,12 +61,15 @@ func TestAddUser(t *testing.T) {
 
 	// Add user
 	user := &models.UserData{
-		ChatID:     123456789,
-		Username:   "test_user",
-		GoodDeals:  false,
-		SuperDeals: false,
-		Keywords:   []string{"test", "test2"},
-		DealsSent:  []string{"120", "122"},
+		ChatID:    123456789,
+		Username:  "test_user",
+		OzbGood:   false,
+		OzbSuper:  false,
+		Keywords:  []string{"test", "test2"},
+		OzbSent:   []string{"120", "122"},
+		AmzDaily:  false,
+		AmzWeekly: false,
+		AmzSent:   []string{"222", "333"},
 	}
 
 	err = udb.AddUser(user)
@@ -102,12 +105,15 @@ func TestGetUser(t *testing.T) {
 
 	// Add user2
 	user2 := &models.UserData{
-		ChatID:     007,
-		Username:   "bond",
-		GoodDeals:  true,
-		SuperDeals: false,
-		Keywords:   []string{"james", "bond"},
-		DealsSent:  []string{"007", "mi5"},
+		ChatID:    007,
+		Username:  "bond",
+		OzbGood:   true,
+		OzbSuper:  false,
+		Keywords:  []string{"james", "bond"},
+		OzbSent:   []string{"007", "mi5"},
+		AmzDaily:  false,
+		AmzWeekly: true,
+		AmzSent:   []string{"222", "333", "444"},
 	}
 
 	err = udb.AddUser(user2)
@@ -134,17 +140,26 @@ func TestGetUser(t *testing.T) {
 	if user.Username != "bond" {
 		t.Errorf("Expected user username to be %s, got %s", "bond", user.Username)
 	}
-	if user.GoodDeals != true {
-		t.Errorf("Expected user good_deals to be %t, got %t", true, user.GoodDeals)
+	if user.OzbGood != true {
+		t.Errorf("Expected user ozb_good to be %t, got %t", true, user.OzbGood)
 	}
-	if user.SuperDeals != false {
-		t.Errorf("Expected user super_deals to be %t, got %t", false, user.SuperDeals)
+	if user.OzbSuper != false {
+		t.Errorf("Expected user ozb_super to be %t, got %t", false, user.OzbSuper)
 	}
 	if len(user.Keywords) != 2 {
 		t.Errorf("Expected user keywords to have length 2, got %d", len(user.Keywords))
 	}
-	if len(user.DealsSent) != 2 {
-		t.Errorf("Expected user deals_sent to have length 2, got %d", len(user.DealsSent))
+	if len(user.OzbSent) != 2 {
+		t.Errorf("Expected user ozb_sent to have length 2, got %d", len(user.OzbSent))
+	}
+	if user.AmzDaily != false {
+		t.Errorf("Expected user amz_daily to be %t, got %t", true, user.OzbGood)
+	}
+	if user.AmzWeekly != true {
+		t.Errorf("Expected user amz_weekly to be %t, got %t", false, user.OzbSuper)
+	}
+	if len(user.AmzSent) != 3 {
+		t.Errorf("Expected user amz_sent to have length 3, got %d", len(user.OzbSent))
 	}
 }
 
@@ -163,12 +178,15 @@ func TestUpdateUser(t *testing.T) {
 
 	// Add user
 	user := &models.UserData{
-		ChatID:     123456789,
-		Username:   "test_user",
-		GoodDeals:  false,
-		SuperDeals: false,
-		Keywords:   []string{"test", "test2"},
-		DealsSent:  []string{"120", "122"},
+		ChatID:    123456789,
+		Username:  "test_user",
+		OzbGood:   false,
+		OzbSuper:  false,
+		Keywords:  []string{"test", "test2"},
+		OzbSent:   []string{"120", "122"},
+		AmzDaily:  false,
+		AmzWeekly: true,
+		AmzSent:   []string{"222", "333", "444"},
 	}
 
 	err = udb.AddUser(user)
@@ -183,11 +201,14 @@ func TestUpdateUser(t *testing.T) {
 	}
 
 	// Update user
-	user.GoodDeals = true
-	user.SuperDeals = true
+	user.OzbGood = true
+	user.OzbSuper = true
 	user.Keywords = []string{"test", "test2", "test3"}
-	user.DealsSent = []string{"120", "122", "123"}
+	user.OzbSent = []string{"120", "122", "123"}
 	user.Username = "test_user_updated"
+	user.AmzDaily = true
+	user.AmzWeekly = false
+	user.OzbSent = []string{"555", "666", "777"}
 
 	err = udb.UpdateUser(user)
 	if err != nil {
