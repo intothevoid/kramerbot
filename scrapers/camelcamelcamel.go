@@ -2,6 +2,8 @@ package scrapers
 
 import (
 	"errors"
+	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -143,4 +145,46 @@ func (s *CamCamCamScraper) AutoScrape() {
 // Get scraper data
 func (s *CamCamCamScraper) GetData() []models.CamCamCamDeal {
 	return s.Deals
+}
+
+// Check deal drop percent i.e. check if the price drop is greater than 'target' percent
+func (s *CamCamCamScraper) IsTargetDropGreater(deal *models.CamCamCamDeal, target int) bool {
+	re, err := regexp.Compile(`down\s*(?P<gdrop>(\d+))\.(.*%)`)
+	if err != nil {
+		s.Logger.Error("Error checking target drop percentage", zap.Error(err))
+		return false
+	}
+
+	// Find drop percentage in deal title
+	var drop string
+	match := re.FindStringSubmatch(deal.Title)
+	for i, name := range re.SubexpNames() {
+		if i != 0 && name == "gdrop" {
+			drop = match[i]
+		}
+	}
+
+	// Convert drop from string to int
+	percentageDrop, err := strconv.Atoi(drop)
+	if err != nil {
+		return false
+	}
+
+	// Check if drop is greater than target
+	if percentageDrop >= target {
+		return true
+	}
+
+	return false
+}
+
+// Get deal drop string
+func (s *CamCamCamScraper) GetDealDropString(deal *models.CamCamCamDeal) string {
+	re, err := regexp.Compile(`down.*[^"]`)
+	if err != nil {
+		s.Logger.Error("Error getting price drop string", zap.Error(err))
+		return ""
+	}
+
+	return re.FindString(deal.Title)
 }

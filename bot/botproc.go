@@ -53,14 +53,14 @@ func (k *KramerBot) BotProc(updates tgbotapi.UpdatesChannel) {
 			continue
 		}
 
-		// User asked to watch daily AMZ deals i.e. 25+ upvotes within the hour
-		if strings.Contains(strings.ToLower(update.Message.Text), "amzdaily") {
+		// User asked to watch daily AMZ deals i.e. top daily deals with price drop > 20%
+		if strings.Contains(strings.ToLower(update.Message.Text), "amazondaily") {
 			k.WatchAmzDailyDeals(update.Message.Chat)
 			continue
 		}
 
-		// User asked to watch weekly AMZ deals i.e. 25+ upvotes within the hour
-		if strings.Contains(strings.ToLower(update.Message.Text), "amzweekly") {
+		// User asked to watch weekly AMZ deals i.e. top weekly deals with price drop > 20%
+		if strings.Contains(strings.ToLower(update.Message.Text), "amazonweekly") {
 			k.WatchAmzWeeklyDeals(update.Message.Chat)
 			continue
 		}

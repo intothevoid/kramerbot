@@ -39,10 +39,10 @@ func (k *KramerBot) Help(chat *tgbotapi.Chat) {
 	k.SendMessage(chat.ID, fmt.Sprintf("Hi %s! Available commands are: \n\n"+
 		"🙏 /help - View this help message \n\n"+
 		"📈 /latest - View the 5 latest deals on OzBargain\n\n"+
-		"🔥 /watchgood - Ozbargain: Watch out for deals with 25+ upvotes within the hour\n\n"+
-		"🔥🔥 /watchsuper - Ozbargain: Watch out for deals with 100+ upvotes within 24 hours\n\n"+
-		"🅰️ /amazondaily - Amazon: Watch out for top daily Amazon deals\n\n"+
-		"🅰️ /amazonweekly - Amazon: Watch out for top weekly Amazon deals\n\n"+
+		"🟠 /watchgood - Ozbargain: Watch out for deals with 25+ upvotes within the hour\n\n"+
+		"🟠 /watchsuper - Ozbargain: Watch out for deals with 100+ upvotes within 24 hours\n\n"+
+		"🅰️ /amazondaily - Amazon: Watch out for top daily Amazon deals with price drops greater than 20 percent\n\n"+
+		"🅰️ /amazonweekly - Amazon: Watch out for top weekly Amazon deals with price drops greater than 20 percent\n\n"+
 		"👀 /watchkeyword - Watch deals with specified keywords across 🟠Ozbargain and 🅰️Amazon\n\n"+
 		"⛔ /clearkeyword - Clear deals with specified keyword\n\n"+
 		"⛔ /clearallkeywords - Clear deals with all watched keywords\n\n"+
@@ -167,11 +167,11 @@ func (k *KramerBot) watchDeal(chat *tgbotapi.Chat, dealType scrapers.DealType) {
 		case scrapers.OZB_GOOD:
 			userData.OzbGood = !userData.OzbGood // toggle
 			added = userData.OzbGood
-			message = " 🔥 ozbargain good deals list."
+			message = " 🟠🔥 ozbargain good deals list."
 		case scrapers.OZB_SUPER:
 			userData.OzbSuper = !userData.OzbSuper
 			added = userData.OzbSuper
-			message = " 🔥🔥 ozbargain super deals"
+			message = " 🟠🔥 ozbargain super deals"
 		case scrapers.AMZ_DAILY:
 			userData.AmzDaily = !userData.AmzDaily
 			added = userData.AmzDaily
@@ -202,10 +202,10 @@ func (k *KramerBot) watchDeal(chat *tgbotapi.Chat, dealType scrapers.DealType) {
 		switch dealType {
 		case scrapers.OZB_GOOD:
 			ozbGood = true
-			message = " 🔥 ozbargain good deals list."
+			message = " 🟠🔥 ozbargain good deals list."
 		case scrapers.OZB_SUPER:
 			ozbSuper = true
-			message = " 🔥🔥 ozbargain super deals"
+			message = " 🟠🔥 ozbargain super deals"
 		case scrapers.AMZ_DAILY:
 			amzDaily = true
 			message = " 🅰️ amazon daily deals list."
@@ -233,8 +233,8 @@ func (k *KramerBot) watchDeal(chat *tgbotapi.Chat, dealType scrapers.DealType) {
 // Send OZB good deal message to user
 func (k *KramerBot) SendOzbGoodDeal(user *models.UserData, deal *models.OzBargainDeal) {
 	shortenedTitle := util.ShortenString(deal.Title, 30) + "..."
-	formattedDeal := fmt.Sprintf(`🔥<a href="%s" target="_blank">%s</a>🔺%s`, deal.Url, shortenedTitle, deal.Upvotes)
-	textDeal := fmt.Sprintf(`🔥 %s 🔺%s`, shortenedTitle, deal.Upvotes)
+	formattedDeal := fmt.Sprintf(`🟠🔥<a href="%s" target="_blank">%s</a>🔺%s`, deal.Url, shortenedTitle, deal.Upvotes)
+	textDeal := fmt.Sprintf(`🟠🔥 %s 🔺%s`, shortenedTitle, deal.Upvotes)
 
 	k.Logger.Debug(fmt.Sprintf("Sending good deal %s to user %s", shortenedTitle, user.Username))
 	k.SendHTMLMessage(user.ChatID, formattedDeal)
@@ -261,8 +261,17 @@ func (k *KramerBot) SendStatus(chat *tgbotapi.Chat) {
 			}
 			return "no"
 		}
-		userDetails := fmt.Sprintf("👨‍🦰👩‍🦰 %s\n\n🔥GoodDeals: %s\n🔥🔥SuperDeals: %s\n👀Watched: %s\n⏰Deals sent: %d", user.GetUsername(),
-			getTruth(user.GetOzbGood()), getTruth(user.GetOzbSuper()), user.GetKeywords(), len(user.GetOzbSent()))
+		prettyPrint := func(words []string) string {
+			var retval string
+			for _, word := range words {
+				retval += word + "\n"
+			}
+			return retval
+		}
+		userDetails := fmt.Sprintf("👨‍🦰👩‍🦰 %s\n\n🟠OZBGood: %s\n🟠OZBSuper: %s\n🅰️AmazonDaily: %s\n🅰️AmazonWeekly: %s\n👀Watched: %s\n⏰OZB Deals sent: %d\n⏰AMZ Deals sent: %d", user.GetUsername(),
+			getTruth(user.GetOzbGood()), getTruth(user.GetOzbSuper()), getTruth(user.GetAmzDaily()),
+			getTruth(user.GetAmzWeekly()), prettyPrint(user.GetKeywords()), len(user.GetOzbSent()),
+			len(user.GetAmzSent()))
 
 		k.SendHTMLMessage(user.ChatID, userDetails)
 	} else {
@@ -273,8 +282,8 @@ func (k *KramerBot) SendStatus(chat *tgbotapi.Chat) {
 // Send OZB super deal to user
 func (k *KramerBot) SendOzbSuperDeal(user *models.UserData, deal *models.OzBargainDeal) {
 	shortenedTitle := util.ShortenString(deal.Title, 30) + "..."
-	formattedDeal := fmt.Sprintf(`🔥🔥<a href="%s" target="_blank">%s</a>🔺%s`, deal.Url, shortenedTitle, deal.Upvotes)
-	textDeal := fmt.Sprintf(`🔥🔥 %s 🔺%s`, shortenedTitle, deal.Upvotes)
+	formattedDeal := fmt.Sprintf(`🟠🔥<a href="%s" target="_blank">%s</a>🔺%s`, deal.Url, shortenedTitle, deal.Upvotes)
+	textDeal := fmt.Sprintf(`🟠🔥 %s 🔺%s`, shortenedTitle, deal.Upvotes)
 
 	k.Logger.Debug(fmt.Sprintf("Sending super deal %s to user %s", shortenedTitle, user.Username))
 	k.SendHTMLMessage(user.ChatID, formattedDeal)
@@ -301,7 +310,7 @@ func (k *KramerBot) SendAmzDeal(user *models.UserData, deal *models.CamCamCamDea
 	}
 
 	shortenedTitle := util.ShortenString(deal.Title, 30) + "..."
-	formattedDeal := fmt.Sprintf(`🅰️<a href="%s" target="_blank">%s</a>`, deal.Url, shortenedTitle)
+	formattedDeal := fmt.Sprintf(`🅰️<a href="%s" target="_blank">%s</a> - %s`, deal.Url, shortenedTitle, k.CCCScraper.GetDealDropString(deal))
 	textDeal := fmt.Sprintf(`🅰️ %s`, shortenedTitle)
 
 	k.Logger.Debug(fmt.Sprintf("Sending Amazon %s deal %s to user %s", dealType, shortenedTitle, user.Username))
@@ -339,7 +348,7 @@ func (k *KramerBot) SendOzbWatchedDeal(user *models.UserData, deal *models.OzBar
 // Send AMZ watched deal to user
 func (k *KramerBot) SendAmzWatchedDeal(user *models.UserData, deal *models.CamCamCamDeal) {
 	shortenedTitle := util.ShortenString(deal.Title, 30) + "..."
-	formattedDeal := fmt.Sprintf(`🅰️👀<a href="%s" target="_blank">%s</a>\n%s`, deal.Url, shortenedTitle, deal.Title)
+	formattedDeal := fmt.Sprintf(`🅰️👀<a href="%s" target="_blank">%s</a> - %s`, deal.Url, shortenedTitle, k.CCCScraper.GetDealDropString(deal))
 	textDeal := fmt.Sprintf(`🅰️👀 %s`, shortenedTitle)
 
 	k.Logger.Debug(fmt.Sprintf("Sending watched Amazon deal %s to user %s", shortenedTitle, user.Username))
