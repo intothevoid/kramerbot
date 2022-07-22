@@ -268,7 +268,7 @@ func (k *KramerBot) SendStatus(chat *tgbotapi.Chat) {
 			}
 			return retval
 		}
-		userDetails := fmt.Sprintf("👨‍🦰👩‍🦰 %s\n\n🟠OZBGood: %s\n🟠OZBSuper: %s\n🅰️AmazonDaily: %s\n🅰️AmazonWeekly: %s\n👀Watched: %s\n⏰OZB Deals sent: %d\n⏰AMZ Deals sent: %d", user.GetUsername(),
+		userDetails := fmt.Sprintf("👨‍🦰👩‍🦰 %s\n\n🟠OZB Good Deals: %s\n🟠OZB Super Deals: %s\n🅰️Amazon Top Daily Deals: %s\n🅰️Amazon Top Weekly Deals: %s\n👀Watched Deals:\n %s⏰OZB Deals sent: %d\n⏰AMZ Deals sent: %d", user.GetUsername(),
 			getTruth(user.GetOzbGood()), getTruth(user.GetOzbSuper()), getTruth(user.GetAmzDaily()),
 			getTruth(user.GetAmzWeekly()), prettyPrint(user.GetKeywords()), len(user.GetOzbSent()),
 			len(user.GetAmzSent()))
