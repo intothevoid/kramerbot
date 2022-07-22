@@ -43,7 +43,7 @@ func (k *KramerBot) Help(chat *tgbotapi.Chat) {
 		"🔥🔥 /watchsuper - Ozbargain: Watch out for deals with 100+ upvotes within 24 hours\n\n"+
 		"🅰️ /amazondaily - Amazon: Watch out for top daily Amazon deals\n\n"+
 		"🅰️ /amazonweekly - Amazon: Watch out for top weekly Amazon deals\n\n"+
-		"👀 /watchkeyword - Watch deals with specified keywords across Ozbargain and Amazon\n\n"+
+		"👀 /watchkeyword - Watch deals with specified keywords across 🟠Ozbargain and 🅰️Amazon\n\n"+
 		"⛔ /clearkeyword - Clear deals with specified keyword\n\n"+
 		"⛔ /clearallkeywords - Clear deals with all watched keywords\n\n"+
 		"👨‍🦰 /status - Get the current user status\n\n"+
@@ -320,8 +320,8 @@ func (k *KramerBot) SendAmzDeal(user *models.UserData, deal *models.CamCamCamDea
 // Send OZB watched deal to user
 func (k *KramerBot) SendOzbWatchedDeal(user *models.UserData, deal *models.OzBargainDeal) {
 	shortenedTitle := util.ShortenString(deal.Title, 30) + "..."
-	formattedDeal := fmt.Sprintf(`👀<a href="%s" target="_blank">%s</a>🔺%s`, deal.Url, shortenedTitle, deal.Upvotes)
-	textDeal := fmt.Sprintf(`👀 %s 🔺%s`, shortenedTitle, deal.Upvotes)
+	formattedDeal := fmt.Sprintf(`🟠👀<a href="%s" target="_blank">%s</a>🔺%s`, deal.Url, shortenedTitle, deal.Upvotes)
+	textDeal := fmt.Sprintf(`🟠👀 %s 🔺%s`, shortenedTitle, deal.Upvotes)
 
 	k.Logger.Debug(fmt.Sprintf("Sending watched Ozbargain deal %s to user %s", shortenedTitle, user.Username))
 	k.SendHTMLMessage(user.ChatID, formattedDeal)
@@ -339,8 +339,8 @@ func (k *KramerBot) SendOzbWatchedDeal(user *models.UserData, deal *models.OzBar
 // Send AMZ watched deal to user
 func (k *KramerBot) SendAmzWatchedDeal(user *models.UserData, deal *models.CamCamCamDeal) {
 	shortenedTitle := util.ShortenString(deal.Title, 30) + "..."
-	formattedDeal := fmt.Sprintf(`👀<a href="%s" target="_blank">%s</a>`, deal.Url, shortenedTitle)
-	textDeal := fmt.Sprintf(`👀 %s`, shortenedTitle)
+	formattedDeal := fmt.Sprintf(`🅰️👀<a href="%s" target="_blank">%s</a>\n%s`, deal.Url, shortenedTitle, deal.Title)
+	textDeal := fmt.Sprintf(`🅰️👀 %s`, shortenedTitle)
 
 	k.Logger.Debug(fmt.Sprintf("Sending watched Amazon deal %s to user %s", shortenedTitle, user.Username))
 	k.SendHTMLMessage(user.ChatID, formattedDeal)
