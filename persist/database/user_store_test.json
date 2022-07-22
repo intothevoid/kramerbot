@@ -1,0 +1,26 @@
+{
+  "Users": {
+    "1537077783": {
+      "chatID": 1536453,
+      "username": "Karan",
+      "ozbgood": true,
+      "ozbsuper": true,
+      "amzdaily": true,
+      "amzweekly": false,
+      "keywords": null,
+      "ozbsent": ["700789", "700785", "700836", "700832"],
+      "amzsent": ["700789", "700785", "700836", "700832"]
+    },
+    "2137049093": {
+      "chatID": 21387345,
+      "username": "Sne",
+      "ozbgood": false,
+      "ozbsuper": true,
+      "amzdaily": true,
+      "amzweekly": false,
+      "keywords": ["TV"],
+      "ozbsent": ["701510", "701508", "701507", "701504", "701503", "701498"],
+      "amzsent": ["701510", "701508", "701507", "701504", "701503", "701498"]
+    }
+  }
+}
