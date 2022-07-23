@@ -1,5 +1,10 @@
 ## kramerbot - Changelog
 
+### 2.2
+
+- Fixed issue with blank watched keywords triggering all deals
+- Added announcement functionality
+
 ### 2.1
 
 - Fixed migration unit tests

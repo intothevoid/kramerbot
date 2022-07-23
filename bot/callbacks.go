@@ -134,6 +134,28 @@ func (k *KramerBot) ProcessClearAllKeywords(chat *tgbotapi.Chat) {
 	k.SendMessage(chat.ID, fmt.Sprintf("👀 Cleared all watched keywords for user %s", chat.FirstName))
 }
 
+// Make an announcement to all users i.e. important messages, updates etc.
+// Note: This is an admin function and will need KRAMERBOT_ADMIN_PASSWORD
+func (k *KramerBot) MakeAnnouncement(chat *tgbotapi.Chat, announcement string) {
+	// Extract message
+	messages := strings.Split(announcement, ":")
+	var message string
+	if len(messages) == 2 {
+		message = messages[1]
+	}
+
+	formattedAnnouncement := fmt.Sprintf(`📢 Kramerbot Announcement 📢 %s`, message)
+
+	for _, user := range k.UserStore.Users {
+		if user.Username == "Karan" {
+			k.Logger.Debug(fmt.Sprintf("Sending announcement %s to user %s", message, user.Username))
+			k.SendMessage(user.ChatID, formattedAnnouncement)
+		}
+	}
+
+	k.SendMessage(chat.ID, "Announcement was sent to all users.")
+}
+
 // Add watch to OZB good deals by chat id
 func (k *KramerBot) WatchOzbGoodDeals(chat *tgbotapi.Chat) {
 	k.watchDeal(chat, scrapers.OZB_GOOD)
