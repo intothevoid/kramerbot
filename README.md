@@ -43,7 +43,7 @@ go build .
 ```
 TELEGRAM_TOKEN_API=<your_token>
 GIN_MODE=release
-KRAMERBOT_ADMIN_PASSWORD=<your_admin_password>
+KRAMERBOT_ADMIN_PASS=<your_admin_password>
 ```
 
 ### Using Docker
@@ -59,7 +59,7 @@ Create a token.env file with your Telegram API token (used in step below) -
 ```
 TELEGRAM_TOKEN_API=<your_token>
 GIN_MODE=release
-KRAMERBOT_ADMIN_PASSWORD=<your_admin_password>
+KRAMERBOT_ADMIN_PASS=<your_admin_password>
 ```
 
 To deploy your container, use the command -
