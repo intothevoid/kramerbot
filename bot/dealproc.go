@@ -62,6 +62,12 @@ func (k *KramerBot) processOzbargainDeals() {
 
 			// Check for watched keywords
 			for _, keyword := range user.Keywords {
+				// If keyword is empty or only contains spaces
+				keyword = strings.TrimSpace(keyword)
+				if len(keyword) == 0 {
+					continue
+				}
+
 				if strings.Contains(strings.ToLower(deal.Title), strings.ToLower(keyword)) && !OzbDealSent(user, &deal) {
 					// Deal contains keyword, notify user
 					k.SendOzbWatchedDeal(user, &deal)
