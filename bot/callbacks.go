@@ -147,10 +147,8 @@ func (k *KramerBot) MakeAnnouncement(chat *tgbotapi.Chat, announcement string) {
 	formattedAnnouncement := fmt.Sprintf(`📢 Kramerbot Announcement 📢 %s`, message)
 
 	for _, user := range k.UserStore.Users {
-		if user.Username == "Karan" {
-			k.Logger.Debug(fmt.Sprintf("Sending announcement %s to user %s", message, user.Username))
-			k.SendMessage(user.ChatID, formattedAnnouncement)
-		}
+		k.Logger.Debug(fmt.Sprintf("Sending announcement %s to user %s", message, user.Username))
+		k.SendMessage(user.ChatID, formattedAnnouncement)
 	}
 
 	k.SendMessage(chat.ID, "Announcement was sent to all users.")
