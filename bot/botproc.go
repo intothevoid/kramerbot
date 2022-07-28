@@ -12,6 +12,7 @@ func (k *KramerBot) BotProc(updates tgbotapi.UpdatesChannel) {
 	// Keyword mode is used for registering keywords to watch
 	var keywordMode bool = false
 	var keywordClearMode bool = false
+	var announceMode bool = false
 
 	// keep watching updates channel
 	for update := range updates {
@@ -32,6 +33,17 @@ func (k *KramerBot) BotProc(updates tgbotapi.UpdatesChannel) {
 		if keywordClearMode {
 			k.ProcessClearKeyword(update.Message.Chat, update.Message.Text)
 			keywordClearMode = false
+			continue
+		}
+
+		if announceMode {
+			if k.verifyAdminPassword(update.Message.Text) {
+				k.MakeAnnouncement(update.Message.Chat, update.Message.Text)
+			} else {
+				k.SendMessage(update.Message.Chat.ID, "⛔ Admin password incorrect.")
+			}
+
+			announceMode = false
 			continue
 		}
 
@@ -95,6 +107,15 @@ func (k *KramerBot) BotProc(updates tgbotapi.UpdatesChannel) {
 			continue
 		}
 
+		// User requested admin function - announce
+		if strings.Contains(strings.ToLower(update.Message.Text), "announcement") {
+			if !announceMode {
+				k.SendMessage(update.Message.Chat.ID, "Enter admin password and announcement in format password:announcement")
+				announceMode = true
+			}
+			continue
+		}
+
 		// User asked for a kramerism
 		if strings.Contains(strings.ToLower(update.Message.Text), "kramerism") {
 			kramerism := util.GetKramerism()
@@ -117,4 +138,15 @@ func (k *KramerBot) BotProc(updates tgbotapi.UpdatesChannel) {
 		// Unknown command - show help banner
 		k.Help(update.Message.Chat)
 	}
+}
+
+// Verify pass for administrative function
+func (k *KramerBot) verifyAdminPassword(message string) bool {
+	messages := strings.Split(message, ":")
+	if len(messages) == 2 {
+		if strings.EqualFold(strings.ToLower(messages[0]), strings.ToLower(k.GetAdminPass())) {
+			return true
+		}
+	}
+	return false
 }

@@ -40,6 +40,12 @@ func (k *KramerBot) GetToken() string {
 	return token
 }
 
+// function to read admin password from environment variable
+func (k *KramerBot) GetAdminPass() string {
+	adminPass := os.Getenv("KRAMERBOT_ADMIN_PASS") // get the admin password
+	return adminPass
+}
+
 // function to create a new bot
 func (k *KramerBot) NewBot(ozbs *scrapers.OzBargainScraper, cccs *scrapers.CamCamCamScraper) {
 	// If user has forgotten to set the token

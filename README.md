@@ -4,7 +4,7 @@
 
 https://t.me/kramerbot
 
-A Telegram bot to get you the latest deals from websites like https://www.ozbargain.com.au. Let Kramer watch deals so you don't have to. Giddy up!
+A Telegram bot to get you the latest deals from websites like https://www.ozbargain.com.au and https://amazon.com.au. Let Kramer watch deals so you don't have to. Giddy up!
 
 ## Features
 
@@ -17,6 +17,7 @@ A Telegram bot to get you the latest deals from websites like https://www.ozbarg
 7. Supports scraping www.amazon.com.au (via Camel Camel Camel RSS) - Top daily and weekly deals
 8. Supports Android TV notifications
 9. API to access user and deal data
+10. Ability to send maintenance messages / announcements to all users
 
 ## API
 
@@ -30,11 +31,19 @@ The following API endpoints are available -
 
 ## Deployment
 
-You must have an environment variable called 'TELEGRAM_TOKEN_API=<token>' in your system environment variables. Kramerbot can be deployed using the command -
+You must have the required environment variables for Kramerbot to function correctly. See section 'Required environment variables' for more details. Kramerbot can be deployed using the foll. command, after required environment variables have been set -
 
 ```
 go build .
 ./kramerbot
+```
+
+### Required environment variables
+
+```
+TELEGRAM_TOKEN_API=<your_token>
+GIN_MODE=release
+KRAMERBOT_ADMIN_PASS=<your_admin_password>
 ```
 
 ### Using Docker
@@ -50,6 +59,7 @@ Create a token.env file with your Telegram API token (used in step below) -
 ```
 TELEGRAM_TOKEN_API=<your_token>
 GIN_MODE=release
+KRAMERBOT_ADMIN_PASS=<your_admin_password>
 ```
 
 To deploy your container, use the command -
