@@ -63,29 +63,22 @@ func (k *KramerBot) SendTestMessage(chat *tgbotapi.Chat) {
 
 // Process keyword watch request
 func (k *KramerBot) ProcessKeyword(chat *tgbotapi.Chat, keyword string) {
-	var keywords []string
-
 	// Check if key exists in user store
 	if _, ok := k.UserStore.Users[chat.ID]; ok {
 		// Key exists, add to watch list
 		userData := k.UserStore.Users[chat.ID]
 		userData.Keywords = append(userData.Keywords, keyword)
-
-		// For messaging the user
-		keywords = userData.Keywords
 	} else {
 		// Key does not exist, create new user data
 		userData := k.CreateUserData(chat.ID, chat.FirstName, keyword, false, false, false, false)
 		k.UserStore.Users[chat.ID] = userData
-
-		// For messaging the user
-		keywords = userData.Keywords
 	}
 
 	// Save user store
 	k.SaveUserStore()
 
-	k.SendMessage(chat.ID, fmt.Sprintf("👀 Currently watching keywords: %s for user %s", keywords, chat.FirstName))
+	// Send status message to user
+	k.SendStatus(chat)
 }
 
 // Process clear keyword request
