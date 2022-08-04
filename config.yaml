@@ -15,7 +15,7 @@ scrapers:
     scrape_interval: 5
     max_stored_deals: 250
   amazon:
-    scrape_interval: 5
+    scrape_interval: 30
     max_stored_deals: 250
     urls:
       - "https://au.camelcamelcamel.com/top_drops/feed?t=daily&"
