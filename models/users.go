@@ -9,15 +9,15 @@ type UserStore struct {
 
 // User data model
 type UserData struct {
-	ChatID    int64    `json:"chatID"`    // Telegram chat ID
-	Username  string   `json:"username"`  // Telegram username
-	OzbGood   bool     `json:"ozbgood"`   // watch deals with 25+ upvotes in the last 24 hours
-	OzbSuper  bool     `json:"ozbsuper"`  // watch deals with 50+ upvotes in the last 24 hours
-	Keywords  []string `json:"keywords"`  // list of keywords / deals to watch for
-	OzbSent   []string `json:"ozbsent"`   // comma separated list of ozb deals sent to user
-	AmzDaily  bool     `json:"amzdaily"`  // watch top daily deals on amazon
-	AmzWeekly bool     `json:"amzweekly"` // watch top weekly deals on amazon
-	AmzSent   []string `json:"amzsent"`   // comma separated list of amz deals sent to user
+	ChatID    int64    `bson:"chatID"`    // Telegram chat ID
+	Username  string   `bson:"username"`  // Telegram username
+	OzbGood   bool     `bson:"ozbgood"`   // watch deals with 25+ upvotes in the last 24 hours
+	OzbSuper  bool     `bson:"ozbsuper"`  // watch deals with 50+ upvotes in the last 24 hours
+	Keywords  []string `bson:"keywords"`  // list of keywords / deals to watch for
+	OzbSent   []string `bson:"ozbsent"`   // comma separated list of ozb deals sent to user
+	AmzDaily  bool     `bson:"amzdaily"`  // watch top daily deals on amazon
+	AmzWeekly bool     `bson:"amzweekly"` // watch top weekly deals on amazon
+	AmzSent   []string `bson:"amzsent"`   // comma separated list of amz deals sent to user
 }
 
 // setters and getters for UserData
