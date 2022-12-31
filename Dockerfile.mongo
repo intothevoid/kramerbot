@@ -1,0 +1,8 @@
+FROM mongo:latest
+
+EXPOSE 27017
+
+
+# Deploy with
+# $ docker build -t mongodb .
+# $ docker run -d --name kramer-mongo -p 27017:27017 mongodb

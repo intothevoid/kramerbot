@@ -6,6 +6,7 @@ require (
 	github.com/gin-gonic/gin v1.8.1
 	github.com/go-telegram-bot-api/telegram-bot-api v4.6.4+incompatible
 	github.com/gocolly/colly v1.2.0
+	github.com/jinzhu/gorm v1.9.16
 	github.com/lib/pq v1.10.6
 	github.com/mattn/go-sqlite3 v1.14.13
 	github.com/mmcdole/gofeed v1.1.3
@@ -31,6 +32,7 @@ require (
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
+	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/kennygrant/sanitize v1.2.4 // indirect
 	github.com/klauspost/compress v1.13.6 // indirect
