@@ -11,6 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.uber.org/zap"
 )
 
 // Keywords is a custom type that represents a slice of strings
@@ -59,7 +60,7 @@ func (UserData) TableName() string {
 	return "users"
 }
 
-func SqliteToMongoDB(sqliteDBFile, mongoURI, mongoDBName, mongoCollectionName string) error {
+func sqliteToMongoDBInner(sqliteDBFile, mongoURI, mongoDBName, mongoCollectionName string) error {
 	// Connect to the SQLite database
 	db, err := gorm.Open("sqlite3", sqliteDBFile)
 	if err != nil {
@@ -102,5 +103,16 @@ func SqliteToMongoDB(sqliteDBFile, mongoURI, mongoDBName, mongoCollectionName st
 			return err
 		}
 	}
+	return nil
+}
+
+// Disable this test for now, since it requires a MongoDB instance to be running.
+func SqliteToMongoDB(sqliteDBFile string, mongoURI string, mongoDBName string, mongoCollectionName string, logger *zap.Logger) error {
+	if err := sqliteToMongoDBInner(sqliteDBFile, mongoURI, mongoDBName, mongoCollectionName); err != nil {
+		logger.Fatal("Failed to convert SQLite database to MongoDB collection!", zap.Error(err))
+		return err
+	}
+
+	logger.Info("Successfully converted SQLite database to MongoDB collection!")
 	return nil
 }

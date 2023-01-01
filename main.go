@@ -27,6 +27,17 @@ func main() {
 	// initialise logger
 	k.Logger = util.SetupLogger(zapcore.Level(appconf.GetInt("log_level")), appconf.GetBool("log_to_file"))
 
+	// migration mode
+	if appconf.GetBool("mongo.migration_mode") {
+		k.Logger.Info("Migration mode enabled")
+		k.MigrateSqliteToMongo(
+			appconf.GetString("mongo.mongo_uri"),
+			appconf.GetString("mongo.mongo_dbname"),
+			appconf.GetString("mongo.mongo_collname"),
+		)
+		return
+	}
+
 	// Android TV notifications via Pipup
 	k.Pipup = pipup.New(k.Config, k.Logger)
 
