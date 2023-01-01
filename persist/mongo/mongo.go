@@ -2,6 +2,7 @@ package persist
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/intothevoid/kramerbot/models"
@@ -60,6 +61,13 @@ func (mdb *MongoStoreDB) Close() error {
 func (mdb *MongoStoreDB) AddUser(user *models.UserData) error {
 	usersColl := mdb.Coll
 
+	// First, you can use the FindOne function to check if the user already exists.
+	result := usersColl.FindOne(context.TODO(), bson.M{"chat_id": user.ChatID})
+	if result.Err() == nil {
+		// create new error
+		return fmt.Errorf("user already exists: %v", user.ChatID)
+	}
+
 	// Then, you can use the InsertOne function to insert a single document into the collection.
 	_, err := usersColl.InsertOne(context.TODO(), user)
 	if err != nil {
@@ -74,11 +82,21 @@ func (mdb *MongoStoreDB) AddUser(user *models.UserData) error {
 func (mdb *MongoStoreDB) UpdateUser(user *models.UserData) error {
 	usersColl := mdb.Coll
 
-	filter := bson.M{"id": user.ChatID}
+	filter := bson.M{"chat_id": user.ChatID}
 	update := bson.M{"$set": user}
-	_, err := usersColl.UpdateOne(context.TODO(), filter, update)
+	result, err := usersColl.UpdateOne(context.TODO(), filter, update)
 	if err != nil {
 		return err
+	}
+
+	if result.MatchedCount == 0 {
+		// create new error
+		return fmt.Errorf("user not found: %v", user.ChatID)
+	}
+
+	if result.ModifiedCount == 0 {
+		// create new error
+		return fmt.Errorf("user not modified: %v", user.ChatID)
 	}
 
 	// The user has been successfully updated in the collection.
@@ -89,10 +107,15 @@ func (mdb *MongoStoreDB) UpdateUser(user *models.UserData) error {
 func (mdb *MongoStoreDB) DeleteUser(user *models.UserData) error {
 	usersColl := mdb.Coll
 
-	filter := bson.M{"id": user.ChatID}
-	_, err := usersColl.DeleteOne(context.TODO(), filter)
+	filter := bson.M{"chat_id": user.ChatID}
+	result, err := usersColl.DeleteOne(context.TODO(), filter)
 	if err != nil {
 		return err
+	}
+
+	if result.DeletedCount == 0 {
+		// create new error
+		return fmt.Errorf("user not found: %v", user.ChatID)
 	}
 
 	// The user has been successfully deleted from the collection.
@@ -104,7 +127,8 @@ func (mdb *MongoStoreDB) GetUser(chatID int64) (*models.UserData, error) {
 	usersColl := mdb.Coll
 
 	var user models.UserData
-	err := usersColl.FindOne(context.TODO(), bson.M{"id": user.ChatID}).Decode(&user)
+	user.ChatID = chatID
+	err := usersColl.FindOne(context.TODO(), bson.M{"chat_id": user.ChatID}).Decode(&user)
 	if err != nil {
 		return nil, err
 	}
