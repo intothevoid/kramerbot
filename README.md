@@ -11,7 +11,7 @@ A Telegram bot to get you the latest deals from websites like https://www.ozbarg
 1. Uses Telegram Bot API for instant notifications
 2. Written in Go and can be deployed with a single binary (Dockerfile included)
 3. Subscribe to good deals, super deals or setup your own custom deals by watching specific keywords
-4. User data is written to a Sqlite database for easy migration
+4. User data is written to a Mongo NoSQL database for easy migration (formerly Sqlite)
 5. Keep track of deals already sent to avoid duplicate sending
 6. Supports scraping www.ozbargain.com.au - Good and super deals
 7. Supports scraping www.amazon.com.au (via Camel Camel Camel RSS) - Top daily and weekly deals
@@ -46,6 +46,14 @@ GIN_MODE=release
 KRAMERBOT_ADMIN_PASS=<your_admin_password>
 ```
 
+### Setup MongoDB
+
+```
+sudo docker build -t mongodb .
+sudo docker network create mongo-network
+sudo docker run -d --network mongo-network --name kramer-mongo -p 27017:27017 -v mongo-data:/data/db mongo:4.4.18
+```
+
 ### Using Docker
 
 To build a Docker image of Kramerbot use the command -
@@ -65,7 +73,7 @@ KRAMERBOT_ADMIN_PASS=<your_admin_password>
 To deploy your container, use the command -
 
 ```
-sudo docker run -d --rm --name kramerbot --env-file=token.env -p 8080:8080 kramerbot:latest
+sudo docker run -d --rm --name kramerbot --network mongo-network --env-file=token.env -p 8080:8080 kramerbot:mongo
 ```
 
 <img src="https://raw.githubusercontent.com/intothevoid/kramerbot/main/static/about.jpeg" width="50%" height="50%"></img>

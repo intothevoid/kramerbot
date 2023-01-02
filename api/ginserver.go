@@ -5,13 +5,13 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	persist "github.com/intothevoid/kramerbot/persist/database"
+	persist "github.com/intothevoid/kramerbot/persist"
 	"github.com/intothevoid/kramerbot/scrapers"
 	"github.com/spf13/viper"
 )
 
 type GinServer struct {
-	UserStoreDB *persist.UserStoreDB
+	UserStoreDB persist.DatabaseIF
 	OzbScraper  *scrapers.OzBargainScraper
 	CCCScraper  *scrapers.CamCamCamScraper
 	Config      *viper.Viper

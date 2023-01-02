@@ -13,7 +13,8 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/intothevoid/kramerbot/api"
 	"github.com/intothevoid/kramerbot/models"
-	persist "github.com/intothevoid/kramerbot/persist/database"
+	persist "github.com/intothevoid/kramerbot/persist"
+	mongo_persist "github.com/intothevoid/kramerbot/persist/mongo"
 	"github.com/intothevoid/kramerbot/pipup"
 	"github.com/intothevoid/kramerbot/scrapers"
 	"github.com/spf13/viper"
@@ -27,7 +28,7 @@ type KramerBot struct {
 	OzbScraper *scrapers.OzBargainScraper
 	CCCScraper *scrapers.CamCamCamScraper
 	UserStore  *models.UserStore
-	DataWriter *persist.UserStoreDB
+	DataWriter persist.DatabaseIF
 	Pipup      *pipup.Pipup
 	Config     *viper.Viper
 	ApiServer  *api.GinServer
@@ -72,12 +73,14 @@ func (k *KramerBot) NewBot(ozbs *scrapers.OzBargainScraper, cccs *scrapers.CamCa
 	k.OzbScraper = ozbs
 	k.CCCScraper = cccs
 
-	// Get working directory
-	dbPath, _ := os.Getwd()
-	dbPath = path.Join(dbPath, "users.db")
-
 	// Set up data writer
-	k.DataWriter = persist.CreateDatabaseConnection(dbPath, k.Logger)
+	dataWriter, _ := mongo_persist.New(
+		k.Config.GetString("mongo.mongo_uri"),
+		k.Config.GetString("mongo.mongo_dbname"),
+		k.Config.GetString("mongo.mongo_collname"),
+		k.Logger,
+	)
+	k.DataWriter = dataWriter
 
 	// Load user store
 	k.LoadUserStore()
@@ -115,4 +118,14 @@ func (k *KramerBot) StartBot() {
 
 	// Start monitoring the bots updates channel
 	k.BotProc(updates)
+}
+
+// migration function to migrate from sqlite to mongo
+func (k *KramerBot) MigrateSqliteToMongo(mongoURI string, mongoDBName string, mongoCollectionName string) {
+	// Get working directory
+	sqliteDBPath, _ := os.Getwd()
+	sqliteDBPath = path.Join(sqliteDBPath, "users.db")
+
+	// Start the conversion
+	mongo_persist.SqliteToMongoDB(sqliteDBPath, mongoURI, mongoDBName, mongoCollectionName, k.Logger)
 }

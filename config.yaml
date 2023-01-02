@@ -6,6 +6,13 @@
 log_level: -1
 log_to_file: true
 
+mongo:
+  # enable migration mode only if you want to convert a sqlite database to a mongo database
+  migration_mode: false
+  mongo_uri: "mongodb://kramer-mongo:27017"
+  mongo_dbname: "usersdb"
+  mongo_collname: "users"
+
 ginserver:
   port: 8080
 

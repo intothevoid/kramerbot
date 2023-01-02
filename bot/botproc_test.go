@@ -6,7 +6,7 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/intothevoid/kramerbot/api"
 	"github.com/intothevoid/kramerbot/models"
-	persist "github.com/intothevoid/kramerbot/persist/database"
+	persist "github.com/intothevoid/kramerbot/persist"
 	"github.com/intothevoid/kramerbot/pipup"
 	"github.com/intothevoid/kramerbot/scrapers"
 	"github.com/spf13/viper"
@@ -21,7 +21,7 @@ func TestKramerBot_verifyAdminPassword(t *testing.T) {
 		OzbScraper *scrapers.OzBargainScraper
 		CCCScraper *scrapers.CamCamCamScraper
 		UserStore  *models.UserStore
-		DataWriter *persist.UserStoreDB
+		DataWriter persist.DatabaseIF
 		Pipup      *pipup.Pipup
 		Config     *viper.Viper
 		ApiServer  *api.GinServer
