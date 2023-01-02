@@ -14,6 +14,8 @@ import (
 
 var NewFunc = New
 
+const MONGOURI = "mongodb://localhost:27017"
+
 func TestNew(t *testing.T) {
 	// Create a mock logger
 	logger := zap.NewNop()
@@ -32,10 +34,10 @@ func TestNew(t *testing.T) {
 		expectedDB: expectedDB,
 	}
 	// Inject the mock client into the New function
-	NewFunc = func(dbName string, collName string, logger *zap.Logger) (*MongoStoreDB, error) {
+	NewFunc = func(mongoUri string, dbName string, collName string, logger *zap.Logger) (*MongoStoreDB, error) {
 		return client.New(dbName, collName, logger)
 	}
-	gotDB, err := NewFunc(dbName, collName, logger)
+	gotDB, err := NewFunc(MONGOURI, dbName, collName, logger)
 	if err != nil {
 		t.Errorf("Unexpected error: %v", err)
 	}
@@ -47,10 +49,10 @@ func TestNew(t *testing.T) {
 	client = &mockMongoClient{
 		connectErr: fmt.Errorf("unable to connect to MongoDB"),
 	}
-	NewFunc = func(dbName string, collName string, logger *zap.Logger) (*MongoStoreDB, error) {
+	NewFunc = func(mongoUri string, dbName string, collName string, logger *zap.Logger) (*MongoStoreDB, error) {
 		return client.New(dbName, collName, logger)
 	}
-	gotDB, err = NewFunc(dbName, collName, logger)
+	gotDB, err = NewFunc(MONGOURI, dbName, collName, logger)
 	if err == nil {
 		t.Errorf("Expected an error, got nil")
 	}
@@ -74,7 +76,7 @@ func (c *mockMongoClient) New(dbName string, collName string, logger *zap.Logger
 // The below test should only be run when a MongoDB instance is running on localhost:27017
 // Otherwise, the test will fail / may hang indefinitely
 func TestMongoStoreDB_AddUser(t *testing.T) {
-	mongoStoreDB, err := New("test_db", "test_coll", zap.NewNop())
+	mongoStoreDB, err := New(MONGOURI, "test_db", "test_coll", zap.NewNop())
 	if err != nil {
 		t.Fatal("Unable to create MongoStoreDB")
 	}
@@ -134,7 +136,7 @@ func TestMongoStoreDB_AddUser(t *testing.T) {
 }
 
 func TestMongoStoreDB_UpdateUser(t *testing.T) {
-	mongoStoreDB, err := New("test_db", "test_coll", zap.NewNop())
+	mongoStoreDB, err := New(MONGOURI, "test_db", "test_coll", zap.NewNop())
 	if err != nil {
 		t.Fatal("Unable to create MongoStoreDB")
 	}
@@ -214,7 +216,7 @@ func TestMongoStoreDB_UpdateUser(t *testing.T) {
 
 func TestMongoStoreDB_DeleteUser(t *testing.T) {
 
-	mongoStoreDB, err := New("test_db", "test_coll", zap.NewNop())
+	mongoStoreDB, err := New(MONGOURI, "test_db", "test_coll", zap.NewNop())
 	if err != nil {
 		t.Fatal("Unable to create MongoStoreDB")
 	}
@@ -293,7 +295,7 @@ func TestMongoStoreDB_DeleteUser(t *testing.T) {
 
 func TestMongoStoreDB_GetUser(t *testing.T) {
 
-	mongoStoreDB, err := New("test_db", "test_coll", zap.NewNop())
+	mongoStoreDB, err := New(MONGOURI, "test_db", "test_coll", zap.NewNop())
 	if err != nil {
 		t.Fatal("Unable to create MongoStoreDB")
 	}
@@ -369,7 +371,7 @@ func TestMongoStoreDB_GetUser(t *testing.T) {
 
 func TestMongoStoreDB_ReadUserStore(t *testing.T) {
 
-	mongoStoreDB, err := New("test_db", "test_coll", zap.NewNop())
+	mongoStoreDB, err := New(MONGOURI, "test_db", "test_coll", zap.NewNop())
 	if err != nil {
 		t.Fatal("Unable to create MongoStoreDB")
 	}
@@ -462,7 +464,7 @@ func TestMongoStoreDB_ReadUserStore(t *testing.T) {
 }
 
 func TestMongoStoreDB_WriteUserStore(t *testing.T) {
-	mongoStoreDB, err := New("test_db", "test_coll", zap.NewNop())
+	mongoStoreDB, err := New(MONGOURI, "test_db", "test_coll", zap.NewNop())
 	if err != nil {
 		t.Fatal("Unable to create MongoStoreDB")
 	}
