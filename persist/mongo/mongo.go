@@ -22,9 +22,9 @@ type MongoStoreDB struct {
 }
 
 // Connect to the mongo database
-func New(dbName string, collName string, logger *zap.Logger) (*MongoStoreDB, error) {
+func New(mongoUri string, dbName string, collName string, logger *zap.Logger) (*MongoStoreDB, error) {
 	// Establish a connection to the MongoDB database.
-	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
+	client, err := mongo.NewClient(options.Client().ApplyURI(mongoUri))
 	if err != nil {
 		return nil, err
 	}

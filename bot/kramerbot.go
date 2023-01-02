@@ -75,6 +75,7 @@ func (k *KramerBot) NewBot(ozbs *scrapers.OzBargainScraper, cccs *scrapers.CamCa
 
 	// Set up data writer
 	dataWriter, _ := mongo_persist.New(
+		k.Config.GetString("mongo.mongo_uri"),
 		k.Config.GetString("mongo.mongo_dbname"),
 		k.Config.GetString("mongo.mongo_collname"),
 		k.Logger,
