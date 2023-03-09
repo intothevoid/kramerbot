@@ -48,10 +48,11 @@ KRAMERBOT_ADMIN_PASS=<your_admin_password>
 
 ### Setup MongoDB
 
+
 ```
-sudo docker build -t mongodb .
-sudo docker network create mongo-network
-sudo docker run -d --network mongo-network --name kramer-mongo -p 27017:27017 -v mongo-data:/data/db mongo:4.4.18
+sudo docker pull mongo:4.4.18
+cd scripts
+sudo ./start_mongo.sh
 ```
 
 ### Using Docker
@@ -73,7 +74,8 @@ KRAMERBOT_ADMIN_PASS=<your_admin_password>
 To deploy your container, use the command -
 
 ```
-sudo docker run -d --rm --name kramerbot --network mongo-network --env-file=token.env -p 8080:8080 kramerbot:mongo
+cd scripts
+sudo ./start_kramer.sh
 ```
 
 <img src="https://raw.githubusercontent.com/intothevoid/kramerbot/main/static/about.jpeg" width="50%" height="50%"></img>
