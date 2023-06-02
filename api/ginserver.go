@@ -21,7 +21,8 @@ func (gs *GinServer) StartServer() {
 	router := gin.Default()
 	router.GET("/users", gs.getUsers)
 	router.GET("/users/:id", gs.getUserById)
-	router.GET("/deals", gs.getDeals)
+	router.GET("/deals/amz", gs.getAmazonDeals)
+	router.GET("/deals/ozb", gs.getOzbargainDeals)
 
 	port := ":" + gs.Config.GetString("ginserver.port")
 
@@ -63,17 +64,29 @@ func (gs *GinServer) getUserById(c *gin.Context) {
 	}
 }
 
-func (gs *GinServer) getDeals(c *gin.Context) {
+func (gs *GinServer) getAmazonDeals(c *gin.Context) {
 	// get deals
 
 	var deals = map[string]interface{}{}
-	deals["OZB"] = gs.OzbScraper.GetData()
 	deals["AMZ"] = gs.CCCScraper.GetData()
 
 	if len(deals) > 0 {
 		c.JSON(http.StatusOK, gin.H{"deals": deals})
 	} else {
-		c.JSON(http.StatusOK, gin.H{"deals": "no deals found"})
+		c.JSON(http.StatusOK, gin.H{"deals": "no amazon deals found"})
+	}
+}
+
+func (gs *GinServer) getOzbargainDeals(c *gin.Context) {
+	// get deals
+
+	var deals = map[string]interface{}{}
+	deals["OZB"] = gs.OzbScraper.GetData()
+
+	if len(deals) > 0 {
+		c.JSON(http.StatusOK, gin.H{"deals": deals})
+	} else {
+		c.JSON(http.StatusOK, gin.H{"deals": "no ozbargain deals found"})
 	}
 
 }
