@@ -44,8 +44,9 @@ func (gs *GinServer) StartServer() {
 	router := gin.Default()
 	router.Use(cors.New(cors.Config{
 		AllowOrigins: []string{"*"},
-		AllowMethods: []string{"POST", "DELETE"},
-		AllowHeaders: []string{"Content-Type,access-control-allow-origin, access-control-allow-headers"},
+		AllowMethods: []string{"POST", "GET", "OPTIONS"},
+		AllowCredentials: true,
+		AllowHeaders: []string{"Content-Type", "Content-Length", "Accept-Encoding", "X-CSRF-Token", "Authorization", "accept", "Origin", "Cache-Control", "X-Requested-With", "access-control-allow-origin", "access-control-allow-headers"},
 	}))
 
 	router.POST("/signup", gs.signup)
