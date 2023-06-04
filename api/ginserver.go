@@ -221,7 +221,7 @@ func (gs *GinServer) getUserById(c *gin.Context) {
 	} else {
 		val, ok := users.Users[iid]
 		if ok {
-			c.JSON(http.StatusOK, gin.H{"user": val})
+			c.JSON(http.StatusOK, gin.H{"result": val})
 		} else {
 			c.JSON(http.StatusNotFound, gin.H{"result": "user not found"})
 		}
