@@ -8,30 +8,32 @@ services:
       - mongo-network
     ports:
       - 27017:27017
+    container_name: kramer-mongo
 
   kramerbot:
     build:
-      context: https://github.com/intothevoid/kramerbot.git#feature/svelte-connect
-      dockerfile: Dockerfile.prod
-    environment:
-      - FILE=token.env
+      context: .
+      dockerfile: Dockerfile
+    env_file: token.env
     networks:
       - mongo-network
     ports:
       - 3179:3179
     depends_on:
       - kramer-mongo
+    container_name: kramerbot
 
   kramerbot-ui:
     build:
-      context: https://github.com/intothevoid/kramberbotui.git#main
-      dockerfile: Dockerfile
+      context: ../kramerbotui
+      dockerfile: Dockerfile.prod
     networks:
       - mongo-network
     ports:
       - 5173:5173
     depends_on:
       - kramerbot
+    container_name: kramerbot-ui
 
 networks:
   mongo-network:
@@ -39,3 +41,4 @@ networks:
 
 volumes:
   mongo-data:
+
