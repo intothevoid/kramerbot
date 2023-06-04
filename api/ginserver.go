@@ -53,7 +53,7 @@ func (gs *GinServer) StartServer() {
 	router.POST("/authenticate", gs.authenticate)
 	router.GET("/users", gs.getUsers)
 	router.GET("/users/:id", gs.getUserById)
-	router.GET("/deals", gs.getDeals)
+	router.GET("/deals/:count", gs.getDeals)
 	router.GET("/", gs.rootHello)
 
 	port := ":" + gs.Config.GetString("ginserver.port")
@@ -109,7 +109,7 @@ func (gs *GinServer) signup(c *gin.Context) {
 	}
 
 	// if we reach here, username is unique and valid
-	// write to store
+	// update user credentials
 	currentUser.UsernameChosen = signup.Username
 	currentUser.Password = signup.Password
 	gs.UserStoreDB.UpdateUser(currentUser)
@@ -229,14 +229,26 @@ func (gs *GinServer) getUserById(c *gin.Context) {
 }
 
 func (gs *GinServer) getDeals(c *gin.Context) {
-	// get deals
+	// get no. of deals to send back
+	sCount := c.Params.ByName("count")
+	i64Count, _ := strconv.ParseInt(sCount, 10, 64)
+	iCount := int(i64Count)
 
+	// get deals
 	var deals = map[string]interface{}{}
-	deals["OZB"] = gs.OzbScraper.GetData()
-	deals["AMZ"] = gs.CCCScraper.GetData()
+	ozbDeals := gs.OzbScraper.GetData()
+	amzDeals := gs.CCCScraper.GetData()
+
+	if iCount < len(ozbDeals) && iCount < len(amzDeals) {
+		deals["OZB"] = gs.OzbScraper.GetData()[:iCount]
+		deals["AMZ"] = gs.CCCScraper.GetData()[:iCount]
+	} else {
+		deals["OZB"] = gs.OzbScraper.GetData()
+		deals["AMZ"] = gs.CCCScraper.GetData()
+	}
 
 	if len(deals) > 0 {
-		c.JSON(http.StatusOK, gin.H{"deals": deals})
+		c.JSON(http.StatusOK, gin.H{"result": deals})
 	} else {
 		c.JSON(http.StatusNotFound, gin.H{"result": "no deals found"})
 	}
