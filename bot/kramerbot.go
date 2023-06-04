@@ -151,9 +151,13 @@ func (k *KramerBot) StartBot() {
 		k.BotProc(updates)
 	} else {
 		testTick := time.NewTicker(time.Second * time.Duration(10))
+		count := 0
 		for range testTick.C {
 			// Test mode do nothing
-			k.Logger.Info("Test mode... tick")
+			// log tick count
+			count++
+			k.Logger.Info("test mode active", zap.Int("tick count", count))
+
 		}
 	}
 }
