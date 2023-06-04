@@ -62,7 +62,7 @@ func (gs *GinServer) StartServer() {
 		router.Run(port)
 	} else {
 		// Failed to read config, use default port
-		router.Run(":8080")
+		router.Run(":3179")
 	}
 }
 
