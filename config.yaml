@@ -6,6 +6,10 @@
 log_level: -1
 log_to_file: true
 
+# test mode - everything works the same way, except all network notifications
+# are blocked and nothing is written to the database. Used for testing features, bugs
+test_mode: false
+
 mongo:
   # enable migration mode only if you want to convert a sqlite database to a mongo database
   migration_mode: false

@@ -9,6 +9,7 @@ package bot
 import (
 	"os"
 	"path"
+	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/intothevoid/kramerbot/api"
@@ -47,33 +48,57 @@ func (k *KramerBot) GetAdminPass() string {
 	return adminPass
 }
 
+// get test mode from configuration
+func (k *KramerBot) getTestMode() bool {
+	testMode := k.Config.GetBool("test_mode")
+	return testMode
+}
+
 // function to create a new bot
 func (k *KramerBot) NewBot(ozbs *scrapers.OzBargainScraper, cccs *scrapers.CamCamCamScraper) {
-	// If user has forgotten to set the token
-	if k.Token == "" {
-		k.Token = k.GetToken()
+	// check test mode
+	testMode := k.getTestMode()
+	if testMode {
+		// TEST MODE
+		k.Logger.Info("****** TEST MODE IS NOW ACTIVE. Telegram not connected. ******")
+
+		// Make entries to dummy database
+		// dataWriter, _ := dummy_persist.New(
+		// 	"dummy_uri",
+		// 	"dummy_dbname",
+		// 	"dummy_collname",
+		// 	k.Logger,
+		// )
+		// k.DataWriter = dataWriter
+	} else {
+		// REGULAR MODE
+		// If user has forgotten to set the token
+		if k.Token == "" {
+			k.Token = k.GetToken()
+		}
+
+		if k.Token == "" {
+			k.Logger.Fatal("Cannot proceed without a bot token, is the TELEGRAM_BOT_TOKEN environment variable set?")
+		}
+
+		// Init telegram bot
+		bot, err := tgbotapi.NewBotAPI(k.Token)
+		if err != nil {
+			k.Logger.Fatal(err.Error())
+		}
+
+		k.Logger.Info("Authorized on account", zap.String("username", bot.Self.UserName))
+
+		// Allocate bot
+		k.BotApi = &tgbotapi.BotAPI{}
+		k.BotApi = bot
 	}
-
-	if k.Token == "" {
-		k.Logger.Fatal("Cannot proceed without a bot token, is the TELEGRAM_BOT_TOKEN environment variable set?")
-	}
-
-	bot, err := tgbotapi.NewBotAPI(k.Token)
-	if err != nil {
-		k.Logger.Fatal(err.Error())
-	}
-
-	k.Logger.Info("Authorized on account", zap.String("username", bot.Self.UserName))
-
-	// Allocate bot
-	k.BotApi = &tgbotapi.BotAPI{}
-	k.BotApi = bot
 
 	// Assign scrapers
 	k.OzbScraper = ozbs
 	k.CCCScraper = cccs
 
-	// Set up data writer
+	// Real mode, make entries to real database
 	dataWriter, _ := mongo_persist.New(
 		k.Config.GetString("mongo.mongo_uri"),
 		k.Config.GetString("mongo.mongo_dbname"),
@@ -97,27 +122,40 @@ func (k *KramerBot) NewBot(ozbs *scrapers.OzBargainScraper, cccs *scrapers.CamCa
 
 // start receiving updates from telegram
 func (k *KramerBot) StartBot() {
-	// log start receiving updates
-	k.Logger.Info("Start receiving updates")
+	// check test mode
+	testMode := k.getTestMode()
 
-	// setup updates
-	u := tgbotapi.NewUpdate(0)
-	u.Timeout = 60
+	// Do not send any updates when test mode is active
+	if !testMode {
 
-	// get updates channel
-	updates, err := k.BotApi.GetUpdatesChan(u)
-	if err != nil {
-		k.Logger.Fatal(err.Error())
+		// log start receiving updates
+		k.Logger.Info("Start receiving updates")
+
+		// setup updates
+		u := tgbotapi.NewUpdate(0)
+		u.Timeout = 60
+
+		// get updates channel
+		updates, err := k.BotApi.GetUpdatesChan(u)
+		if err != nil {
+			k.Logger.Fatal(err.Error())
+		}
+
+		// Start processing deals and scraping
+		// Run asyncronously to avoid blocking the main thread
+		go func() {
+			k.StartProcessing()
+		}()
+
+		// Start monitoring the bots updates channel
+		k.BotProc(updates)
+	} else {
+		testTick := time.NewTicker(time.Second * time.Duration(10))
+		for range testTick.C {
+			// Test mode do nothing
+			k.Logger.Info("Test mode... tick")
+		}
 	}
-
-	// Start processing deals and scraping
-	// Run asyncronously to avoid blocking the main thread
-	go func() {
-		k.StartProcessing()
-	}()
-
-	// Start monitoring the bots updates channel
-	k.BotProc(updates)
 }
 
 // migration function to migrate from sqlite to mongo
