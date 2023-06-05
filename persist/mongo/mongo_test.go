@@ -1,6 +1,7 @@
 package persist
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"testing"
@@ -8,6 +9,7 @@ import (
 	"github.com/intothevoid/kramerbot/models"
 	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.uber.org/zap"
 )
@@ -107,15 +109,15 @@ func TestMongoStoreDB_AddUser(t *testing.T) {
 			args: args{
 				user: &models.UserData{
 					ChatID:         123,
-					Username:       "JohnDoe",
-					OzbGood:        false,
-					OzbSuper:       false,
-					Keywords:       []string{"test1", "test2"},
-					OzbSent:        []string{"test1", "test2"},
-					AmzDaily:       false,
-					AmzWeekly:      false,
-					AmzSent:        []string{"test1", "test2"},
-					UsernameChosen: "JohnDoe",
+					Username:       "JaneDoe",
+					OzbGood:        true,
+					OzbSuper:       true,
+					Keywords:       []string{"test3", "test4"},
+					OzbSent:        []string{"test3", "test4"},
+					AmzDaily:       true,
+					AmzWeekly:      true,
+					AmzSent:        []string{"test3", "test4"},
+					UsernameChosen: "JaneDoe",
 					Password:       "password",
 				},
 			},
@@ -124,6 +126,12 @@ func TestMongoStoreDB_AddUser(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			// Clear the database before each test run
+			_, err := mongoStoreDB.Coll.DeleteMany(context.Background(), bson.M{})
+			if err != nil {
+				t.Fatal("Unable to clear database: ", err)
+			}
+
 			mdb := &MongoStoreDB{
 				Coll:     tt.fields.Coll,
 				Name:     tt.fields.Name,
@@ -156,11 +164,6 @@ func TestMongoStoreDB_UpdateUser(t *testing.T) {
 		AmzSent:        []string{"test1", "test2"},
 		UsernameChosen: "JohnDoe",
 		Password:       "password",
-	}
-
-	err = mongoStoreDB.AddUser(user)
-	if err != nil {
-		t.Logf("Unable to insert test user %d", user.ChatID)
 	}
 
 	type fields struct {
@@ -207,6 +210,16 @@ func TestMongoStoreDB_UpdateUser(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			// Clear the database before each test run
+			_, err := mongoStoreDB.Coll.DeleteMany(context.Background(), bson.M{})
+			if err != nil {
+				t.Fatal("Unable to clear database: ", err)
+			}
+			err = mongoStoreDB.AddUser(user)
+			if err != nil {
+				t.Logf("Unable to insert test user %d", user.ChatID)
+			}
+
 			mdb := &MongoStoreDB{
 				Coll:     tt.fields.Coll,
 				Name:     tt.fields.Name,
