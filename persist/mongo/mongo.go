@@ -172,18 +172,32 @@ func (mdb *MongoStoreDB) WriteUserStore(userStore *models.UserStore) error {
 		users = append(users, user)
 	}
 
-	// First, you can use the Drop function to delete all documents in the collection.
-	_, err := mdb.Coll.DeleteMany(context.TODO(), bson.M{})
-	if err != nil {
-		return err
+	// Instead of dropping the collection, iterate over the users and update each one.
+	for _, user := range users {
+		// Cast the user back to *models.UserData
+		userData := user.(*models.UserData)
+
+		// Create the filter for the user
+		filter := bson.M{"chat_id": userData.ChatID}
+
+		// Create the update document
+		update := bson.M{"$set": userData}
+
+		// Update the user
+		_, err := mdb.Coll.UpdateOne(context.TODO(), filter, update)
+		if err != nil {
+			// If the user does not exist, insert it
+			if err == mongo.ErrNoDocuments {
+				_, err := mdb.Coll.InsertOne(context.TODO(), userData)
+				if err != nil {
+					return err
+				}
+			} else {
+				return err
+			}
+		}
 	}
 
-	// Then, you can use the InsertMany function to insert multiple documents into the collection.
-	_, err = mdb.Coll.InsertMany(context.TODO(), users)
-	if err != nil {
-		return err
-	}
-
-	// The users have been successfully inserted into the collection.
+	// The users have been successfully updated in the collection.
 	return nil
 }
