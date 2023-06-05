@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/intothevoid/kramerbot/models"
 	persist "github.com/intothevoid/kramerbot/persist"
@@ -41,7 +42,31 @@ type PreferencesRequest struct {
 
 func (gs *GinServer) StartServer() {
 	router := gin.Default()
+
+	// General CORS options
+	router.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"*"},
+		AllowMethods:     []string{"POST", "GET", "OPTIONS"},
+		AllowCredentials: true,
+		AllowHeaders:     []string{"Content-Type", "Content-Length", "Accept-Encoding", "X-CSRF-Token", "Authorization", "accept", "Origin", "Cache-Control", "X-Requested-With", "access-control-allow-origin", "access-control-allow-headers"},
+	}))
+
+	// OPTIONS request for CORS
 	router.OPTIONS("/authenticate", func(c *gin.Context) {
+		// Respond with 200 OK and the necessary CORS headers
+		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, Origin, Cache-Control, X-Requested-With")
+		c.Writer.WriteHeader(http.StatusOK)
+	})
+	router.OPTIONS("/signup", func(c *gin.Context) {
+		// Respond with 200 OK and the necessary CORS headers
+		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, Origin, Cache-Control, X-Requested-With")
+		c.Writer.WriteHeader(http.StatusOK)
+	})
+	router.OPTIONS("/preferences", func(c *gin.Context) {
 		// Respond with 200 OK and the necessary CORS headers
 		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
