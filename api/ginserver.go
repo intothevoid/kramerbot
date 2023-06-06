@@ -265,12 +265,16 @@ func (gs *GinServer) getDeals(c *gin.Context) {
 	ozbDeals := gs.OzbScraper.GetData()
 	amzDeals := gs.CCCScraper.GetData()
 
-	if iCount < len(ozbDeals) && iCount < len(amzDeals) {
-		deals["OZB"] = gs.OzbScraper.GetData()[:iCount]
-		deals["AMZ"] = gs.CCCScraper.GetData()[:iCount]
+	if iCount <= len(ozbDeals) {
+		deals["OZB"] = ozbDeals[:iCount]
 	} else {
-		deals["OZB"] = gs.OzbScraper.GetData()
-		deals["AMZ"] = gs.CCCScraper.GetData()
+		deals["OZB"] = ozbDeals
+	}
+
+	if iCount <= len(amzDeals) {
+		deals["AMZ"] = amzDeals[:iCount]
+	} else {
+		deals["AMZ"] = amzDeals
 	}
 
 	if len(deals) > 0 {
