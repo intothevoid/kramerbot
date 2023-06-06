@@ -119,7 +119,7 @@ func (s *CamCamCamScraper) GetLatestDeals(count int) []models.CamCamCamDeal {
 	if len(s.Deals) <= count {
 		return s.Deals
 	}
-	return s.Deals[:count]
+	return s.Deals[len(s.Deals)-count:]
 }
 
 // go routine to auto scrape every X minutes

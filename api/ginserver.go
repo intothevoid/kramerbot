@@ -262,20 +262,8 @@ func (gs *GinServer) getDeals(c *gin.Context) {
 
 	// get deals
 	var deals = map[string]interface{}{}
-	ozbDeals := gs.OzbScraper.GetData()
-	amzDeals := gs.CCCScraper.GetData()
-
-	if iCount <= len(ozbDeals) {
-		deals["OZB"] = ozbDeals[:iCount]
-	} else {
-		deals["OZB"] = ozbDeals
-	}
-
-	if iCount <= len(amzDeals) {
-		deals["AMZ"] = amzDeals[:iCount]
-	} else {
-		deals["AMZ"] = amzDeals
-	}
+	deals["OZB"] = gs.OzbScraper.GetLatestDeals(iCount)
+	deals["AMZ"] = gs.CCCScraper.GetLatestDeals(iCount)
 
 	if len(deals) > 0 {
 		c.JSON(http.StatusOK, gin.H{"result": deals})
