@@ -40,6 +40,9 @@ func (k *KramerBot) processOzbargainDeals() {
 
 	// Load deals from OzBargain
 	deals := k.OzbScraper.GetData()
+
+	// Load store
+	k.LoadUserStore()
 	userdata := k.UserStore.Users
 
 	for _, deal := range deals {
@@ -89,6 +92,9 @@ func (k *KramerBot) processCCCDeals() {
 
 	// Load deals from OzBargain
 	deals := k.CCCScraper.GetData()
+
+	// Load store
+	k.LoadUserStore()
 	userdata := k.UserStore.Users
 
 	// Get price drop target from configuration
