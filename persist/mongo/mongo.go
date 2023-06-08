@@ -3,6 +3,7 @@ package persist
 import (
 	"context"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/intothevoid/kramerbot/models"
@@ -13,6 +14,9 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.uber.org/zap"
 )
+
+// Use sync mutex to prevent data race
+var storeMutex *sync.Mutex = &sync.Mutex{}
 
 type MongoStoreDB struct {
 	Coll     *mongo.Collection
@@ -59,6 +63,10 @@ func (mdb *MongoStoreDB) Close() error {
 
 // Add user to the database
 func (mdb *MongoStoreDB) AddUser(user *models.UserData) error {
+	// Add sync mutex to the database
+	storeMutex.Lock()
+	defer storeMutex.Unlock()
+
 	usersColl := mdb.Coll
 
 	// First, you can use the FindOne function to check if the user already exists.
@@ -80,6 +88,10 @@ func (mdb *MongoStoreDB) AddUser(user *models.UserData) error {
 
 // Update user in the database
 func (mdb *MongoStoreDB) UpdateUser(user *models.UserData) error {
+	// Add sync mutex to the database
+	storeMutex.Lock()
+	defer storeMutex.Unlock()
+
 	usersColl := mdb.Coll
 
 	filter := bson.M{"chat_id": user.ChatID}
@@ -105,6 +117,10 @@ func (mdb *MongoStoreDB) UpdateUser(user *models.UserData) error {
 
 // Delete user from the database
 func (mdb *MongoStoreDB) DeleteUser(user *models.UserData) error {
+	// Add sync mutex to the database
+	storeMutex.Lock()
+	defer storeMutex.Unlock()
+
 	usersColl := mdb.Coll
 
 	filter := bson.M{"chat_id": user.ChatID}
@@ -124,6 +140,10 @@ func (mdb *MongoStoreDB) DeleteUser(user *models.UserData) error {
 
 // Get user from the database by chat_id
 func (mdb *MongoStoreDB) GetUser(chatID int64) (*models.UserData, error) {
+	// Add sync mutex to the database
+	storeMutex.Lock()
+	defer storeMutex.Unlock()
+
 	usersColl := mdb.Coll
 
 	var user models.UserData
@@ -139,6 +159,9 @@ func (mdb *MongoStoreDB) GetUser(chatID int64) (*models.UserData, error) {
 
 // Read all users from the database
 func (mdb *MongoStoreDB) ReadUserStore() (*models.UserStore, error) {
+	// Add sync mutex to the database
+	storeMutex.Lock()
+	defer storeMutex.Unlock()
 
 	userStore := &models.UserStore{
 		Users: make(map[int64]*models.UserData),
@@ -166,6 +189,11 @@ func (mdb *MongoStoreDB) ReadUserStore() (*models.UserStore, error) {
 
 // Write *models.UserStore to the database
 func (mdb *MongoStoreDB) WriteUserStore(userStore *models.UserStore) error {
+	// Add sync mutex to the database
+	storeMutex.Lock()
+	defer storeMutex.Unlock()
+
+	// Syncrhoniza
 	// Convert the userStore map to a slice of users.
 	var users []interface{}
 	for _, user := range userStore.Users {
