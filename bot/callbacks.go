@@ -70,7 +70,7 @@ func (k *KramerBot) SendOzbGoodDeal(user *models.UserData, deal *models.OzBargai
 
 	// Mark deal as sent
 	user.OzbSent = append(user.OzbSent, deal.Id)
-	k.SaveUserStore()
+	k.UpdateUser(user)
 }
 
 // Send OZB super deal to user
@@ -89,7 +89,7 @@ func (k *KramerBot) SendOzbSuperDeal(user *models.UserData, deal *models.OzBarga
 
 	// Mark deal as sent
 	user.OzbSent = append(user.OzbSent, deal.Id)
-	k.SaveUserStore()
+	k.UpdateUser(user)
 }
 
 func (k *KramerBot) SendAmzDeal(user *models.UserData, deal *models.CamCamCamDeal) {
@@ -117,7 +117,7 @@ func (k *KramerBot) SendAmzDeal(user *models.UserData, deal *models.CamCamCamDea
 
 	// Mark deal as sent
 	user.AmzSent = append(user.AmzSent, deal.Id)
-	k.SaveUserStore()
+	k.UpdateUser(user)
 }
 
 // Send OZB watched deal to user
@@ -136,7 +136,7 @@ func (k *KramerBot) SendOzbWatchedDeal(user *models.UserData, deal *models.OzBar
 
 	// Mark deal as sent
 	user.OzbSent = append(user.OzbSent, deal.Id)
-	k.SaveUserStore()
+	k.UpdateUser(user)
 }
 
 // Send AMZ watched deal to user
@@ -155,5 +155,5 @@ func (k *KramerBot) SendAmzWatchedDeal(user *models.UserData, deal *models.CamCa
 
 	// Mark deal as sent
 	user.AmzSent = append(user.AmzSent, deal.Id)
-	k.SaveUserStore()
+	k.UpdateUser(user)
 }

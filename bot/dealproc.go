@@ -4,6 +4,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/intothevoid/kramerbot/models"
 	"github.com/intothevoid/kramerbot/scrapers"
 	"go.uber.org/zap"
 )
@@ -41,11 +42,17 @@ func (k *KramerBot) processOzbargainDeals() {
 	// Load deals from OzBargain
 	deals := k.OzbScraper.GetData()
 
+	// Strip duplicates by using a map indexed by deal id
+	uniqueDeals := make(map[string]models.OzBargainDeal)
+	for _, deal := range deals {
+		uniqueDeals[deal.Id] = deal
+	}
+
 	// Load store
 	k.LoadUserStore()
 	userdata := k.UserStore.Users
 
-	for _, deal := range deals {
+	for _, deal := range uniqueDeals {
 		k.Logger.Debug("Ozbargain deal", zap.Any("deal", deal))
 
 		// Check deal type
@@ -93,6 +100,12 @@ func (k *KramerBot) processCCCDeals() {
 	// Load deals from OzBargain
 	deals := k.CCCScraper.GetData()
 
+	// Strip duplicates by using a map indexed by deal id
+	uniqueDeals := make(map[string]models.CamCamCamDeal)
+	for _, deal := range deals {
+		uniqueDeals[deal.Id] = deal
+	}
+
 	// Load store
 	k.LoadUserStore()
 	userdata := k.UserStore.Users
@@ -100,7 +113,7 @@ func (k *KramerBot) processCCCDeals() {
 	// Get price drop target from configuration
 	priceDropTarget := k.Config.GetInt("scrapers.amazon.target_price_drop")
 
-	for _, deal := range deals {
+	for _, deal := range uniqueDeals {
 		k.Logger.Debug("Amazon deal", zap.Any("deal", deal))
 
 		// Check if percentage drop meets target

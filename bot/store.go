@@ -41,6 +41,14 @@ func (k *KramerBot) SaveUserStore() {
 	}
 }
 
+// Update single user record in user store
+func (k *KramerBot) UpdateUser(userData *models.UserData) {
+	// Update user store
+	if k.DataWriter != nil {
+		k.DataWriter.UpdateUser(userData)
+	}
+}
+
 // Check if the OZB deal has already been sent to the user
 func OzbDealSent(user *models.UserData, deal *models.OzBargainDeal) bool {
 	// Check if deal.Id is in user.DealsSent
