@@ -2,6 +2,7 @@ package bot
 
 import (
 	"github.com/intothevoid/kramerbot/models"
+	"go.uber.org/zap"
 )
 
 // Create user data from parameters passed in
@@ -24,7 +25,11 @@ func (k *KramerBot) CreateUserData(chatID int64, username string, keyword string
 func (k *KramerBot) LoadUserStore() {
 	// Load user store i.e. user data indexed by chat id
 	if k.DataWriter != nil {
-		k.UserStore, _ = k.DataWriter.ReadUserStore()
+		var err error
+		k.UserStore, err = k.DataWriter.ReadUserStore()
+		if err != nil {
+			k.Logger.Error("Error loading user store: ", zap.Error(err))
+		}
 	}
 }
 
@@ -33,6 +38,14 @@ func (k *KramerBot) SaveUserStore() {
 	// Save user store i.e. user data indexed by chat id
 	if k.DataWriter != nil {
 		k.DataWriter.WriteUserStore(k.UserStore)
+	}
+}
+
+// Update single user record in user store
+func (k *KramerBot) UpdateUser(userData *models.UserData) {
+	// Update user store
+	if k.DataWriter != nil {
+		k.DataWriter.UpdateUser(userData)
 	}
 }
 

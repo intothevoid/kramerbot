@@ -18,6 +18,7 @@ A Telegram bot to get you the latest deals from websites like https://www.ozbarg
 8. Supports Android TV notifications
 9. API to access user and deal data
 10. Ability to send maintenance messages / announcements to all users
+11. Slick web app to manage user preferences https://www.github.com/intothevoid/kramerbotui
 
 ## API
 
@@ -27,6 +28,9 @@ The following API endpoints are available -
 /users - Get user data for all users
 /users/:chatid - Get user data by chat id
 /deals - Get deal data for latest deals by the scraper
+/signup - Signup from accompanying web app https://www.github.com/intothevoid/kramerbotui
+/preferences - Update user preferences
+/authenticate - User authentication
 ```
 
 ## Deployment

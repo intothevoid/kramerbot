@@ -44,15 +44,17 @@ func (k Keywords) Value() (driver.Value, error) {
 
 // UserData represents the structure of the data in the SQLite database
 type UserData struct {
-	ChatID    int64    `gorm:"column:chat_id"`    // Telegram chat ID
-	Username  string   `gorm:"column:username"`   // Telegram username
-	OzbGood   bool     `gorm:"column:ozb_good"`   // watch deals with 25+ upvotes in the last 24 hours
-	OzbSuper  bool     `gorm:"column:ozb_super"`  // watch deals with 50+ upvotes in the last 24 hours
-	Keywords  Keywords `gorm:"column:keywords"`   // list of keywords / deals to watch for
-	OzbSent   Keywords `gorm:"column:ozb_sent"`   // comma separated list of ozb deals sent to user
-	AmzDaily  bool     `gorm:"column:amz_daily"`  // watch top daily deals on amazon
-	AmzWeekly bool     `gorm:"column:amz_weekly"` // watch top weekly deals on amazon
-	AmzSent   Keywords `gorm:"column:amz_sent"`   // comma separated list of amz deals sent to user
+	ChatID         int64    `gorm:"column:chat_id"`         // Telegram chat ID
+	Username       string   `gorm:"column:username"`        // Telegram username
+	OzbGood        bool     `gorm:"column:ozb_good"`        // watch deals with 25+ upvotes in the last 24 hours
+	OzbSuper       bool     `gorm:"column:ozb_super"`       // watch deals with 50+ upvotes in the last 24 hours
+	Keywords       Keywords `gorm:"column:keywords"`        // list of keywords / deals to watch for
+	OzbSent        Keywords `gorm:"column:ozb_sent"`        // comma separated list of ozb deals sent to user
+	AmzDaily       bool     `gorm:"column:amz_daily"`       // watch top daily deals on amazon
+	AmzWeekly      bool     `gorm:"column:amz_weekly"`      // watch top weekly deals on amazon
+	AmzSent        Keywords `gorm:"column:amz_sent"`        // comma separated list of amz deals sent to user
+	UsernameChosen string   `gorm:"column:username_chosen"` // username chosen by user
+	Password       string   `gorm:"column:password"`        // password chosen by user
 }
 
 // TableName sets the table name for the UserData struct
@@ -89,15 +91,17 @@ func sqliteToMongoDBInner(sqliteDBFile, mongoURI, mongoDBName, mongoCollectionNa
 	// Insert the user data into the MongoDB collection
 	for _, user := range users {
 		userDoc := bson.M{
-			"chat_id":    user.ChatID,
-			"username":   user.Username,
-			"ozb_good":   user.OzbGood,
-			"ozb_super":  user.OzbSuper,
-			"keywords":   user.Keywords,
-			"ozb_sent":   user.OzbSent,
-			"amz_daily":  user.AmzDaily,
-			"amz_weekly": user.AmzWeekly,
-			"amz_sent":   user.AmzSent,
+			"chat_id":         user.ChatID,
+			"username":        user.Username,
+			"ozb_good":        user.OzbGood,
+			"ozb_super":       user.OzbSuper,
+			"keywords":        user.Keywords,
+			"ozb_sent":        user.OzbSent,
+			"amz_daily":       user.AmzDaily,
+			"amz_weekly":      user.AmzWeekly,
+			"amz_sent":        user.AmzSent,
+			"username_chosen": user.UsernameChosen,
+			"password":        user.Password,
 		}
 		if _, err := usersCollection.InsertOne(context.TODO(), userDoc); err != nil {
 			return err

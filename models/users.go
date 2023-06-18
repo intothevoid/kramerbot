@@ -9,15 +9,17 @@ type UserStore struct {
 
 // User data model
 type UserData struct {
-	ChatID    int64    `bson:"chat_id"`    // Telegram chat ID
-	Username  string   `bson:"username"`   // Telegram username
-	OzbGood   bool     `bson:"ozb_good"`   // watch deals with 25+ upvotes in the last 24 hours
-	OzbSuper  bool     `bson:"ozb_super"`  // watch deals with 50+ upvotes in the last 24 hours
-	Keywords  []string `bson:"keywords"`   // list of keywords / deals to watch for
-	OzbSent   []string `bson:"ozb_sent"`   // comma separated list of ozb deals sent to user
-	AmzDaily  bool     `bson:"amz_daily"`  // watch top daily deals on amazon
-	AmzWeekly bool     `bson:"amz_weekly"` // watch top weekly deals on amazon
-	AmzSent   []string `bson:"amz_sent"`   // comma separated list of amz deals sent to user
+	ChatID         int64    `bson:"chat_id"`         // Telegram chat ID
+	Username       string   `bson:"username"`        // Telegram username
+	OzbGood        bool     `bson:"ozb_good"`        // watch deals with 25+ upvotes in the last 24 hours
+	OzbSuper       bool     `bson:"ozb_super"`       // watch deals with 50+ upvotes in the last 24 hours
+	Keywords       []string `bson:"keywords"`        // list of keywords / deals to watch for
+	OzbSent        []string `bson:"ozb_sent"`        // comma separated list of ozb deals sent to user
+	AmzDaily       bool     `bson:"amz_daily"`       // watch top daily deals on amazon
+	AmzWeekly      bool     `bson:"amz_weekly"`      // watch top weekly deals on amazon
+	AmzSent        []string `bson:"amz_sent"`        // comma separated list of amz deals sent to user
+	UsernameChosen string   `bson:"username_chosen"` // username chosen by user on website
+	Password       string   `bson:"password"`        // password chosen by user on website
 }
 
 // setters and getters for UserData
@@ -74,4 +76,10 @@ func (u *UserData) SetAmzSent(amzSent []string) {
 }
 func (u *UserData) GetAmzSent() []string {
 	return u.AmzSent
+}
+func (u *UserData) SetUsernameChosen(usernameChosen string) {
+	u.UsernameChosen = usernameChosen
+}
+func (u *UserData) GetUsernameChosen() string {
+	return u.UsernameChosen
 }
