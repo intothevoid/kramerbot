@@ -17,10 +17,12 @@ func (k *KramerBot) Help(chat *tgbotapi.Chat) {
 	fpath, _ := filepath.Abs("./static/kramer_drnostrand.jpg")
 	k.SendPhoto(chat.ID, fpath)
 
+	urlWebUi := k.Config.GetString("webui.url")
+
 	// Show the help banner
 	k.SendMessage(chat.ID, fmt.Sprintf("Hi %s! Welcome to @kramerbot\n\n"+
-		"To configure your bot, please sign up at <TBD>\n"+
-		"You ChatID is %d\n", chat.FirstName, chat.ID))
+		"To configure your bot, please sign up at %s\n"+
+		"You ChatID is %d\n", chat.FirstName, urlWebUi, chat.ID))
 }
 
 // Send test message
