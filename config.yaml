@@ -13,7 +13,7 @@ test_mode: false
 # if you are hosting the webui of kramerbot this url is sent in the registration message
 # when a new user signs up
 webui:
-  url: "http://bindok.hopto.org:8181/"
+  url: "https://kramerbot.karan.myds.me/"
 
 mongo:
   # enable migration mode only if you want to convert a sqlite database to a mongo database
