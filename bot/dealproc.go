@@ -14,8 +14,8 @@ import (
 func (k *KramerBot) StartProcessing() {
 	// Begin timed processing and scraping
 	go func() {
-		// ozbTick := time.NewTicker(time.Second * 60)
-		ozbTick := time.NewTicker(time.Minute * time.Duration(k.OzbScraper.ScrapeInterval))
+		ozbTick := time.NewTicker(time.Second * 60)
+		// ozbTick := time.NewTicker(time.Minute * time.Duration(k.OzbScraper.ScrapeInterval))
 		for range ozbTick.C {
 			// Process Ozbargain deals
 			k.processOzbargainDeals()
@@ -33,6 +33,12 @@ func (k *KramerBot) StartProcessing() {
 }
 
 func (k *KramerBot) processOzbargainDeals() {
+	// Add nil checks for k.OzbScraper
+	if k.OzbScraper == nil {
+		k.Logger.Error("OzbScraper is nil")
+		return
+	}
+
 	err := k.OzbScraper.Scrape()
 	if err != nil {
 		k.Logger.Error("Error scraping deals", zap.Error(err))
@@ -41,6 +47,9 @@ func (k *KramerBot) processOzbargainDeals() {
 
 	// Load deals from OzBargain
 	deals := k.OzbScraper.GetData()
+	if deals == nil {
+		k.Logger.Error("No deals returned from scraper")
+	}
 
 	// Strip duplicates by using a map indexed by deal id
 	uniqueDeals := make(map[string]models.OzBargainDeal)
@@ -50,7 +59,15 @@ func (k *KramerBot) processOzbargainDeals() {
 
 	// Load store
 	k.LoadUserStore()
-	userdata := k.UserStore.Users
+
+	var userdata map[int64]*models.UserData
+	if k.UserStore != nil {
+		userdata = k.UserStore.Users
+	} else {
+		userdata = nil
+		k.Logger.Error("No users found in UserStore")
+		return
+	}
 
 	for _, deal := range uniqueDeals {
 		k.Logger.Debug("Ozbargain deal", zap.Any("deal", deal))
