@@ -12,7 +12,6 @@ import (
 	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
-	"github.com/intothevoid/kramerbot/api"
 	"github.com/intothevoid/kramerbot/models"
 	persist "github.com/intothevoid/kramerbot/persist"
 	mongo_persist "github.com/intothevoid/kramerbot/persist/mongo"
@@ -32,7 +31,6 @@ type KramerBot struct {
 	DataWriter persist.DatabaseIF
 	Pipup      *pipup.Pipup
 	Config     *viper.Viper
-	ApiServer  *api.GinServer
 }
 
 // function to read token from environment variable
@@ -109,15 +107,6 @@ func (k *KramerBot) NewBot(ozbs *scrapers.OzBargainScraper, cccs *scrapers.CamCa
 
 	// Load user store
 	k.LoadUserStore()
-
-	// Initialise API server
-	k.ApiServer = &api.GinServer{
-		UserStoreDB: k.DataWriter,
-		OzbScraper:  k.OzbScraper,
-		CCCScraper:  k.CCCScraper,
-		Config:      k.Config,
-	}
-	go k.ApiServer.StartServer()
 }
 
 // start receiving updates from telegram

@@ -46,8 +46,9 @@ func main() {
 	// and not store it in the config file to avoid security issues
 	k.Token = k.GetToken()
 
-	if k.Token == "" {
-		k.Logger.Fatal("Cannot proceed without a bot token")
+	// Test mode doesn't require a token
+	if k.Token == "" && !appconf.GetBool("test_mode") {
+		k.Logger.Fatal("Cannot proceed without a bot token, is the TELEGRAM_BOT_TOKEN environment variable set?")
 	}
 
 	// Create Ozbargain ozbscraper
