@@ -10,20 +10,12 @@ log_to_file: true
 # are blocked and nothing is written to the database. Used for testing features, bugs
 test_mode: false
 
-# if you are hosting the webui of kramerbot this url is sent in the registration message
-# when a new user signs up
-webui:
-  url: "https://kramerbot.karan.myds.me/"
-
 mongo:
   # enable migration mode only if you want to convert a sqlite database to a mongo database
   migration_mode: false
   mongo_uri: "mongodb://kramer-mongo:27017"
   mongo_dbname: "usersdb"
   mongo_collname: "users"
-
-ginserver:
-  port: 3179
 
 # scraper config
 scrapers:
