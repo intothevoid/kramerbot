@@ -49,24 +49,24 @@ func (k *KramerBot) BotProc(updates tgbotapi.UpdatesChannel) {
 			case "listkeywords":
 				k.ListKeywords(update.Message.Chat)
 				continue
-			// case "addkeyword":
-			// 	k.AddKeyword(update.Message.Chat, args)
-			// 	continue
-			// case "removekeyword":
-			// 	k.RemoveKeyword(update.Message.Chat, args)
-			// 	continue
-			// case "toggle_ozbgood":
-			// 	k.ToggleOzbGood(update.Message.Chat)
-			// 	continue
-			// case "toggle_ozbsuper":
-			// 	k.ToggleOzbSuper(update.Message.Chat)
-			// 	continue
-			// case "toggle_amzdaily":
-			// 	k.ToggleAmzDaily(update.Message.Chat)
-			// 	continue
-			// case "toggle_amzweekly":
-			// 	k.ToggleAmzWeekly(update.Message.Chat)
-			// 	continue
+			case "addkeyword":
+				k.AddKeyword(update.Message.Chat, args)
+				continue
+			case "removekeyword":
+				k.RemoveKeyword(update.Message.Chat, args)
+				continue
+			case "toggle_ozbgood":
+				k.ToggleOzbGood(update.Message.Chat)
+				continue
+			case "toggle_ozbsuper":
+				k.ToggleOzbSuper(update.Message.Chat)
+				continue
+			case "toggle_amzdaily":
+				k.ToggleAmzDaily(update.Message.Chat)
+				continue
+			case "toggle_amzweekly":
+				k.ToggleAmzWeekly(update.Message.Chat)
+				continue
 			case "test":
 				k.SendTestMessage(update.Message.Chat)
 				continue

@@ -114,6 +114,141 @@ func (k *KramerBot) ListKeywords(chat *tgbotapi.Chat) {
 	}
 }
 
+// Helper function to get user data and handle errors
+func (k *KramerBot) getUserData(chatID int64) (*models.UserData, error) {
+	user, err := k.DataWriter.GetUser(chatID)
+	if err != nil || user == nil {
+		k.SendMessage(chatID, "Could not find your user data. Have you registered using /start ?")
+		return nil, fmt.Errorf("user not found or error fetching data: %w", err)
+	}
+	return user, nil
+}
+
+// ToggleOzbGood toggles the OzbGood preference
+func (k *KramerBot) ToggleOzbGood(chat *tgbotapi.Chat) {
+	user, err := k.getUserData(chat.ID)
+	if err != nil {
+		return // Error message already sent by getUserData
+	}
+
+	user.OzbGood = !user.OzbGood
+	k.UpdateUser(user) // Update DB
+	k.UserStore.Users[chat.ID].OzbGood = user.OzbGood // Update memory
+
+	k.SendMessage(chat.ID, fmt.Sprintf("Ozbargain Good Deals (25+) notifications set to: %t", user.OzbGood))
+	k.ShowPreferences(chat)
+}
+
+// ToggleOzbSuper toggles the OzbSuper preference
+func (k *KramerBot) ToggleOzbSuper(chat *tgbotapi.Chat) {
+	user, err := k.getUserData(chat.ID)
+	if err != nil {
+		return
+	}
+
+	user.OzbSuper = !user.OzbSuper
+	k.UpdateUser(user) // Update DB
+	k.UserStore.Users[chat.ID].OzbSuper = user.OzbSuper // Update memory
+
+	k.SendMessage(chat.ID, fmt.Sprintf("Ozbargain Super Deals (50+) notifications set to: %t", user.OzbSuper))
+	k.ShowPreferences(chat)
+}
+
+// ToggleAmzDaily toggles the AmzDaily preference
+func (k *KramerBot) ToggleAmzDaily(chat *tgbotapi.Chat) {
+	user, err := k.getUserData(chat.ID)
+	if err != nil {
+		return
+	}
+
+	user.AmzDaily = !user.AmzDaily
+	k.UpdateUser(user) // Update DB
+	k.UserStore.Users[chat.ID].AmzDaily = user.AmzDaily // Update memory
+
+	k.SendMessage(chat.ID, fmt.Sprintf("Amazon Daily Deals notifications set to: %t", user.AmzDaily))
+	k.ShowPreferences(chat)
+}
+
+// ToggleAmzWeekly toggles the AmzWeekly preference
+func (k *KramerBot) ToggleAmzWeekly(chat *tgbotapi.Chat) {
+	user, err := k.getUserData(chat.ID)
+	if err != nil {
+		return
+	}
+
+	user.AmzWeekly = !user.AmzWeekly
+	k.UpdateUser(user) // Update DB
+	k.UserStore.Users[chat.ID].AmzWeekly = user.AmzWeekly // Update memory
+
+	k.SendMessage(chat.ID, fmt.Sprintf("Amazon Weekly Deals notifications set to: %t", user.AmzWeekly))
+	k.ShowPreferences(chat)
+}
+
+// AddKeyword adds a keyword to the user's watch list
+func (k *KramerBot) AddKeyword(chat *tgbotapi.Chat, keyword string) {
+	user, err := k.getUserData(chat.ID)
+	if err != nil {
+		return
+	}
+
+	keyword = strings.TrimSpace(strings.ToLower(keyword))
+	if keyword == "" {
+		k.SendMessage(chat.ID, "Please provide a keyword to add. Usage: /addkeyword <keyword>")
+		return
+	}
+
+	// Check if keyword already exists
+	for _, existingKeyword := range user.Keywords {
+		if existingKeyword == keyword {
+			k.SendMessage(chat.ID, fmt.Sprintf("Keyword '%s' is already in your watch list.", keyword))
+			return
+		}
+	}
+
+	user.Keywords = append(user.Keywords, keyword)
+	k.UpdateUser(user) // Update DB
+	k.UserStore.Users[chat.ID].Keywords = user.Keywords // Update memory
+
+	k.SendMessage(chat.ID, fmt.Sprintf("Keyword '%s' added to your watch list.", keyword))
+	k.ListKeywords(chat)
+}
+
+// RemoveKeyword removes a keyword from the user's watch list
+func (k *KramerBot) RemoveKeyword(chat *tgbotapi.Chat, keywordToRemove string) {
+	user, err := k.getUserData(chat.ID)
+	if err != nil {
+		return
+	}
+
+	keywordToRemove = strings.TrimSpace(strings.ToLower(keywordToRemove))
+	if keywordToRemove == "" {
+		k.SendMessage(chat.ID, "Please provide a keyword to remove. Usage: /removekeyword <keyword>")
+		return
+	}
+
+	found := false
+	var updatedKeywords []string
+	for _, existingKeyword := range user.Keywords {
+		if existingKeyword != keywordToRemove {
+			updatedKeywords = append(updatedKeywords, existingKeyword)
+		} else {
+			found = true
+		}
+	}
+
+	if !found {
+		k.SendMessage(chat.ID, fmt.Sprintf("Keyword '%s' not found in your watch list.", keywordToRemove))
+		return
+	}
+
+	user.Keywords = updatedKeywords
+	k.UpdateUser(user) // Update DB
+	k.UserStore.Users[chat.ID].Keywords = user.Keywords // Update memory
+
+	k.SendMessage(chat.ID, fmt.Sprintf("Keyword '%s' removed from your watch list.", keywordToRemove))
+	k.ListKeywords(chat)
+}
+
 
 // Send test message
 func (k *KramerBot) SendTestMessage(chat *tgbotapi.Chat) {
