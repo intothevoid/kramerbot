@@ -7,7 +7,7 @@ import (
 
 	"go.uber.org/zap"
 
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/intothevoid/kramerbot/models"
 	"github.com/intothevoid/kramerbot/scrapers"
 	"github.com/intothevoid/kramerbot/util"

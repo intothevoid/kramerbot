@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KramerBot Preferences</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Telegram WebApp script -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>KramerBot Settings</h1>
+
+        <div id="loading">Loading preferences...</div>
+        <div id="error" style="display: none;"></div>
+
+        <div id="preferences" style="display: none;">
+            <div class="section">
+                <h2>Notification Settings</h2>
+                <div class="toggle-item">
+                    <span>OzBargain Good Deals (25+)</span>
+                    <label class="switch">
+                        <input type="checkbox" id="ozbGood">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="toggle-item">
+                    <span>OzBargain Super Deals (50+)</span>
+                    <label class="switch">
+                        <input type="checkbox" id="ozbSuper">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="toggle-item">
+                    <span>Amazon Daily Deals</span>
+                    <label class="switch">
+                        <input type="checkbox" id="amzDaily">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="toggle-item">
+                    <span>Amazon Weekly Deals</span>
+                    <label class="switch">
+                        <input type="checkbox" id="amzWeekly">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>Watched Keywords</h2>
+                <ul id="keywordsList" class="keywords-list">
+                    <!-- Keywords will be loaded here -->
+                </ul>
+                <div class="add-keyword">
+                    <input type="text" id="newKeyword" placeholder="Enter new keyword">
+                    <button id="addKeywordBtn">Add</button>
+                </div>
+            </div>
+
+            <div class="section">
+                 <h2>Actions</h2>
+                <button id="testBtn" class="action-button">Send Test Notification</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html> 

@@ -3,7 +3,7 @@ package bot
 import (
 	"testing"
 
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/intothevoid/kramerbot/models"
 	persist "github.com/intothevoid/kramerbot/persist"
 	"github.com/intothevoid/kramerbot/pipup"

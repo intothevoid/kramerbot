@@ -22,6 +22,18 @@ type UserData struct {
 	Password       string   `bson:"password"`        // password chosen by user on website
 }
 
+// TelegramUser represents the user structure from Telegram's initData
+// See: https://core.telegram.org/bots/webapps#webappinitdata
+type TelegramUser struct {
+	ID           int64  `json:"id"`
+	IsBot        bool   `json:"is_bot,omitempty"`
+	FirstName    string `json:"first_name"`
+	LastName     string `json:"last_name,omitempty"`
+	Username     string `json:"username,omitempty"`
+	LanguageCode string `json:"language_code,omitempty"`
+	IsPremium    bool   `json:"is_premium,omitempty"`
+}
+
 // setters and getters for UserData
 func (u *UserData) SetChatID(chatID int64) {
 	u.ChatID = chatID

@@ -3,7 +3,7 @@ module github.com/intothevoid/kramerbot
 go 1.18
 
 require (
-	github.com/go-telegram-bot-api/telegram-bot-api v4.6.4+incompatible
+	github.com/go-telegram-bot-api/telegram-bot-api/v5 v5.5.1
 	github.com/gocolly/colly v1.2.0
 	github.com/jinzhu/gorm v1.9.16
 	github.com/lib/pq v1.10.6
@@ -46,7 +46,6 @@ require (
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/subosito/gotenv v1.3.0 // indirect
-	github.com/technoweenie/multipartstreamer v1.0.1 // indirect
 	github.com/temoto/robotstxt v1.1.2 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
 	github.com/xdg-go/scram v1.1.1 // indirect

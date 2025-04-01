@@ -3,7 +3,7 @@ package bot
 import (
 	"strings"
 
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"go.uber.org/zap"
 )
 
@@ -69,6 +69,24 @@ func (k *KramerBot) BotProc(updates tgbotapi.UpdatesChannel) {
 				continue
 			case "test":
 				k.SendTestMessage(update.Message.Chat)
+				continue
+			case "webapp":
+				// Send a button that opens the web app
+				if k.WebAppURL == "" {
+					k.SendMessage(update.Message.Chat.ID, "Web App is not configured correctly on the server.")
+					continue
+				}
+
+				// Instead of WebAppInfo, use URL button directly
+				button := tgbotapi.NewInlineKeyboardButtonURL("Open Settings App", k.WebAppURL)
+				keyboard := tgbotapi.NewInlineKeyboardMarkup([]tgbotapi.InlineKeyboardButton{button})
+
+				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Click the button below to manage your preferences:")
+				msg.ReplyMarkup = keyboard
+
+				if _, err := k.BotApi.Send(msg); err != nil {
+					k.Logger.Error("Failed to send Web App button", zap.Error(err), zap.Int64("chatID", update.Message.Chat.ID))
+				}
 				continue
 			case "announce": // Admin command
 				if !announceMode {
