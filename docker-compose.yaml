@@ -5,7 +5,10 @@ services:
       dockerfile: Dockerfile
     container_name: kramerbot
     restart: unless-stopped
+    ports:
+      - "5173:5173"  # Map webapp port to host
     volumes:
-      - ./data:/app/data
+      - ./data:/kramerbot/data
+      - ./webapp:/kramerbot/webapp
     env_file:
       - kramerbot.env
