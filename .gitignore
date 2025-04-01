@@ -26,3 +26,4 @@ deals.db
 users_test.db
 token.env
 .aider*
+kramerbot.env
