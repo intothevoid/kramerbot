@@ -53,14 +53,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             console.log("Fetching preferences from API...");
-            // TODO: Replace with actual API endpoint
+            // Prepare headers with Telegram init data
+            const headers = {
+                'Content-Type': 'application/json'
+            };
+            
+            // Use actual Telegram initData if available, otherwise we're in dev mode
+            if (tg.initData && tg.initData.length > 0) {
+                headers['X-Telegram-Init-Data'] = tg.initData;
+            }
+            
             const response = await fetch('/api/preferences', {
-                 method: 'GET',
-                 headers: {
-                     // Pass user init data for authentication/identification on backend
-                     'X-Telegram-Init-Data': tg.initData || 'dummy-init-data-for-testing'
-                 }
-             });
+                method: 'GET',
+                headers: headers
+            });
 
             console.log("Response status:", response.status);
             if (!response.ok) {
@@ -91,22 +97,28 @@ document.addEventListener('DOMContentLoaded', () => {
     async function updatePreference(key, value) {
         console.log(`Updating ${key} to ${value}`);
         try {
-            // TODO: Replace with actual API endpoint
-             const response = await fetch('/api/preferences', {
-                 method: 'POST',
-                 headers: {
-                     'Content-Type': 'application/json',
-                     'X-Telegram-Init-Data': tg.initData
-                 },
-                 body: JSON.stringify({ [key]: value })
-             });
+            // Prepare headers with Telegram init data
+            const headers = {
+                'Content-Type': 'application/json'
+            };
+            
+            // Use actual Telegram initData if available, otherwise we're in dev mode
+            if (tg.initData && tg.initData.length > 0) {
+                headers['X-Telegram-Init-Data'] = tg.initData;
+            }
+            
+            const response = await fetch('/api/preferences', {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify({ [key]: value })
+            });
 
-             if (!response.ok) {
+            if (!response.ok) {
                 const errorData = await response.text(); 
                 throw new Error(`Failed to update preference: ${errorData}`);
-             }
-             console.log(`Successfully updated ${key}`);
-             // Optionally: Add visual feedback (e.g., a small checkmark)
+            }
+            console.log(`Successfully updated ${key}`);
+            // Optionally: Add visual feedback (e.g., a small checkmark)
         } catch (err) {
             console.error("Failed to update preference:", err);
             showError(`Failed to update ${key}. Please try reloading.`);
@@ -123,13 +135,19 @@ document.addEventListener('DOMContentLoaded', () => {
         addKeywordBtn.disabled = true; // Prevent double clicks
 
         try {
-            // TODO: Replace with actual API endpoint
+            // Prepare headers with Telegram init data
+            const headers = {
+                'Content-Type': 'application/json'
+            };
+            
+            // Use actual Telegram initData if available, otherwise we're in dev mode
+            if (tg.initData && tg.initData.length > 0) {
+                headers['X-Telegram-Init-Data'] = tg.initData;
+            }
+            
             const response = await fetch('/api/keywords/add', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Telegram-Init-Data': tg.initData
-                },
+                headers: headers,
                 body: JSON.stringify({ keyword: keyword })
             });
 
@@ -155,20 +173,26 @@ document.addEventListener('DOMContentLoaded', () => {
         // Optionally disable the specific button or show loading state
 
         try {
-            // TODO: Replace with actual API endpoint
+            // Prepare headers with Telegram init data
+            const headers = {
+                'Content-Type': 'application/json'
+            };
+            
+            // Use actual Telegram initData if available, otherwise we're in dev mode
+            if (tg.initData && tg.initData.length > 0) {
+                headers['X-Telegram-Init-Data'] = tg.initData;
+            }
+            
             const response = await fetch('/api/keywords/remove', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Telegram-Init-Data': tg.initData
-                },
+                headers: headers,
                 body: JSON.stringify({ keyword: keyword })
             });
 
-             if (!response.ok) {
+            if (!response.ok) {
                 const errorData = await response.text(); 
                 throw new Error(`Failed to remove keyword: ${errorData}`);
-             }
+            }
 
             const updatedKeywords = await response.json(); // Expect backend to return the full list
             renderKeywords(updatedKeywords.keywords);
@@ -185,18 +209,25 @@ document.addEventListener('DOMContentLoaded', () => {
         testBtn.textContent = 'Sending...';
 
         try {
-            // TODO: Replace with actual API endpoint
+            // Prepare headers with Telegram init data
+            const headers = {
+                'Content-Type': 'application/json'
+            };
+            
+            // Use actual Telegram initData if available, otherwise we're in dev mode
+            if (tg.initData && tg.initData.length > 0) {
+                headers['X-Telegram-Init-Data'] = tg.initData;
+            }
+            
             const response = await fetch('/api/test', {
                 method: 'POST',
-                 headers: {
-                     'X-Telegram-Init-Data': tg.initData
-                 }
+                headers: headers
             });
             
-             if (!response.ok) {
+            if (!response.ok) {
                 const errorData = await response.text(); 
                 throw new Error(`Failed to send test notification: ${errorData}`);
-             }
+            }
 
             console.log("Test notification request sent successfully.");
              // Maybe show a temporary success message instead of error
