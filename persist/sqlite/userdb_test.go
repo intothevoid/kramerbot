@@ -1,4 +1,4 @@
-package persist_test
+package sqlite_test
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/intothevoid/kramerbot/models"
-	persist "github.com/intothevoid/kramerbot/persist/database"
+	"github.com/intothevoid/kramerbot/persist/sqlite"
 	"github.com/mattn/go-sqlite3"
 	"go.uber.org/zap"
 )
@@ -20,7 +20,7 @@ func TestNew(t *testing.T) {
 	var logger = *zap.NewExample()
 	dbName := "users_test.db"
 	defer DeleteDBFile(dbName)
-	udb := persist.CreateDatabaseConnection(dbName, &logger)
+	udb := sqlite.CreateDatabaseConnection(dbName, &logger)
 
 	// Check database name
 	if udb.Name != dbName {
@@ -38,7 +38,7 @@ func TestCreateTable(t *testing.T) {
 	var logger = *zap.NewExample()
 	dbName := "users_test.db"
 	defer DeleteDBFile(dbName)
-	udb := persist.CreateDatabaseConnection(dbName, &logger)
+	udb := sqlite.CreateDatabaseConnection(dbName, &logger)
 
 	// Create table
 	err := udb.CreateTable()
@@ -51,7 +51,7 @@ func TestCreateTable(t *testing.T) {
 func TestAddUser(t *testing.T) {
 	var logger = *zap.NewExample()
 	dbName := "users_test.db"
-	udb := persist.CreateDatabaseConnection(dbName, &logger)
+	udb := sqlite.CreateDatabaseConnection(dbName, &logger)
 
 	// Create table
 	err := udb.CreateTable()
@@ -95,7 +95,7 @@ func TestGetUser(t *testing.T) {
 	var logger = *zap.NewExample()
 	dbName := "users_test.db"
 	defer DeleteDBFile(dbName)
-	udb := persist.CreateDatabaseConnection(dbName, &logger)
+	udb := sqlite.CreateDatabaseConnection(dbName, &logger)
 
 	// Create table
 	err := udb.CreateTable()
@@ -168,7 +168,7 @@ func TestUpdateUser(t *testing.T) {
 	var logger = *zap.NewExample()
 	dbName := "users_test.db"
 	defer DeleteDBFile(dbName)
-	udb := persist.CreateDatabaseConnection(dbName, &logger)
+	udb := sqlite.CreateDatabaseConnection(dbName, &logger)
 
 	// Create table
 	err := udb.CreateTable()

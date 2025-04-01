@@ -1,4 +1,4 @@
-package persist
+package sqlite
 
 import (
 	"encoding/json"
