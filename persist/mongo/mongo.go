@@ -27,12 +27,24 @@ type MongoStoreDB struct {
 
 // Connect to the mongo database
 func New(mongoUri string, dbName string, collName string, logger *zap.Logger) (*MongoStoreDB, error) {
-	// Establish a connection to the MongoDB database.
-	client, err := mongo.NewClient(options.Client().ApplyURI(mongoUri))
+	// Establish a connection to the MongoDB database with more robust options
+	clientOptions := options.Client().
+		ApplyURI(mongoUri).
+		SetServerSelectionTimeout(30 * time.Second). // Longer server selection timeout
+		SetConnectTimeout(30 * time.Second).         // Longer connect timeout
+		SetSocketTimeout(30 * time.Second).          // Longer socket timeout
+		SetMaxConnIdleTime(60 * time.Second).        // Keep connections alive longer
+		SetRetryWrites(true).                        // Enable retry for writes
+		SetRetryReads(true).                         // Enable retry for reads
+		SetMinPoolSize(1).                           // Minimum pool size
+		SetMaxPoolSize(10)                           // Maximum pool size
+
+	client, err := mongo.NewClient(clientOptions)
 	if err != nil {
 		return nil, err
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 	err = client.Connect(ctx)
 	if err != nil {
