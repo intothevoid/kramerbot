@@ -23,18 +23,6 @@ services:
       - kramer-mongo
     container_name: kramerbot
 
-  kramerbot-ui:
-    build:
-      context: ../kramerbotui
-      dockerfile: Dockerfile.prod
-    networks:
-      - mongo-network
-    ports:
-      - 5173:5173
-    depends_on:
-      - kramerbot
-    container_name: kramerbot-ui
-
 networks:
   mongo-network:
     name: mongo-network

@@ -61,6 +61,22 @@ func (mdb *MongoStoreDB) Close() error {
 	return nil
 }
 
+// Ping checks the connection to the database
+func (mdb *MongoStoreDB) Ping() error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second) // 5 second timeout
+	defer cancel()
+
+	if mdb.Coll == nil || mdb.Coll.Database() == nil || mdb.Coll.Database().Client() == nil {
+		return fmt.Errorf("mongo client or collection not initialized")
+	}
+
+	err := mdb.Coll.Database().Client().Ping(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("failed to ping mongo database: %w", err)
+	}
+	return nil
+}
+
 // Add user to the database
 func (mdb *MongoStoreDB) AddUser(user *models.UserData) error {
 	// Add sync mutex to the database

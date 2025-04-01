@@ -105,6 +105,12 @@ func (k *KramerBot) NewBot(ozbs *scrapers.OzBargainScraper, cccs *scrapers.CamCa
 	)
 	k.DataWriter = dataWriter
 
+	// Check if the database connection is valid
+	if err := k.DataWriter.Ping(); err != nil {
+		k.Logger.Fatal("Failed to connect to MongoDB", zap.Error(err))
+	}
+	k.Logger.Info("Successfully connected to MongoDB")
+
 	// Load user store
 	k.LoadUserStore()
 }

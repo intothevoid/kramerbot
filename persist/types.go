@@ -15,4 +15,5 @@ type DatabaseIF interface {
 	AddUser(user *models.UserData) error
 	UpdateUser(user *models.UserData) error
 	Close() error
+	Ping() error
 }
