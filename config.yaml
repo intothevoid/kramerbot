@@ -20,7 +20,7 @@ mongo:
 # scraper config
 scrapers:
   ozbargain:
-    scrape_interval: 1
+    scrape_interval: 5
     max_stored_deals: 250
   amazon:
     scrape_interval: 30
