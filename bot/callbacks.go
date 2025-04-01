@@ -21,20 +21,19 @@ func (k *KramerBot) Help(chat *tgbotapi.Chat) {
 
 	// Show the help banner
 	helpText := fmt.Sprintf("Hi %s! Welcome to @kramerbot\n\n"+
-		"Your ChatID is %d\n\n"+
 		"Available commands:\n"+
 		"/start - Register or view your status\n"+
 		"/help - Show this help message\n"+
 		"/preferences - Show your current notification preferences\n"+
-		"/toggle_ozbgood - Toggle OzBargain 'Good' deals (25+ votes)\n"+
-		"/toggle_ozbsuper - Toggle OzBargain 'Super' deals (50+ votes)\n"+
-		"/toggle_amzdaily - Toggle Amazon Daily deals\n"+
-		"/toggle_amzweekly - Toggle Amazon Weekly deals\n"+
+		"/ozbgood - Toggle OzBargain 'Good' deals (25+ votes)\n"+
+		"/ozbsuper - Toggle OzBargain 'Super' deals (50+ votes)\n"+
+		"/amzdaily - Toggle Amazon Daily deals\n"+
+		"/amzweekly - Toggle Amazon Weekly deals\n"+
 		"/addkeyword <keyword> - Add a keyword to watch\n"+
 		"/removekeyword <keyword> - Remove a keyword\n"+
 		"/listkeywords - List your watched keywords\n"+
 		"/test - Send a test notification",
-		chat.FirstName, chat.ID)
+		chat.FirstName)
 	k.SendMessage(chat.ID, helpText)
 }
 
