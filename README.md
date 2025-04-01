@@ -94,6 +94,5 @@ To deploy your container (example using the network from `start_mongo.sh`):
 # Ensure the mongo-network exists (created by start_mongo.sh)
 sudo docker run -d --name kramerbot --network mongo-network --env-file ./kramerbot.env --restart unless-stopped kramerbot:latest
 ```
-*(Note: The previous `start_kramer.sh` script might need updating. This example assumes environment variables are used. If using `config.yaml` within the container, you'll need to mount it as a volume.)*
 
 <img src="https://raw.githubusercontent.com/intothevoid/kramerbot/main/static/about.jpeg" width="50%" height="50%"></img>
