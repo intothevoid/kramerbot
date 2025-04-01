@@ -46,6 +46,6 @@ pipup:
 
 web_app:
   enabled: true # Set to true to enable the web app server
-  listen_address: "0.0.0.0:8085" # Address and port for the web server
-  base_url: "" # Publicly accessible base URL of the web app (e.g., https://yourdomain.com/kramerbot-app) - Required if using a reverse proxy or different domain
+  listen_address: "0.0.0.0:5173" # Address and port for the web server
+  base_url: "http://kramerbot.karan.myds.me" # Publicly accessible base URL of the web app (e.g., https://yourdomain.com/kramerbot-app) - Required if using a reverse proxy or different domain
   development_mode: false # Set to true during development to bypass authentication and use dummy data

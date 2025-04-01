@@ -6,7 +6,7 @@ https://t.me/kramerbot
 
 A Telegram bot to get you the latest deals from websites like https://www.ozbargain.com.au and https://amazon.com.au. Let Kramer watch deals so you don't have to. Giddy up!
 
-**Note:** This version is CLI-only and does not include a web interface or API.
+**Note:** This version includes a Telegram web app interface for users to manage their preferences.
 
 ## Features
 
@@ -19,6 +19,33 @@ A Telegram bot to get you the latest deals from websites like https://www.ozbarg
 7. Supports scraping www.amazon.com.au (via Camel Camel Camel RSS) - Top daily and weekly deals
 8. Supports Android TV notifications (via Pipup)
 9. Ability to send maintenance messages / announcements to all users (if admin commands are implemented)
+10. Includes a web app that allows users to manage preferences directly from Telegram
+
+## Web App
+
+The bot includes a Telegram Web App that allows users to manage their preferences directly from within Telegram. Users can:
+- Toggle notification settings for OzBargain and Amazon deals
+- Add and remove keywords to watch for
+- Send test notifications
+
+### Web App Configuration
+
+The web app is configured in the `config.yaml` file:
+
+```yaml
+web_app:
+  enabled: true # Set to true to enable the web app server
+  listen_address: "0.0.0.0:8085" # Address and port for the web server
+  base_url: "" # Publicly accessible base URL of the web app (e.g., https://yourdomain.com/kramerbot-app)
+  development_mode: false # Set to true during development to bypass authentication and use dummy data
+```
+
+#### Development Mode
+
+The web app includes a development mode that makes local testing easier:
+- When `development_mode` is set to `true`, the app bypasses Telegram authentication and uses dummy data
+- This allows you to test the web app without needing a real Telegram connection
+- Set `development_mode` to `false` in production to enforce proper Telegram authentication
 
 ## API
 
@@ -92,7 +119,7 @@ sudo docker run -d --name kramerbot \
   -v "$(pwd)/data:/app/data" \
   --restart unless-stopped \
   kramerbot:latest
-```
-*(This mounts your local `./data` directory into `/app/data` inside the container, where the bot expects to find the SQLite file by default or via the environment variable.)*
+```*(This mounts your local `./data` directory into `/app/data` inside the container, where the bot expects to find the SQLite file by default or via the environment variable.)*
 
 <img src="https://raw.githubusercontent.com/intothevoid/kramerbot/main/static/about.jpeg" width="50%" height="50%"></img>
+
