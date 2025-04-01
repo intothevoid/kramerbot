@@ -63,7 +63,7 @@ func (mdb *MongoStoreDB) Close() error {
 
 // Ping checks the connection to the database
 func (mdb *MongoStoreDB) Ping() error {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second) // 5 second timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second) // Increased timeout to 15 seconds
 	defer cancel()
 
 	if mdb.Coll == nil || mdb.Coll.Database() == nil || mdb.Coll.Database().Client() == nil {
