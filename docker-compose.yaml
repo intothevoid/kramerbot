@@ -1,27 +1,32 @@
-version: '3.7'
 services:
   kramer-mongo:
     image: mongo:4.4.18
-    volumes:
-      - mongo-data:/data/db
+    container_name: kramer-mongo
+    restart: unless-stopped
     networks:
       - mongo-network
-    ports:
-      - 27017:27017
-    container_name: kramer-mongo
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   kramerbot:
     build:
       context: .
       dockerfile: Dockerfile
-    env_file: token.env
+    container_name: kramerbot
+    restart: unless-stopped
     networks:
       - mongo-network
-    ports:
-      - 3179:3179
     depends_on:
-      - kramer-mongo
-    container_name: kramerbot
+      kramer-mongo:
+        condition: service_healthy
+    env_file:
+      - kramerbot.env
 
 networks:
   mongo-network:
