@@ -14,8 +14,7 @@ import (
 func (k *KramerBot) StartProcessing() {
 	// Begin timed processing and scraping
 	go func() {
-		ozbTick := time.NewTicker(time.Second * 60)
-		// ozbTick := time.NewTicker(time.Minute * time.Duration(k.OzbScraper.ScrapeInterval))
+		ozbTick := time.NewTicker(time.Minute * time.Duration(k.OzbScraper.ScrapeInterval))
 		for range ozbTick.C {
 			// Process Ozbargain deals
 			k.processOzbargainDeals()

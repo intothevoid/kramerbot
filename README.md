@@ -6,19 +6,19 @@ https://t.me/kramerbot
 
 A Telegram bot to get you the latest deals from websites like https://www.ozbargain.com.au and https://amazon.com.au. Let Kramer watch deals so you don't have to. Giddy up!
 
+**Note:** This version is CLI-only and does not include a web interface or API.
+
 ## Features
 
 1. Uses Telegram Bot API for instant notifications
 2. Written in Go and can be deployed with a single binary (Dockerfile included)
-3. Subscribe to good deals, super deals or setup your own custom deals by watching specific keywords
-4. User data is written to a Mongo NoSQL database for easy migration (formerly Sqlite)
+3. Subscribe to good deals, super deals or setup your own custom deals by watching specific keywords via Telegram commands
+4. User data is written to a Mongo NoSQL database
 5. Keep track of deals already sent to avoid duplicate sending
 6. Supports scraping www.ozbargain.com.au - Good and super deals
 7. Supports scraping www.amazon.com.au (via Camel Camel Camel RSS) - Top daily and weekly deals
-8. Supports Android TV notifications
-9. API to access user and deal data
-10. Ability to send maintenance messages / announcements to all users
-11. Slick web app to manage user preferences https://www.github.com/intothevoid/kramerbotui
+8. Supports Android TV notifications (via Pipup)
+9. Ability to send maintenance messages / announcements to all users (if admin commands are implemented)
 
 ## API
 
@@ -35,7 +35,7 @@ The following API endpoints are available -
 
 ## Deployment
 
-You must have the required environment variables for Kramerbot to function correctly. See section 'Required environment variables' for more details. Kramerbot can be deployed using the foll. command, after required environment variables have been set -
+Configuration is primarily managed via `config.yaml`. However, sensitive information like tokens should be set via environment variables. Kramerbot can be deployed using the following command after setting the required environment variables:
 
 ```
 go build .
@@ -44,42 +44,56 @@ go build .
 
 ### Required environment variables
 
+These environment variables override values in `config.yaml` if set.
+
 ```
-TELEGRAM_TOKEN_API=<your_token>
-GIN_MODE=release
-KRAMERBOT_ADMIN_PASS=<your_admin_password>
+TELEGRAM_BOT_TOKEN=<your_telegram_bot_token> # Mandatory
+KRAMERBOT_ADMIN_PASS=<your_admin_password> # Optional: If admin commands are used
+MONGO_URI=<your_mongodb_connection_string> # Optional: Defaults to value in config.yaml
+MONGO_DBNAME=<your_database_name> # Optional: Defaults to value in config.yaml
+MONGO_COLLNAME=<your_collection_name> # Optional: Defaults to value in config.yaml
 ```
+*(Refer to `config.yaml` for other configuration options like logging, scraper intervals, etc.)*
 
 ### Setup MongoDB
 
+Ensure you have a running MongoDB instance accessible by the bot. The connection details should be set either in `config.yaml` or via the `MONGO_*` environment variables.
 
+You can run MongoDB locally using Docker:
 ```
+# Pull the image (if needed)
 sudo docker pull mongo:4.4.18
+
+# Start the container (example)
 cd scripts
 sudo ./start_mongo.sh
 ```
+*(The `start_mongo.sh` script sets up a network and volume. Ensure your `MONGO_URI` points correctly to this instance, e.g., `mongodb://kramer-mongo:27017` if running kramerbot in the same Docker network)*
 
 ### Using Docker
 
-To build a Docker image of Kramerbot use the command -
+To build a Docker image of Kramerbot:
 
 ```
 sudo docker build -t kramerbot:latest .
 ```
 
-Create a token.env file with your Telegram API token (used in step below) -
+Create an environment file (e.g., `kramerbot.env`) with your required variables:
 
 ```
-TELEGRAM_TOKEN_API=<your_token>
-GIN_MODE=release
-KRAMERBOT_ADMIN_PASS=<your_admin_password>
+TELEGRAM_BOT_TOKEN=<your_telegram_bot_token>
+KRAMERBOT_ADMIN_PASS=<your_admin_password> # Optional
+MONGO_URI=<your_mongodb_connection_string> # Or configure in config.yaml and mount it
+MONGO_DBNAME=<your_database_name> # Or configure in config.yaml
+MONGO_COLLNAME=<your_collection_name> # Or configure in config.yaml
 ```
 
-To deploy your container, use the command -
+To deploy your container (example using the network from `start_mongo.sh`):
 
+```bash
+# Ensure the mongo-network exists (created by start_mongo.sh)
+sudo docker run -d --name kramerbot --network mongo-network --env-file ./kramerbot.env --restart unless-stopped kramerbot:latest
 ```
-cd scripts
-sudo ./start_kramer.sh
-```
+*(Note: The previous `start_kramer.sh` script might need updating. This example assumes environment variables are used. If using `config.yaml` within the container, you'll need to mount it as a volume.)*
 
 <img src="https://raw.githubusercontent.com/intothevoid/kramerbot/main/static/about.jpeg" width="50%" height="50%"></img>
