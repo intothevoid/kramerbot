@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"go.uber.org/zap"
+
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/intothevoid/kramerbot/models"
 	"github.com/intothevoid/kramerbot/scrapers"
@@ -43,15 +45,15 @@ func (k *KramerBot) RegisterUser(chat *tgbotapi.Chat) {
 	if err != nil || user == nil {
 		// User doesn't exist, create a new one
 		newUser := &models.UserData{
-			ChatID:   chat.ID,
-			Username: chat.UserName,
-			OzbGood:  true, // Default settings
-			OzbSuper: false,
-			AmzDaily: false,
+			ChatID:    chat.ID,
+			Username:  chat.UserName,
+			OzbGood:   true, // Default settings
+			OzbSuper:  false,
+			AmzDaily:  false,
 			AmzWeekly: false,
-			Keywords: []string{},
-			OzbSent:  []string{},
-			AmzSent:  []string{},
+			Keywords:  []string{},
+			OzbSent:   []string{},
+			AmzSent:   []string{},
 		}
 		err := k.DataWriter.AddUser(newUser)
 		if err != nil {
@@ -68,7 +70,7 @@ func (k *KramerBot) RegisterUser(chat *tgbotapi.Chat) {
 		// User exists, update username if changed and show status
 		if user.Username != chat.UserName {
 			user.Username = chat.UserName
-			k.UpdateUser(user) // Update in DB
+			k.UpdateUser(user)                                  // Update in DB
 			k.UserStore.Users[chat.ID].Username = chat.UserName // Update in memory
 			k.Logger.Info("Updated username for existing user", zap.String("username", chat.UserName), zap.Int64("chatID", chat.ID))
 		}
@@ -132,7 +134,7 @@ func (k *KramerBot) ToggleOzbGood(chat *tgbotapi.Chat) {
 	}
 
 	user.OzbGood = !user.OzbGood
-	k.UpdateUser(user) // Update DB
+	k.UpdateUser(user)                                // Update DB
 	k.UserStore.Users[chat.ID].OzbGood = user.OzbGood // Update memory
 
 	k.SendMessage(chat.ID, fmt.Sprintf("Ozbargain Good Deals (25+) notifications set to: %t", user.OzbGood))
@@ -147,7 +149,7 @@ func (k *KramerBot) ToggleOzbSuper(chat *tgbotapi.Chat) {
 	}
 
 	user.OzbSuper = !user.OzbSuper
-	k.UpdateUser(user) // Update DB
+	k.UpdateUser(user)                                  // Update DB
 	k.UserStore.Users[chat.ID].OzbSuper = user.OzbSuper // Update memory
 
 	k.SendMessage(chat.ID, fmt.Sprintf("Ozbargain Super Deals (50+) notifications set to: %t", user.OzbSuper))
@@ -162,7 +164,7 @@ func (k *KramerBot) ToggleAmzDaily(chat *tgbotapi.Chat) {
 	}
 
 	user.AmzDaily = !user.AmzDaily
-	k.UpdateUser(user) // Update DB
+	k.UpdateUser(user)                                  // Update DB
 	k.UserStore.Users[chat.ID].AmzDaily = user.AmzDaily // Update memory
 
 	k.SendMessage(chat.ID, fmt.Sprintf("Amazon Daily Deals notifications set to: %t", user.AmzDaily))
@@ -177,7 +179,7 @@ func (k *KramerBot) ToggleAmzWeekly(chat *tgbotapi.Chat) {
 	}
 
 	user.AmzWeekly = !user.AmzWeekly
-	k.UpdateUser(user) // Update DB
+	k.UpdateUser(user)                                    // Update DB
 	k.UserStore.Users[chat.ID].AmzWeekly = user.AmzWeekly // Update memory
 
 	k.SendMessage(chat.ID, fmt.Sprintf("Amazon Weekly Deals notifications set to: %t", user.AmzWeekly))
@@ -206,7 +208,7 @@ func (k *KramerBot) AddKeyword(chat *tgbotapi.Chat, keyword string) {
 	}
 
 	user.Keywords = append(user.Keywords, keyword)
-	k.UpdateUser(user) // Update DB
+	k.UpdateUser(user)                                  // Update DB
 	k.UserStore.Users[chat.ID].Keywords = user.Keywords // Update memory
 
 	k.SendMessage(chat.ID, fmt.Sprintf("Keyword '%s' added to your watch list.", keyword))
@@ -242,13 +244,12 @@ func (k *KramerBot) RemoveKeyword(chat *tgbotapi.Chat, keywordToRemove string) {
 	}
 
 	user.Keywords = updatedKeywords
-	k.UpdateUser(user) // Update DB
+	k.UpdateUser(user)                                  // Update DB
 	k.UserStore.Users[chat.ID].Keywords = user.Keywords // Update memory
 
 	k.SendMessage(chat.ID, fmt.Sprintf("Keyword '%s' removed from your watch list.", keywordToRemove))
 	k.ListKeywords(chat)
 }
-
 
 // Send test message
 func (k *KramerBot) SendTestMessage(chat *tgbotapi.Chat) {
