@@ -96,11 +96,32 @@ func (k *KramerBot) NewBot(ozbs *scrapers.OzBargainScraper, cccs *scrapers.CamCa
 	k.OzbScraper = ozbs
 	k.CCCScraper = cccs
 
+	// Check for environment variables first, then fall back to config values
+	mongoURI := os.Getenv("MONGO_URI")
+	if mongoURI == "" {
+		mongoURI = k.Config.GetString("mongo.mongo_uri")
+	}
+
+	mongoDBName := os.Getenv("MONGO_DBNAME")
+	if mongoDBName == "" {
+		mongoDBName = k.Config.GetString("mongo.mongo_dbname")
+	}
+
+	mongoCollName := os.Getenv("MONGO_COLLNAME")
+	if mongoCollName == "" {
+		mongoCollName = k.Config.GetString("mongo.mongo_collname")
+	}
+
+	k.Logger.Info("Connecting to MongoDB",
+		zap.String("uri", mongoURI),
+		zap.String("database", mongoDBName),
+		zap.String("collection", mongoCollName))
+
 	// Real mode, make entries to real database
 	dataWriter, _ := mongo_persist.New(
-		k.Config.GetString("mongo.mongo_uri"),
-		k.Config.GetString("mongo.mongo_dbname"),
-		k.Config.GetString("mongo.mongo_collname"),
+		mongoURI,
+		mongoDBName,
+		mongoCollName,
 		k.Logger,
 	)
 	k.DataWriter = dataWriter
