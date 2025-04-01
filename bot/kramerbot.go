@@ -13,8 +13,9 @@ import (
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/intothevoid/kramerbot/models"
-	persist "github.com/intothevoid/kramerbot/persist"
+	"github.com/intothevoid/kramerbot/persist"
 	mongo_persist "github.com/intothevoid/kramerbot/persist/mongo"
+	sqlite_persist "github.com/intothevoid/kramerbot/persist/sqlite"
 	"github.com/intothevoid/kramerbot/pipup"
 	"github.com/intothevoid/kramerbot/scrapers"
 	"github.com/spf13/viper"
@@ -96,41 +97,29 @@ func (k *KramerBot) NewBot(ozbs *scrapers.OzBargainScraper, cccs *scrapers.CamCa
 	k.OzbScraper = ozbs
 	k.CCCScraper = cccs
 
-	// Check for environment variables first, then fall back to config values
-	mongoURI := os.Getenv("MONGO_URI")
-	if mongoURI == "" {
-		mongoURI = k.Config.GetString("mongo.mongo_uri")
+	// Database Initialization (SQLite)
+	dbPath := os.Getenv("SQLITE_DB_PATH")
+	if dbPath == "" {
+		dbPath = k.Config.GetString("sqlite.db_path")
+		if dbPath == "" {
+			dbPath = "data/users.db" // Default path if neither env var nor config is set
+		}
 	}
 
-	mongoDBName := os.Getenv("MONGO_DBNAME")
-	if mongoDBName == "" {
-		mongoDBName = k.Config.GetString("mongo.mongo_dbname")
+	k.Logger.Info("Initializing SQLite database", zap.String("path", dbPath))
+
+	// Use the NewSQLiteWrapper from the sqlite package
+	dataWriter, err := sqlite_persist.NewSQLiteWrapper(dbPath, k.Logger)
+	if err != nil {
+		k.Logger.Fatal("Failed to initialize SQLite database", zap.String("path", dbPath), zap.Error(err))
 	}
+	k.DataWriter = dataWriter // Assign the wrapper which implements DatabaseIF
 
-	mongoCollName := os.Getenv("MONGO_COLLNAME")
-	if mongoCollName == "" {
-		mongoCollName = k.Config.GetString("mongo.mongo_collname")
-	}
-
-	k.Logger.Info("Connecting to MongoDB",
-		zap.String("uri", mongoURI),
-		zap.String("database", mongoDBName),
-		zap.String("collection", mongoCollName))
-
-	// Real mode, make entries to real database
-	dataWriter, _ := mongo_persist.New(
-		mongoURI,
-		mongoDBName,
-		mongoCollName,
-		k.Logger,
-	)
-	k.DataWriter = dataWriter
-
-	// Check if the database connection is valid
+	// Check if the database connection is valid using Ping
 	if err := k.DataWriter.Ping(); err != nil {
-		k.Logger.Fatal("Failed to connect to MongoDB", zap.Error(err))
+		k.Logger.Fatal("Failed to connect to SQLite database", zap.String("path", dbPath), zap.Error(err))
 	}
-	k.Logger.Info("Successfully connected to MongoDB")
+	k.Logger.Info("Successfully connected to SQLite database", zap.String("path", dbPath))
 
 	// Load user store
 	k.LoadUserStore()

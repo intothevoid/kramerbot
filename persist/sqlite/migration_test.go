@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"testing"
 
-	persist "github.com/intothevoid/kramerbot/persist/database"
+	sqlite_persist "github.com/intothevoid/kramerbot/persist/sqlite"
 	"go.uber.org/zap"
 )
 
@@ -13,7 +13,7 @@ func TestMigrateUserStoreFromJsonToDatabase(t *testing.T) {
 	// Create logger
 	var logger = *zap.NewExample()
 
-	persist.MigrateUserStoreFromJsonToDatabase(&logger)
+	sqlite_persist.MigrateUserStoreFromJsonToDatabase(&logger)
 	// if err != nil {
 	// t.Errorf("Error migrating user store from json to database: %s", err)
 	// }
@@ -21,7 +21,7 @@ func TestMigrateUserStoreFromJsonToDatabase(t *testing.T) {
 	// Open database file
 	dbName := "users_test.db"
 	// defer DeleteDBFile(dbName)
-	udb := persist.CreateDatabaseConnection(dbName, &logger)
+	udb := sqlite_persist.CreateDatabaseConnection(dbName, &logger)
 
 	// Get count of users in database
 	count, err := udb.DB.Query("SELECT COUNT(*) FROM users")

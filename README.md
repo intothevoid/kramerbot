@@ -13,7 +13,7 @@ A Telegram bot to get you the latest deals from websites like https://www.ozbarg
 1. Uses Telegram Bot API for instant notifications
 2. Written in Go and can be deployed with a single binary (Dockerfile included)
 3. Subscribe to good deals, super deals or setup your own custom deals by watching specific keywords via Telegram commands
-4. User data is written to a Mongo NoSQL database
+4. User data is written to a SQLite database file (`data/users.db` by default)
 5. Keep track of deals already sent to avoid duplicate sending
 6. Supports scraping www.ozbargain.com.au - Good and super deals
 7. Supports scraping www.amazon.com.au (via Camel Camel Camel RSS) - Top daily and weekly deals
@@ -49,26 +49,15 @@ These environment variables override values in `config.yaml` if set.
 ```
 TELEGRAM_BOT_TOKEN=<your_telegram_bot_token> # Mandatory
 KRAMERBOT_ADMIN_PASS=<your_admin_password> # Optional: If admin commands are used
-MONGO_URI=<your_mongodb_connection_string> # Optional: Defaults to value in config.yaml
-MONGO_DBNAME=<your_database_name> # Optional: Defaults to value in config.yaml
-MONGO_COLLNAME=<your_collection_name> # Optional: Defaults to value in config.yaml
+SQLITE_DB_PATH=<path_to_your_sqlite_db_file> # Optional: Defaults to value in config.yaml or 'data/users.db'
 ```
 *(Refer to `config.yaml` for other configuration options like logging, scraper intervals, etc.)*
 
-### Setup MongoDB
+### Setup Database (SQLite)
 
-Ensure you have a running MongoDB instance accessible by the bot. The connection details should be set either in `config.yaml` or via the `MONGO_*` environment variables.
-
-You can run MongoDB locally using Docker:
-```
-# Pull the image (if needed)
-sudo docker pull mongo:4.4.18
-
-# Start the container (example)
-cd scripts
-sudo ./start_mongo.sh
-```
-*(The `start_mongo.sh` script sets up a network and volume. Ensure your `MONGO_URI` points correctly to this instance, e.g., `mongodb://kramer-mongo:27017` if running kramerbot in the same Docker network)*
+The bot uses a SQLite database file to store user data. By default, it will create/use a file at `./data/users.db` relative to where the bot is run.
+- Ensure the directory `./data` exists and the bot has write permissions.
+- You can change the path using the `sqlite.db_path` setting in `config.yaml` or the `SQLITE_DB_PATH` environment variable.
 
 ### Using Docker
 
@@ -83,16 +72,27 @@ Create an environment file (e.g., `kramerbot.env`) with your required variables:
 ```
 TELEGRAM_BOT_TOKEN=<your_telegram_bot_token>
 KRAMERBOT_ADMIN_PASS=<your_admin_password> # Optional
-MONGO_URI=<your_mongodb_connection_string> # Or configure in config.yaml and mount it
-MONGO_DBNAME=<your_database_name> # Or configure in config.yaml
-MONGO_COLLNAME=<your_collection_name> # Or configure in config.yaml
+SQLITE_DB_PATH=/app/data/users.db # Optional: Specify path inside the container
 ```
 
-To deploy your container (example using the network from `start_mongo.sh`):
+To deploy your container using Docker Compose (recommended for persisting data):
+
+1.  Make sure you have a `docker-compose.yaml` file similar to the one provided in the repository (it should handle mounting the `./data` directory).
+2.  Run: `docker compose up -d`
+
+Alternatively, to run directly with `docker run`:
 
 ```bash
-# Ensure the mongo-network exists (created by start_mongo.sh)
-sudo docker run -d --name kramerbot --network mongo-network --env-file ./kramerbot.env --restart unless-stopped kramerbot:latest
+# Create the data directory on your host first if it doesn't exist
+mkdir -p data
+
+# Run the container, mounting the local data directory
+sudo docker run -d --name kramerbot \
+  --env-file ./kramerbot.env \
+  -v "$(pwd)/data:/app/data" \
+  --restart unless-stopped \
+  kramerbot:latest
 ```
+*(This mounts your local `./data` directory into `/app/data` inside the container, where the bot expects to find the SQLite file by default or via the environment variable.)*
 
 <img src="https://raw.githubusercontent.com/intothevoid/kramerbot/main/static/about.jpeg" width="50%" height="50%"></img>

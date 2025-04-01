@@ -1,4 +1,4 @@
-package sqlite
+package persist
 
 import (
 	"database/sql"
