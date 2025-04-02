@@ -2,6 +2,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const tg = window.Telegram.WebApp;
     tg.ready(); // Inform Telegram the web app is ready
 
+    // Check for Telegram initData in URL parameters (for direct browser access)
+    function getInitDataFromURL() {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get('tgWebAppData') || '';
+    }
+
+    // If tg.initData is empty but we have URL parameters, use those instead
+    if (!tg.initData && getInitDataFromURL()) {
+        console.log("Using initData from URL parameters");
+        // This is a workaround for direct browser access
+        window.Telegram.WebApp.initData = getInitDataFromURL();
+    }
+
     // --- UI Elements ---
     const loadingDiv = document.getElementById('loading');
     const preferencesDiv = document.getElementById('preferences');

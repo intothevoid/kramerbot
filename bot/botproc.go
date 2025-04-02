@@ -1,6 +1,8 @@
 package bot
 
 import (
+	"fmt"
+	"net/url"
 	"strings"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -77,11 +79,28 @@ func (k *KramerBot) BotProc(updates tgbotapi.UpdatesChannel) {
 					continue
 				}
 
-				// Instead of WebAppInfo, use URL button directly
-				button := tgbotapi.NewInlineKeyboardButtonURL("Open Settings App", k.WebAppURL)
+				// Create a URL with dummy initData for direct browser access
+				// This allows the webapp to identify this is a direct browser access
+				// and handle authentication differently
+				chatIDStr := fmt.Sprintf("%d", update.Message.Chat.ID)
+				webAppURL := k.WebAppURL
+				if !strings.Contains(webAppURL, "?") {
+					webAppURL += "?tgWebAppData=" + url.QueryEscape("chat_id="+chatIDStr)
+				} else {
+					webAppURL += "&tgWebAppData=" + url.QueryEscape("chat_id="+chatIDStr)
+				}
+
+				// Create a message with a regular URL button
+				button := tgbotapi.NewInlineKeyboardButtonURL("Open Web App", webAppURL)
 				keyboard := tgbotapi.NewInlineKeyboardMarkup([]tgbotapi.InlineKeyboardButton{button})
 
-				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Click the button below to manage your preferences:")
+				// Send instructions to the user
+				instructions := "To access the web app, please:\n\n" +
+					"1. Click the button below to open in your browser\n" +
+					"2. Log in using Telegram if prompted\n\n" +
+					"Note: For the best experience, use the official Telegram app where web apps are fully supported."
+
+				msg := tgbotapi.NewMessage(update.Message.Chat.ID, instructions)
 				msg.ReplyMarkup = keyboard
 
 				if _, err := k.BotApi.Send(msg); err != nil {

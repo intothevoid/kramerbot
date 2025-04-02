@@ -68,13 +68,47 @@ func (a *API) ValidateAuthMiddleware(next http.Handler) http.Handler {
 		}
 
 		// PRODUCTION MODE - Normal authentication flow
+
+		// Try to get initData from header first (normal Telegram WebApp flow)
 		initDataString := r.Header.Get("X-Telegram-Init-Data")
+
+		// If not in header, check if it's in URL query parameters (direct browser access)
 		if initDataString == "" {
-			a.Logger.Warn("Missing X-Telegram-Init-Data header")
+			// Check URL query for tgWebAppData parameter (our custom browser access)
+			tgWebAppData := r.URL.Query().Get("tgWebAppData")
+			if tgWebAppData != "" {
+				a.Logger.Info("Using tgWebAppData from URL query parameter")
+
+				// Extract chat_id from the tgWebAppData
+				// Format is expected to be "chat_id=123456"
+				if strings.HasPrefix(tgWebAppData, "chat_id=") {
+					chatIDStr := strings.TrimPrefix(tgWebAppData, "chat_id=")
+					chatID, err := strconv.ParseInt(chatIDStr, 10, 64)
+					if err == nil && chatID > 0 {
+						a.Logger.Info("Creating user for direct browser access", zap.Int64("chatID", chatID))
+
+						// Create a user based on the chat_id
+						browserUser := &models.TelegramUser{
+							ID:        chatID,
+							FirstName: "Browser",
+							Username:  "browser_user",
+						}
+
+						// Store user data in request context
+						ctx := context.WithValue(r.Context(), userDataKey, browserUser)
+						next.ServeHTTP(w, r.WithContext(ctx))
+						return
+					}
+				}
+			}
+
+			// No valid initData found in either header or URL
+			a.Logger.Warn("Missing X-Telegram-Init-Data header and tgWebAppData parameter")
 			http.Error(w, "Unauthorized: Missing authentication data", http.StatusUnauthorized)
 			return
 		}
 
+		// Validate the initData if we have it
 		userData, err := a.validateInitData(initDataString)
 		if err != nil {
 			a.Logger.Error("Invalid initData", zap.Error(err), zap.String("initData", initDataString))
