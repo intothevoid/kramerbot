@@ -1,12 +1,18 @@
 FROM golang:latest
 
-# Set the working directory
-WORKDIR /kramerbot
+# Install sqlite3
+RUN apt-get update && apt-get install -y sqlite3
 
-# Copy the source code
-ADD . /kramerbot
+WORKDIR /app
+
+# Create data directory with correct permissions
+RUN mkdir -p /app/data && chmod 777 /app/data
+
+# Copy source code
+ADD . /app
 
 # Build the bot
 RUN go build .
 
-ENTRYPOINT [ "./kramerbot" ]
+# Set the entry point
+ENTRYPOINT ["./kramerbot"]
