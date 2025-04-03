@@ -50,24 +50,32 @@ func (k *KramerBot) UpdateUser(userData *models.UserData) error {
 	return nil
 }
 
-// Check if the OZB deal has already been sent to the user
+// OzbDealSent checks if an OzBargain deal has already been sent to the user
+// by searching for the deal ID in the user's sent deals list
 func OzbDealSent(user *models.UserData, deal *models.OzBargainDeal) bool {
-	// Check if deal.Id is in user.DealsSent
-	for _, dealId := range user.OzbSent {
-		if dealId == deal.Id {
-			return true
-		}
+	if user == nil || deal == nil {
+		return false
 	}
-	return false
+
+	// Use a map for O(1) lookup instead of slice iteration
+	sentDeals := make(map[string]bool)
+	for _, id := range user.OzbSent {
+		sentDeals[id] = true
+	}
+	return sentDeals[deal.Id]
 }
 
-// Check if the AMZ deal has already been sent to the user
+// AmzDealSent checks if an Amazon deal has already been sent to the user
+// by searching for the deal ID in the user's sent deals list
 func AmzDealSent(user *models.UserData, deal *models.CamCamCamDeal) bool {
-	// Check if deal.Id is in user.DealsSent
-	for _, dealId := range user.AmzSent {
-		if dealId == deal.Id {
-			return true
-		}
+	if user == nil || deal == nil {
+		return false
 	}
-	return false
+
+	// Use a map for O(1) lookup instead of slice iteration
+	sentDeals := make(map[string]bool)
+	for _, id := range user.AmzSent {
+		sentDeals[id] = true
+	}
+	return sentDeals[deal.Id]
 }
