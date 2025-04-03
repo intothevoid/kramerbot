@@ -16,7 +16,7 @@ import (
 	sqlite_persist "github.com/intothevoid/kramerbot/persist/sqlite"
 	"github.com/intothevoid/kramerbot/pipup"
 	"github.com/intothevoid/kramerbot/scrapers"
-	"github.com/spf13/viper"
+	"github.com/intothevoid/kramerbot/util"
 	"go.uber.org/zap"
 )
 
@@ -29,7 +29,7 @@ type KramerBot struct {
 	UserStore  *models.UserStore
 	DataWriter persist.DatabaseIF
 	Pipup      *pipup.Pipup
-	Config     *viper.Viper
+	Config     *util.Config
 }
 
 // function to read token from environment variable
@@ -47,8 +47,7 @@ func (k *KramerBot) GetAdminPass() string {
 
 // get test mode from configuration
 func (k *KramerBot) getTestMode() bool {
-	testMode := k.Config.GetBool("test_mode")
-	return testMode
+	return k.Config.TestMode
 }
 
 // function to create a new bot
@@ -58,15 +57,6 @@ func (k *KramerBot) NewBot(ozbs *scrapers.OzBargainScraper, cccs *scrapers.CamCa
 	if testMode {
 		// TEST MODE
 		k.Logger.Info("****** TEST MODE IS NOW ACTIVE. Telegram not connected. ******")
-
-		// Make entries to dummy database
-		// dataWriter, _ := dummy_persist.New(
-		// 	"dummy_uri",
-		// 	"dummy_dbname",
-		// 	"dummy_collname",
-		// 	k.Logger,
-		// )
-		// k.DataWriter = dataWriter
 	} else {
 		// REGULAR MODE
 		// If user has forgotten to set the token
@@ -98,10 +88,7 @@ func (k *KramerBot) NewBot(ozbs *scrapers.OzBargainScraper, cccs *scrapers.CamCa
 	// Database Initialization (SQLite)
 	dbPath := os.Getenv("SQLITE_DB_PATH")
 	if dbPath == "" {
-		dbPath = k.Config.GetString("sqlite.db_path")
-		if dbPath == "" {
-			dbPath = "data/users.db" // Default path if neither env var nor config is set
-		}
+		dbPath = k.Config.SQLite.DBPath
 	}
 
 	k.Logger.Info("Initializing SQLite database", zap.String("path", dbPath))

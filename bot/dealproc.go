@@ -127,7 +127,7 @@ func (k *KramerBot) processCCCDeals() {
 	userdata := k.UserStore.GetAllUsers()
 
 	// Get price drop target from configuration
-	priceDropTarget := k.Config.GetInt("scrapers.amazon.target_price_drop")
+	priceDropTarget := k.Config.Scrapers.Amazon.TargetPriceDrop
 
 	for _, deal := range uniqueDeals {
 		k.Logger.Debug("Amazon deal", zap.Any("deal", deal))

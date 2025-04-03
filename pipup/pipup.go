@@ -2,18 +2,27 @@ package pipup
 
 import (
 	"encoding/json"
-	"strings"
 
 	"github.com/intothevoid/kramerbot/models"
 	"github.com/intothevoid/kramerbot/util"
-	"github.com/spf13/viper"
 	"go.uber.org/zap"
 )
 
 type Pipup struct {
-	Config   *viper.Viper
-	Logger   *zap.Logger
-	Username string
+	Enabled         bool
+	Username        string
+	BaseURL         string
+	Duration        int
+	MediaType       string
+	MediaURI        string
+	ImageWidth      int
+	Position        int
+	TitleColor      string
+	TitleSize       int
+	MessageColor    string
+	MessageSize     int
+	BackgroundColor string
+	Logger          *zap.Logger
 }
 
 /* Sample POST request from CURL -
@@ -23,34 +32,44 @@ curl -X POST -H "Content-Type: application/json" -d '{"title": "Kramerbot",
 "http://192.168.1.10:7979/notify"
 */
 
-// Create a new pipup instance
-func New(config *viper.Viper, logger *zap.Logger) *Pipup {
+// Create new pipup instance
+func New(config util.PipupConfig, logger *zap.Logger) *Pipup {
 	return &Pipup{
-		Config:   config,
-		Logger:   logger,
-		Username: config.GetString("pipup.username"),
+		Enabled:         config.Enabled,
+		Username:        config.Username,
+		BaseURL:         config.BaseURL,
+		Duration:        config.Duration,
+		MediaType:       config.MediaType,
+		MediaURI:        config.MediaURI,
+		ImageWidth:      config.ImageWidth,
+		Position:        config.Position,
+		TitleColor:      config.TitleColor,
+		TitleSize:       config.TitleSize,
+		MessageColor:    config.MessageColor,
+		MessageSize:     config.MessageSize,
+		BackgroundColor: config.BackgroundColor,
+		Logger:          logger,
 	}
 }
 
 // Create and send sample notification via post.go
 func (p *Pipup) SendMediaMessage(message string, title string) {
 	// Do not send message if pipup is disabled
-	enabled := p.Config.GetBool("pipup.enabled")
-	if !enabled {
+	if !p.Enabled {
 		return
 	}
 
-	duration := p.Config.GetInt("pipup.duration")
-	position := p.Config.GetInt("pipup.position")
-	mediaUri := p.Config.GetString("pipup.media_uri")
-	mediaType := strings.ToLower(p.Config.GetString("pipup.media_type"))
-	imageWidth := p.Config.GetInt("pipup.image_width")
-	baseUrl := p.Config.GetString("pipup.base_url")
-	title_color := p.Config.GetString("pipup.title_color")
-	message_color := p.Config.GetString("pipup.message_color")
-	message_size := p.Config.GetInt("pipup.message_size")
-	background_color := p.Config.GetString("pipup.background_color")
-	title_size := p.Config.GetInt("pipup.title_size")
+	duration := p.Duration
+	position := p.Position
+	mediaUri := p.MediaURI
+	mediaType := p.MediaType
+	imageWidth := p.ImageWidth
+	baseUrl := p.BaseURL
+	title_color := p.TitleColor
+	message_color := p.MessageColor
+	message_size := p.MessageSize
+	background_color := p.BackgroundColor
+	title_size := p.TitleSize
 
 	// Initialise toast
 	toast := &models.PipupToast{}
@@ -130,14 +149,13 @@ func (p *Pipup) SendMediaMessage(message string, title string) {
 // Send a simple message
 func (p *Pipup) SendMessage(message string, title string) {
 	// Do not send message if pipup is disabled
-	enabled := p.Config.GetBool("pipup.enabled")
-	if !enabled {
+	if !p.Enabled {
 		return
 	}
 
-	duration := p.Config.GetInt("pipup.duration")
-	position := p.Config.GetInt("pipup.position")
-	baseUrl := p.Config.GetString("pipup.base_url")
+	duration := p.Duration
+	position := p.Position
+	baseUrl := p.BaseURL
 
 	toast := &models.PipupSimpleToast{
 		Title:    title,
