@@ -1,9 +1,11 @@
 package pipup
 
 import (
+	"bytes"
 	"encoding/json"
+	"fmt"
+	"net/http"
 
-	"github.com/intothevoid/kramerbot/models"
 	"github.com/intothevoid/kramerbot/util"
 	"go.uber.org/zap"
 )
@@ -52,126 +54,95 @@ func New(config util.PipupConfig, logger *zap.Logger) *Pipup {
 	}
 }
 
-// Create and send sample notification via post.go
-func (p *Pipup) SendMediaMessage(message string, title string) {
-	// Do not send message if pipup is disabled
+// SendMediaMessage sends a media message to the user
+func (p *Pipup) SendMediaMessage(message string, title string) error {
 	if !p.Enabled {
-		return
+		return fmt.Errorf("pipup is not enabled")
 	}
 
-	duration := p.Duration
-	position := p.Position
-	mediaUri := p.MediaURI
-	mediaType := p.MediaType
-	imageWidth := p.ImageWidth
-	baseUrl := p.BaseURL
-	title_color := p.TitleColor
-	message_color := p.MessageColor
-	message_size := p.MessageSize
-	background_color := p.BackgroundColor
-	title_size := p.TitleSize
+	// Create the URL
+	url := fmt.Sprintf("%s/api/message", p.BaseURL)
 
-	// Initialise toast
-	toast := &models.PipupToast{}
-
-	if mediaType == "image" {
-		toast = &models.PipupToast{
-			Title:    title,
-			Message:  message,
-			Duration: duration,
-			Position: position,
-			Media: &models.PipupImage{
-				Image: &models.PipupUri{
-					Uri:   mediaUri,
-					Width: imageWidth,
-				},
-			},
-			TitleColor:      title_color,
-			TitleSize:       title_size,
-			MessageColor:    message_color,
-			MessageSize:     message_size,
-			BackgroundColor: background_color,
-		}
+	// Create the request body
+	body := map[string]string{
+		"username": p.Username,
+		"message":  message,
+		"title":    title,
 	}
 
-	if mediaType == "video" {
-		toast = &models.PipupToast{
-			Title:    title,
-			Message:  message,
-			Duration: duration,
-			Position: position,
-			Media: &models.PipupVideo{
-				Video: &models.PipupUri{
-					Uri:   mediaUri,
-					Width: imageWidth,
-				},
-			},
-			TitleColor:      title_color,
-			TitleSize:       title_size,
-			MessageColor:    message_color,
-			MessageSize:     message_size,
-			BackgroundColor: background_color,
-		}
-	}
-
-	if mediaType == "web" {
-		toast = &models.PipupToast{
-			Title:    title,
-			Message:  message,
-			Duration: duration,
-			Position: position,
-			Media: &models.PipupWeb{
-				Web: &models.PipupUri{
-					Uri:   mediaUri,
-					Width: imageWidth,
-				},
-			},
-			TitleColor:      title_color,
-			TitleSize:       title_size,
-			MessageColor:    message_color,
-			MessageSize:     message_size,
-			BackgroundColor: background_color,
-		}
-	}
-
-	// Create json message
-	jsonBody, err := json.Marshal(toast)
-
+	// Convert body to JSON
+	jsonBody, err := json.Marshal(body)
 	if err != nil {
-		p.Logger.Error("Error marshalling andtoid tv notification json", zap.Error(err))
+		return fmt.Errorf("failed to marshal request body: %w", err)
 	}
 
-	// Send post request
-	p.Logger.Debug("Sending pipup request", zap.String("url", baseUrl), zap.String("json", string(jsonBody)))
-	util.SendPostRequest(baseUrl, jsonBody)
+	// Create the request
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonBody))
+	if err != nil {
+		return fmt.Errorf("failed to create request: %w", err)
+	}
+
+	// Set headers
+	req.Header.Set("Content-Type", "application/json")
+
+	// Send the request
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to send request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	// Check response status
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+	}
+
+	return nil
 }
 
-// Send a simple message
-func (p *Pipup) SendMessage(message string, title string) {
-	// Do not send message if pipup is disabled
+// SendMessage sends a message to the user
+func (p *Pipup) SendMessage(message string) error {
 	if !p.Enabled {
-		return
+		return fmt.Errorf("pipup is not enabled")
 	}
 
-	duration := p.Duration
-	position := p.Position
-	baseUrl := p.BaseURL
+	// Create the URL
+	url := fmt.Sprintf("%s/api/message", p.BaseURL)
 
-	toast := &models.PipupSimpleToast{
-		Title:    title,
-		Message:  message,
-		Duration: duration,
-		Position: position,
+	// Create the request body
+	body := map[string]string{
+		"username": p.Username,
+		"message":  message,
 	}
 
-	// Create json message
-	jsonBody, err := json.Marshal(toast)
-
+	// Convert body to JSON
+	jsonBody, err := json.Marshal(body)
 	if err != nil {
-		p.Logger.Error("Error marshalling andtoid tv notification json", zap.Error(err))
+		return fmt.Errorf("failed to marshal request body: %w", err)
 	}
 
-	// Send post request
-	p.Logger.Debug("Sending pipup request", zap.String("url", baseUrl), zap.String("json", string(jsonBody)))
-	util.SendPostRequest(baseUrl, jsonBody)
+	// Create the request
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonBody))
+	if err != nil {
+		return fmt.Errorf("failed to create request: %w", err)
+	}
+
+	// Set headers
+	req.Header.Set("Content-Type", "application/json")
+
+	// Send the request
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to send request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	// Check response status
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+	}
+
+	return nil
 }

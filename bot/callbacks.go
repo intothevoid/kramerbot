@@ -296,44 +296,58 @@ func (k *KramerBot) MakeAnnouncement(chat *tgbotapi.Chat, announcement string) {
 }
 
 // Send OZB good deal message to user
-func (k *KramerBot) SendOzbGoodDeal(user *models.UserData, deal *models.OzBargainDeal) {
+func (k *KramerBot) SendOzbGoodDeal(user *models.UserData, deal *models.OzBargainDeal) error {
 	shortenedTitle := util.ShortenString(deal.Title, 30) + "..."
 	formattedDeal := fmt.Sprintf(`🟠🔥<a href="%s" target="_blank">%s</a>🔺%s`, deal.Url, shortenedTitle, deal.Upvotes)
 	textDeal := fmt.Sprintf(`🟠🔥 %s 🔺%s`, shortenedTitle, deal.Upvotes)
 
 	k.Logger.Debug(fmt.Sprintf("Sending good deal %s to user %s", shortenedTitle, user.Username))
-	k.SendHTMLMessage(user.ChatID, formattedDeal)
+	if err := k.SendHTMLMessage(user.ChatID, formattedDeal); err != nil {
+		return fmt.Errorf("failed to send HTML message: %w", err)
+	}
 
 	// Send android notification if username is set
 	if strings.EqualFold(user.Username, k.Pipup.Username) {
-		k.Pipup.SendMediaMessage(textDeal, "Kramerbot")
+		if err := k.Pipup.SendMediaMessage(textDeal, "Kramerbot"); err != nil {
+			return fmt.Errorf("failed to send pipup message: %w", err)
+		}
 	}
 
 	// Mark deal as sent
 	user.OzbSent = append(user.OzbSent, deal.Id)
-	k.UpdateUser(user)
+	if err := k.UpdateUser(user); err != nil {
+		return fmt.Errorf("failed to update user: %w", err)
+	}
+	return nil
 }
 
 // Send OZB super deal to user
-func (k *KramerBot) SendOzbSuperDeal(user *models.UserData, deal *models.OzBargainDeal) {
+func (k *KramerBot) SendOzbSuperDeal(user *models.UserData, deal *models.OzBargainDeal) error {
 	shortenedTitle := util.ShortenString(deal.Title, 30) + "..."
 	formattedDeal := fmt.Sprintf(`🟠🔥<a href="%s" target="_blank">%s</a>🔺%s`, deal.Url, shortenedTitle, deal.Upvotes)
 	textDeal := fmt.Sprintf(`🟠🔥 %s 🔺%s`, shortenedTitle, deal.Upvotes)
 
 	k.Logger.Debug(fmt.Sprintf("Sending super deal %s to user %s", shortenedTitle, user.Username))
-	k.SendHTMLMessage(user.ChatID, formattedDeal)
+	if err := k.SendHTMLMessage(user.ChatID, formattedDeal); err != nil {
+		return fmt.Errorf("failed to send HTML message: %w", err)
+	}
 
 	// Send android notification if username is set
 	if strings.EqualFold(user.Username, k.Pipup.Username) {
-		k.Pipup.SendMediaMessage(textDeal, "Kramerbot")
+		if err := k.Pipup.SendMediaMessage(textDeal, "Kramerbot"); err != nil {
+			return fmt.Errorf("failed to send pipup message: %w", err)
+		}
 	}
 
 	// Mark deal as sent
 	user.OzbSent = append(user.OzbSent, deal.Id)
-	k.UpdateUser(user)
+	if err := k.UpdateUser(user); err != nil {
+		return fmt.Errorf("failed to update user: %w", err)
+	}
+	return nil
 }
 
-func (k *KramerBot) SendAmzDeal(user *models.UserData, deal *models.CamCamCamDeal) {
+func (k *KramerBot) SendAmzDeal(user *models.UserData, deal *models.CamCamCamDeal) error {
 	dealType := ""
 
 	// Get deal type
@@ -349,52 +363,73 @@ func (k *KramerBot) SendAmzDeal(user *models.UserData, deal *models.CamCamCamDea
 	textDeal := fmt.Sprintf(`🅰️ %s`, shortenedTitle)
 
 	k.Logger.Debug(fmt.Sprintf("Sending Amazon %s deal %s to user %s", dealType, shortenedTitle, user.Username))
-	k.SendHTMLMessage(user.ChatID, formattedDeal)
+	if err := k.SendHTMLMessage(user.ChatID, formattedDeal); err != nil {
+		return fmt.Errorf("failed to send HTML message: %w", err)
+	}
 
 	// Send android notification if username is set
 	if strings.EqualFold(user.Username, k.Pipup.Username) {
-		k.Pipup.SendMediaMessage(textDeal, "Kramerbot")
+		if err := k.Pipup.SendMediaMessage(textDeal, "Kramerbot"); err != nil {
+			return fmt.Errorf("failed to send pipup message: %w", err)
+		}
 	}
 
 	// Mark deal as sent
 	user.AmzSent = append(user.AmzSent, deal.Id)
-	k.UpdateUser(user)
+	if err := k.UpdateUser(user); err != nil {
+		return fmt.Errorf("failed to update user: %w", err)
+	}
+	return nil
 }
 
 // Send OZB watched deal to user
-func (k *KramerBot) SendOzbWatchedDeal(user *models.UserData, deal *models.OzBargainDeal) {
+func (k *KramerBot) SendOzbWatchedDeal(user *models.UserData, deal *models.OzBargainDeal) error {
 	shortenedTitle := util.ShortenString(deal.Title, 30) + "..."
 	formattedDeal := fmt.Sprintf(`🟠👀<a href="%s" target="_blank">%s</a>🔺%s`, deal.Url, shortenedTitle, deal.Upvotes)
 	textDeal := fmt.Sprintf(`🟠👀 %s 🔺%s`, shortenedTitle, deal.Upvotes)
 
 	k.Logger.Debug(fmt.Sprintf("Sending watched Ozbargain deal %s to user %s", shortenedTitle, user.Username))
-	k.SendHTMLMessage(user.ChatID, formattedDeal)
+	if err := k.SendHTMLMessage(user.ChatID, formattedDeal); err != nil {
+		return fmt.Errorf("failed to send HTML message: %w", err)
+	}
 
 	// Send android notification if username is set
 	if strings.EqualFold(user.Username, k.Pipup.Username) {
-		k.Pipup.SendMediaMessage(textDeal, "Kramerbot")
+		if err := k.Pipup.SendMediaMessage(textDeal, "Kramerbot"); err != nil {
+			return fmt.Errorf("failed to send pipup message: %w", err)
+		}
 	}
 
 	// Mark deal as sent
 	user.OzbSent = append(user.OzbSent, deal.Id)
-	k.UpdateUser(user)
+	if err := k.UpdateUser(user); err != nil {
+		return fmt.Errorf("failed to update user: %w", err)
+	}
+	return nil
 }
 
 // Send AMZ watched deal to user
-func (k *KramerBot) SendAmzWatchedDeal(user *models.UserData, deal *models.CamCamCamDeal) {
+func (k *KramerBot) SendAmzWatchedDeal(user *models.UserData, deal *models.CamCamCamDeal) error {
 	shortenedTitle := util.ShortenString(deal.Title, 30) + "..."
 	formattedDeal := fmt.Sprintf(`🅰️👀<a href="%s" target="_blank">%s</a> - %s`, deal.Url, shortenedTitle, k.CCCScraper.GetDealDropString(deal))
 	textDeal := fmt.Sprintf(`🅰️👀 %s`, shortenedTitle)
 
 	k.Logger.Debug(fmt.Sprintf("Sending watched Amazon deal %s to user %s", shortenedTitle, user.Username))
-	k.SendHTMLMessage(user.ChatID, formattedDeal)
+	if err := k.SendHTMLMessage(user.ChatID, formattedDeal); err != nil {
+		return fmt.Errorf("failed to send HTML message: %w", err)
+	}
 
 	// Send android notification if username is set
 	if strings.EqualFold(user.Username, k.Pipup.Username) {
-		k.Pipup.SendMediaMessage(textDeal, "Kramerbot")
+		if err := k.Pipup.SendMediaMessage(textDeal, "Kramerbot"); err != nil {
+			return fmt.Errorf("failed to send pipup message: %w", err)
+		}
 	}
 
 	// Mark deal as sent
 	user.AmzSent = append(user.AmzSent, deal.Id)
-	k.UpdateUser(user)
+	if err := k.UpdateUser(user); err != nil {
+		return fmt.Errorf("failed to update user: %w", err)
+	}
+	return nil
 }

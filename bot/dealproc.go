@@ -1,6 +1,7 @@
 package bot
 
 import (
+	"fmt"
 	"strings"
 	"time"
 
@@ -16,38 +17,37 @@ func (k *KramerBot) StartProcessing() {
 	go func() {
 		ozbTick := time.NewTicker(time.Minute * time.Duration(k.OzbScraper.ScrapeInterval))
 		for range ozbTick.C {
-			// Process Ozbargain deals
-			k.processOzbargainDeals()
+			if err := k.processOzbargainDeals(); err != nil {
+				k.Logger.Error("Error processing Ozbargain deals", zap.Error(err))
+			}
 		}
 	}()
 
 	go func() {
-		// amzTick := time.NewTicker(time.Second * 60)
 		amzTick := time.NewTicker(time.Minute * time.Duration(k.CCCScraper.ScrapeInterval))
 		for range amzTick.C {
-			// Process Camel camel camel (Amazon) deals
-			k.processCCCDeals()
+			if err := k.processCCCDeals(); err != nil {
+				k.Logger.Error("Error processing CCC deals", zap.Error(err))
+			}
 		}
 	}()
 }
 
-func (k *KramerBot) processOzbargainDeals() {
+func (k *KramerBot) processOzbargainDeals() error {
 	// Add nil checks for k.OzbScraper
 	if k.OzbScraper == nil {
-		k.Logger.Error("OzbScraper is nil")
-		return
+		return fmt.Errorf("OzbScraper is nil")
 	}
 
 	err := k.OzbScraper.Scrape()
 	if err != nil {
-		k.Logger.Error("Error scraping deals", zap.Error(err))
-		return
+		return fmt.Errorf("error scraping deals: %w", err)
 	}
 
 	// Load deals from OzBargain
 	deals := k.OzbScraper.GetData()
 	if deals == nil {
-		k.Logger.Error("No deals returned from scraper")
+		return fmt.Errorf("no deals returned from scraper")
 	}
 
 	// Strip duplicates by using a map indexed by deal id
@@ -57,13 +57,14 @@ func (k *KramerBot) processOzbargainDeals() {
 	}
 
 	// Load store
-	k.LoadUserStore()
+	if err := k.LoadUserStore(); err != nil {
+		return fmt.Errorf("error loading user store: %w", err)
+	}
 
 	// Get a thread-safe copy of all users
 	userdata := k.UserStore.GetAllUsers()
 	if userdata == nil {
-		k.Logger.Error("No users found in UserStore")
-		return
+		return fmt.Errorf("no users found in UserStore")
 	}
 
 	for _, deal := range uniqueDeals {
@@ -76,12 +77,22 @@ func (k *KramerBot) processOzbargainDeals() {
 		for _, user := range userdata {
 			if user.OzbGood && dealType == int(scrapers.OZB_GOOD) && !OzbDealSent(user, &deal) {
 				// User is subscribed to good deals, notify user
-				k.SendOzbGoodDeal(user, &deal)
+				if err := k.SendOzbGoodDeal(user, &deal); err != nil {
+					k.Logger.Error("Failed to send OZB good deal",
+						zap.String("deal_id", deal.Id),
+						zap.Int64("user_id", user.ChatID),
+						zap.Error(err))
+				}
 			}
 
 			if user.OzbSuper && dealType == int(scrapers.OZB_SUPER) && !OzbDealSent(user, &deal) {
 				// User is subscribed to super deals, notify user
-				k.SendOzbSuperDeal(user, &deal)
+				if err := k.SendOzbSuperDeal(user, &deal); err != nil {
+					k.Logger.Error("Failed to send OZB super deal",
+						zap.String("deal_id", deal.Id),
+						zap.Int64("user_id", user.ChatID),
+						zap.Error(err))
+				}
 			}
 
 			// Check for watched keywords
@@ -94,7 +105,13 @@ func (k *KramerBot) processOzbargainDeals() {
 
 				if strings.Contains(strings.ToLower(deal.Title), strings.ToLower(keyword)) && !OzbDealSent(user, &deal) {
 					// Deal contains keyword, notify user
-					k.SendOzbWatchedDeal(user, &deal)
+					if err := k.SendOzbWatchedDeal(user, &deal); err != nil {
+						k.Logger.Error("Failed to send OZB watched deal",
+							zap.String("deal_id", deal.Id),
+							zap.Int64("user_id", user.ChatID),
+							zap.String("keyword", keyword),
+							zap.Error(err))
+					}
 
 					// Break out of keyword loop
 					break
@@ -102,17 +119,24 @@ func (k *KramerBot) processOzbargainDeals() {
 			}
 		}
 	}
+	return nil
 }
 
-func (k *KramerBot) processCCCDeals() {
+func (k *KramerBot) processCCCDeals() error {
+	if k.CCCScraper == nil {
+		return fmt.Errorf("CCCScraper is nil")
+	}
+
 	err := k.CCCScraper.Scrape()
 	if err != nil {
-		k.Logger.Error("Error scraping deals", zap.Error(err))
-		return
+		return fmt.Errorf("error scraping deals: %w", err)
 	}
 
 	// Load deals from OzBargain
 	deals := k.CCCScraper.GetData()
+	if deals == nil {
+		return fmt.Errorf("no deals returned from scraper")
+	}
 
 	// Strip duplicates by using a map indexed by deal id
 	uniqueDeals := make(map[string]models.CamCamCamDeal)
@@ -121,10 +145,15 @@ func (k *KramerBot) processCCCDeals() {
 	}
 
 	// Load store
-	k.LoadUserStore()
+	if err := k.LoadUserStore(); err != nil {
+		return fmt.Errorf("error loading user store: %w", err)
+	}
 
 	// Get a thread-safe copy of all users
 	userdata := k.UserStore.GetAllUsers()
+	if userdata == nil {
+		return fmt.Errorf("no users found in UserStore")
+	}
 
 	// Get price drop target from configuration
 	priceDropTarget := k.Config.Scrapers.Amazon.TargetPriceDrop
@@ -139,12 +168,22 @@ func (k *KramerBot) processCCCDeals() {
 		for _, user := range userdata {
 			if user.AmzDaily && priceDropTargetMet && deal.DealType == int(scrapers.AMZ_DAILY) && !AmzDealSent(user, &deal) {
 				// User is subscribed to AMZ daily deals, notify user
-				k.SendAmzDeal(user, &deal)
+				if err := k.SendAmzDeal(user, &deal); err != nil {
+					k.Logger.Error("Failed to send AMZ daily deal",
+						zap.String("deal_id", deal.Id),
+						zap.Int64("user_id", user.ChatID),
+						zap.Error(err))
+				}
 			}
 
 			if user.AmzWeekly && priceDropTargetMet && deal.DealType == int(scrapers.AMZ_WEEKLY) && !AmzDealSent(user, &deal) {
 				// User is subscribed to AMZ weekly deals, notify user
-				k.SendAmzDeal(user, &deal)
+				if err := k.SendAmzDeal(user, &deal); err != nil {
+					k.Logger.Error("Failed to send AMZ weekly deal",
+						zap.String("deal_id", deal.Id),
+						zap.Int64("user_id", user.ChatID),
+						zap.Error(err))
+				}
 			}
 
 			// Check for watched keywords
@@ -157,7 +196,13 @@ func (k *KramerBot) processCCCDeals() {
 
 				if strings.Contains(strings.ToLower(deal.Title), strings.ToLower(keyword)) && !AmzDealSent(user, &deal) {
 					// Deal contains keyword, notify user
-					k.SendAmzWatchedDeal(user, &deal)
+					if err := k.SendAmzWatchedDeal(user, &deal); err != nil {
+						k.Logger.Error("Failed to send AMZ watched deal",
+							zap.String("deal_id", deal.Id),
+							zap.Int64("user_id", user.ChatID),
+							zap.String("keyword", keyword),
+							zap.Error(err))
+					}
 
 					// Break out of keyword loop
 					break
@@ -165,4 +210,5 @@ func (k *KramerBot) processCCCDeals() {
 			}
 		}
 	}
+	return nil
 }
