@@ -3,6 +3,7 @@ package sqlite
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 
 	"github.com/intothevoid/kramerbot/models"
 	_ "github.com/lib/pq"
@@ -40,7 +41,27 @@ func (udb *UserStoreDB) Close() {
 
 // Create *models.UserData table in database
 func (udb *UserStoreDB) CreateTable() error {
-	_, err := udb.DB.Exec(`
+	// Set WAL mode and other pragmas first
+	_, err := udb.DB.Exec("PRAGMA journal_mode=WAL")
+	if err != nil {
+		udb.Logger.Error("Failed to set WAL mode", zap.Error(err))
+		return err
+	}
+
+	_, err = udb.DB.Exec("PRAGMA synchronous=NORMAL")
+	if err != nil {
+		udb.Logger.Error("Failed to set synchronous mode", zap.Error(err))
+		return err
+	}
+
+	_, err = udb.DB.Exec("PRAGMA busy_timeout=5000")
+	if err != nil {
+		udb.Logger.Error("Failed to set busy timeout", zap.Error(err))
+		return err
+	}
+
+	// Create the table
+	_, err = udb.DB.Exec(`
 		CREATE TABLE IF NOT EXISTS users (
 			chat_id INTEGER PRIMARY KEY,
 			username TEXT,
@@ -55,6 +76,7 @@ func (udb *UserStoreDB) CreateTable() error {
 		`)
 
 	if err != nil {
+		udb.Logger.Error("Failed to create table", zap.Error(err))
 		return err
 	}
 
@@ -98,6 +120,11 @@ func (udb *UserStoreDB) AddUser(user *models.UserData) error {
 
 // Update user in the database
 func (udb *UserStoreDB) UpdateUser(user *models.UserData) error {
+	udb.Logger.Debug("Starting user update",
+		zap.Int64("chatID", user.ChatID),
+		zap.String("username", user.Username),
+		zap.Bool("amz_daily", user.AmzDaily))
+
 	// Convert string array to bytes
 	// We do this as sqlite does not allow us to store string slices
 	// Instead we convert to JSON bytes and store in the database
@@ -116,9 +143,9 @@ func (udb *UserStoreDB) UpdateUser(user *models.UserData) error {
 		udb.Logger.Error("Error marshalling AMZ deals sent", zap.Error(err))
 	}
 
-	_, err = udb.DB.Exec(`
+	result, err := udb.DB.Exec(`
 		UPDATE users SET
-			username = ?, ozb_good = ?, ozb_super = ?, keywords = ?, ozb_sent = ?, amz_daily =?, amz_weekly =?, amz_sent =?
+			username = ?, ozb_good = ?, ozb_super = ?, keywords = ?, ozb_sent = ?, amz_daily = ?, amz_weekly = ?, amz_sent = ?
 		WHERE chat_id = ?`,
 		user.Username, user.OzbGood, user.OzbSuper, keywords, ozbSent, user.AmzDaily, user.AmzWeekly, amzSent, user.ChatID,
 	)
@@ -126,6 +153,20 @@ func (udb *UserStoreDB) UpdateUser(user *models.UserData) error {
 	if err != nil {
 		udb.Logger.Error("Error updating user", zap.Error(err))
 		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		udb.Logger.Error("Error getting rows affected", zap.Error(err))
+		return err
+	}
+
+	udb.Logger.Debug("User update completed",
+		zap.Int64("chatID", user.ChatID),
+		zap.Int64("rowsAffected", rowsAffected))
+
+	if rowsAffected == 0 {
+		return fmt.Errorf("no rows were updated for chat_id %d", user.ChatID)
 	}
 
 	return nil

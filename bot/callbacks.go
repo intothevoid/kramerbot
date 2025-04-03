@@ -159,12 +159,26 @@ func (k *KramerBot) ToggleOzbSuper(chat *tgbotapi.Chat) {
 func (k *KramerBot) ToggleAmzDaily(chat *tgbotapi.Chat) {
 	user, err := k.getUserData(chat.ID)
 	if err != nil {
-		return
+		k.Logger.Error("Failed to get user data", zap.Error(err))
+		return // Error message already sent by getUserData
 	}
 
+	k.Logger.Debug("Toggling AmzDaily preference",
+		zap.Int64("chatID", chat.ID),
+		zap.Bool("currentValue", user.AmzDaily),
+		zap.Bool("newValue", !user.AmzDaily))
+
 	user.AmzDaily = !user.AmzDaily
-	k.UpdateUser(user)                                  // Update DB
+	if err := k.UpdateUser(user); err != nil {
+		k.Logger.Error("Failed to update user", zap.Error(err))
+		k.SendMessage(chat.ID, "Sorry, there was an error updating your preferences. Please try again later.")
+		return
+	}
 	k.UserStore.Users[chat.ID].AmzDaily = user.AmzDaily // Update memory
+
+	k.Logger.Debug("Successfully updated AmzDaily preference",
+		zap.Int64("chatID", chat.ID),
+		zap.Bool("newValue", user.AmzDaily))
 
 	k.SendMessage(chat.ID, fmt.Sprintf("Amazon Daily Deals notifications set to: %t", user.AmzDaily))
 	k.ShowPreferences(chat)
