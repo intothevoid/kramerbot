@@ -8,13 +8,11 @@ package bot
 // imports
 import (
 	"os"
-	"path"
 	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/intothevoid/kramerbot/models"
 	"github.com/intothevoid/kramerbot/persist"
-	mongo_persist "github.com/intothevoid/kramerbot/persist/mongo"
 	sqlite_persist "github.com/intothevoid/kramerbot/persist/sqlite"
 	"github.com/intothevoid/kramerbot/pipup"
 	"github.com/intothevoid/kramerbot/scrapers"
@@ -165,14 +163,4 @@ func (k *KramerBot) StartBot() {
 
 		}
 	}
-}
-
-// migration function to migrate from sqlite to mongo
-func (k *KramerBot) MigrateSqliteToMongo(mongoURI string, mongoDBName string, mongoCollectionName string) {
-	// Get working directory
-	sqliteDBPath, _ := os.Getwd()
-	sqliteDBPath = path.Join(sqliteDBPath, "users.db")
-
-	// Start the conversion
-	mongo_persist.SqliteToMongoDB(sqliteDBPath, mongoURI, mongoDBName, mongoCollectionName, k.Logger)
 }
