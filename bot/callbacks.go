@@ -307,7 +307,7 @@ func (k *KramerBot) SendOzbGoodDeal(user *models.UserData, deal *models.OzBargai
 	}
 
 	// Send android notification if username is set
-	if strings.EqualFold(user.Username, k.Pipup.Username) {
+	if k.Pipup != nil && strings.EqualFold(user.Username, k.Pipup.Username) {
 		if err := k.Pipup.SendMediaMessage(textDeal, "Kramerbot"); err != nil {
 			return fmt.Errorf("failed to send pipup message: %w", err)
 		}
@@ -333,7 +333,7 @@ func (k *KramerBot) SendOzbSuperDeal(user *models.UserData, deal *models.OzBarga
 	}
 
 	// Send android notification if username is set
-	if strings.EqualFold(user.Username, k.Pipup.Username) {
+	if k.Pipup != nil && strings.EqualFold(user.Username, k.Pipup.Username) {
 		if err := k.Pipup.SendMediaMessage(textDeal, "Kramerbot"); err != nil {
 			return fmt.Errorf("failed to send pipup message: %w", err)
 		}
@@ -368,7 +368,7 @@ func (k *KramerBot) SendAmzDeal(user *models.UserData, deal *models.CamCamCamDea
 	}
 
 	// Send android notification if username is set
-	if strings.EqualFold(user.Username, k.Pipup.Username) {
+	if k.Pipup != nil && strings.EqualFold(user.Username, k.Pipup.Username) {
 		if err := k.Pipup.SendMediaMessage(textDeal, "Kramerbot"); err != nil {
 			return fmt.Errorf("failed to send pipup message: %w", err)
 		}
@@ -394,7 +394,7 @@ func (k *KramerBot) SendOzbWatchedDeal(user *models.UserData, deal *models.OzBar
 	}
 
 	// Send android notification if username is set
-	if strings.EqualFold(user.Username, k.Pipup.Username) {
+	if k.Pipup != nil && strings.EqualFold(user.Username, k.Pipup.Username) {
 		if err := k.Pipup.SendMediaMessage(textDeal, "Kramerbot"); err != nil {
 			return fmt.Errorf("failed to send pipup message: %w", err)
 		}
@@ -420,7 +420,7 @@ func (k *KramerBot) SendAmzWatchedDeal(user *models.UserData, deal *models.CamCa
 	}
 
 	// Send android notification if username is set
-	if strings.EqualFold(user.Username, k.Pipup.Username) {
+	if k.Pipup != nil && strings.EqualFold(user.Username, k.Pipup.Username) {
 		if err := k.Pipup.SendMediaMessage(textDeal, "Kramerbot"); err != nil {
 			return fmt.Errorf("failed to send pipup message: %w", err)
 		}
