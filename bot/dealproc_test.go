@@ -87,13 +87,20 @@ func TestKramerBot_processOzbargainDeals(t *testing.T) {
 					Deals: []models.OzBargainDeal{
 						{
 							Id:       "123",
-							Title:    "Test Deal",
+							Title:    "Test Deal 1",
 							Url:      "https://example.com",
 							Upvotes:  "30",
 							DealType: int(scrapers.OZB_GOOD),
 						},
 						{
 							Id:       "456",
+							Title:    "Test Deal 2",
+							Url:      "https://example.com",
+							Upvotes:  "20",
+							DealType: int(scrapers.OZB_GOOD),
+						},
+						{
+							Id:       "789",
 							Title:    "Nintendo Switch Deal",
 							Url:      "https://example.com",
 							Upvotes:  "20",
@@ -108,6 +115,7 @@ func TestKramerBot_processOzbargainDeals(t *testing.T) {
 							Username: "testuser",
 							OzbGood:  true,
 							Keywords: []string{"test", "nintendo"},
+							OzbSent:  []string{}, // Empty sent deals to verify multiple matches
 						},
 						456: {
 							ChatID:   456,

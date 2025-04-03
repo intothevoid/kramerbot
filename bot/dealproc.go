@@ -67,14 +67,31 @@ func (k *KramerBot) processOzbargainDeals() error {
 		return fmt.Errorf("no users found in UserStore")
 	}
 
+	// Pre-process user keywords into maps for efficient lookups
+	userKeywordMaps := make(map[int64]map[string]bool)
+	for chatID, user := range userdata {
+		keywordMap := make(map[string]bool)
+		for _, keyword := range user.Keywords {
+			// Only add non-empty keywords
+			if trimmed := strings.TrimSpace(keyword); trimmed != "" {
+				keywordMap[strings.ToLower(trimmed)] = true
+			}
+		}
+		userKeywordMaps[chatID] = keywordMap
+	}
+
 	for _, deal := range uniqueDeals {
 		k.Logger.Debug("Ozbargain deal", zap.Any("deal", deal))
+
+		// Pre-process deal title once
+		dealTitleLower := strings.ToLower(deal.Title)
 
 		// Check deal type
 		dealType := k.OzbScraper.GetDealType(deal)
 
 		// Go through all registered users and check deals they are subscribed to
-		for _, user := range userdata {
+		for chatID, user := range userdata {
+			// Check deal type subscriptions
 			if user.OzbGood && dealType == int(scrapers.OZB_GOOD) && !OzbDealSent(user, &deal) {
 				// User is subscribed to good deals, notify user
 				if err := k.SendOzbGoodDeal(user, &deal); err != nil {
@@ -95,26 +112,22 @@ func (k *KramerBot) processOzbargainDeals() error {
 				}
 			}
 
-			// Check for watched keywords
-			for _, keyword := range user.Keywords {
-				// If keyword is empty or only contains spaces
-				keyword = strings.TrimSpace(keyword)
-				if len(keyword) == 0 {
-					continue
-				}
-
-				if strings.Contains(strings.ToLower(deal.Title), strings.ToLower(keyword)) && !OzbDealSent(user, &deal) {
-					// Deal contains keyword, notify user
-					if err := k.SendOzbWatchedDeal(user, &deal); err != nil {
-						k.Logger.Error("Failed to send OZB watched deal",
-							zap.String("deal_id", deal.Id),
-							zap.Int64("user_id", user.ChatID),
-							zap.String("keyword", keyword),
-							zap.Error(err))
+			// Check for watched keywords using pre-processed map
+			keywordMap := userKeywordMaps[chatID]
+			if len(keywordMap) > 0 {
+				// Check if any keyword is in the deal title
+				for keyword := range keywordMap {
+					if strings.Contains(dealTitleLower, keyword) && !OzbDealSent(user, &deal) {
+						// Deal contains keyword, notify user
+						if err := k.SendOzbWatchedDeal(user, &deal); err != nil {
+							k.Logger.Error("Failed to send OZB watched deal",
+								zap.String("deal_id", deal.Id),
+								zap.Int64("user_id", user.ChatID),
+								zap.String("keyword", keyword),
+								zap.Error(err))
+						}
+						break // Break after first match
 					}
-
-					// Break out of keyword loop
-					break
 				}
 			}
 		}
@@ -155,17 +168,33 @@ func (k *KramerBot) processCCCDeals() error {
 		return fmt.Errorf("no users found in UserStore")
 	}
 
+	// Pre-process user keywords into maps for efficient lookups
+	userKeywordMaps := make(map[int64]map[string]bool)
+	for chatID, user := range userdata {
+		keywordMap := make(map[string]bool)
+		for _, keyword := range user.Keywords {
+			// Only add non-empty keywords
+			if trimmed := strings.TrimSpace(keyword); trimmed != "" {
+				keywordMap[strings.ToLower(trimmed)] = true
+			}
+		}
+		userKeywordMaps[chatID] = keywordMap
+	}
+
 	// Get price drop target from configuration
 	priceDropTarget := k.Config.Scrapers.Amazon.TargetPriceDrop
 
 	for _, deal := range uniqueDeals {
 		k.Logger.Debug("Amazon deal", zap.Any("deal", deal))
 
+		// Pre-process deal title once
+		dealTitleLower := strings.ToLower(deal.Title)
+
 		// Check if percentage drop meets target
 		priceDropTargetMet := k.CCCScraper.IsTargetDropGreater(&deal, priceDropTarget)
 
 		// Go through all registered users and check deals they are subscribed to
-		for _, user := range userdata {
+		for chatID, user := range userdata {
 			if user.AmzDaily && priceDropTargetMet && deal.DealType == int(scrapers.AMZ_DAILY) && !AmzDealSent(user, &deal) {
 				// User is subscribed to AMZ daily deals, notify user
 				if err := k.SendAmzDeal(user, &deal); err != nil {
@@ -186,26 +215,22 @@ func (k *KramerBot) processCCCDeals() error {
 				}
 			}
 
-			// Check for watched keywords
-			for _, keyword := range user.Keywords {
-				// If keyword is empty or only contains spaces
-				keyword = strings.TrimSpace(keyword)
-				if len(keyword) == 0 {
-					continue
-				}
-
-				if strings.Contains(strings.ToLower(deal.Title), strings.ToLower(keyword)) && !AmzDealSent(user, &deal) {
-					// Deal contains keyword, notify user
-					if err := k.SendAmzWatchedDeal(user, &deal); err != nil {
-						k.Logger.Error("Failed to send AMZ watched deal",
-							zap.String("deal_id", deal.Id),
-							zap.Int64("user_id", user.ChatID),
-							zap.String("keyword", keyword),
-							zap.Error(err))
+			// Check for watched keywords using pre-processed map
+			keywordMap := userKeywordMaps[chatID]
+			if len(keywordMap) > 0 {
+				// Check if any keyword is in the deal title
+				for keyword := range keywordMap {
+					if strings.Contains(dealTitleLower, keyword) && !AmzDealSent(user, &deal) {
+						// Deal contains keyword, notify user
+						if err := k.SendAmzWatchedDeal(user, &deal); err != nil {
+							k.Logger.Error("Failed to send AMZ watched deal",
+								zap.String("deal_id", deal.Id),
+								zap.Int64("user_id", user.ChatID),
+								zap.String("keyword", keyword),
+								zap.Error(err))
+						}
+						break // Break after first match
 					}
-
-					// Break out of keyword loop
-					break
 				}
 			}
 		}
