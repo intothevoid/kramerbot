@@ -52,7 +52,12 @@ func (k *KramerBot) processOzbargainDeals() error {
 
 	// Strip duplicates by using a map indexed by deal id
 	uniqueDeals := make(map[string]models.OzBargainDeal)
-	for _, deal := range deals {
+	for i := range deals {
+		deal := deals[i]
+		if deal.Id == "" {
+			k.Logger.Warn("Skipping deal with empty ID")
+			continue
+		}
 		uniqueDeals[deal.Id] = deal
 	}
 
@@ -70,6 +75,10 @@ func (k *KramerBot) processOzbargainDeals() error {
 	// Pre-process user keywords into maps for efficient lookups
 	userKeywordMaps := make(map[int64]map[string]bool)
 	for chatID, user := range userdata {
+		if user == nil {
+			k.Logger.Warn("Skipping nil user", zap.Int64("chat_id", chatID))
+			continue
+		}
 		keywordMap := make(map[string]bool)
 		for _, keyword := range user.Keywords {
 			// Only add non-empty keywords
@@ -91,6 +100,11 @@ func (k *KramerBot) processOzbargainDeals() error {
 
 		// Go through all registered users and check deals they are subscribed to
 		for chatID, user := range userdata {
+			if user == nil {
+				k.Logger.Warn("Skipping nil user", zap.Int64("chat_id", chatID))
+				continue
+			}
+
 			// Check deal type subscriptions
 			if user.OzbGood && dealType == int(scrapers.OZB_GOOD) && !OzbDealSent(user, &deal) {
 				// User is subscribed to good deals, notify user
@@ -195,6 +209,11 @@ func (k *KramerBot) processCCCDeals() error {
 
 		// Go through all registered users and check deals they are subscribed to
 		for chatID, user := range userdata {
+			if user == nil {
+				k.Logger.Warn("Skipping nil user", zap.Int64("chat_id", chatID))
+				continue
+			}
+
 			if user.AmzDaily && priceDropTargetMet && deal.DealType == int(scrapers.AMZ_DAILY) && !AmzDealSent(user, &deal) {
 				// User is subscribed to AMZ daily deals, notify user
 				if err := k.SendAmzDeal(user, &deal); err != nil {
