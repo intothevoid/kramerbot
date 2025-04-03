@@ -43,10 +43,13 @@ func NewSQLiteWrapper(dbPath string, logger *zap.Logger) (*SQLiteWrapper, error)
 	}
 
 	// Create database connection using the function from userdb.go
-	db := CreateDatabaseConnection(dbPath, logger)
+	db, err := CreateDatabaseConnection(dbPath, logger)
+	if err != nil {
+		logger.Error("Failed to create database connection", zap.String("path", dbPath), zap.Error(err))
+		return nil, fmt.Errorf("failed to create database connection for path '%s': %w", dbPath, err)
+	}
 	if db == nil || db.DB == nil {
-		// CreateDatabaseConnection panics on error, but let's be safe
-		return nil, fmt.Errorf("failed to create database connection for path '%s'", dbPath)
+		return nil, fmt.Errorf("database connection is nil for path '%s'", dbPath)
 	}
 
 	// Create table if it doesn't exist

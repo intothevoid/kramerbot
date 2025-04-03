@@ -8,6 +8,7 @@ import (
 
 	"github.com/intothevoid/kramerbot/models"
 	"github.com/intothevoid/kramerbot/persist/sqlite"
+	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
 )
 
@@ -56,7 +57,17 @@ func TestMigrateUserStoreFromJsonToDatabase(t *testing.T) {
 	// Open database file
 	dbName := "users_test.db"
 	defer os.Remove(dbName) // Clean up after test
-	udb := sqlite.CreateDatabaseConnection(dbName, logger)
+	udb, err := sqlite.CreateDatabaseConnection(dbName, logger)
+	if err != nil {
+		t.Fatalf("Failed to create database connection: %v", err)
+	}
+	assert.NoError(t, err)
+
+	// Create table
+	if err := udb.CreateTable(); err != nil {
+		t.Fatalf("Failed to create table: %v", err)
+	}
+	assert.NoError(t, err)
 
 	// Get count of users in database
 	count, err := udb.DB.Query("SELECT COUNT(*) FROM users")

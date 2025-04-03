@@ -20,7 +20,10 @@ func TestNew(t *testing.T) {
 	var logger = *zap.NewExample()
 	dbName := "users_test.db"
 	defer DeleteDBFile(dbName)
-	udb := sqlite.CreateDatabaseConnection(dbName, &logger)
+	udb, err := sqlite.CreateDatabaseConnection(dbName, &logger)
+	if err != nil {
+		t.Fatalf("Failed to create database connection: %v", err)
+	}
 
 	// Check database name
 	if udb.Name != dbName {
@@ -38,10 +41,13 @@ func TestCreateTable(t *testing.T) {
 	var logger = *zap.NewExample()
 	dbName := "users_test.db"
 	defer DeleteDBFile(dbName)
-	udb := sqlite.CreateDatabaseConnection(dbName, &logger)
+	udb, err := sqlite.CreateDatabaseConnection(dbName, &logger)
+	if err != nil {
+		t.Fatalf("Failed to create database connection: %v", err)
+	}
 
 	// Create table
-	err := udb.CreateTable()
+	err = udb.CreateTable()
 	if err != nil {
 		t.Errorf("Error creating 'users' table: %s", err)
 	}
@@ -51,10 +57,13 @@ func TestCreateTable(t *testing.T) {
 func TestAddUser(t *testing.T) {
 	var logger = *zap.NewExample()
 	dbName := "users_test.db"
-	udb := sqlite.CreateDatabaseConnection(dbName, &logger)
+	udb, err := sqlite.CreateDatabaseConnection(dbName, &logger)
+	if err != nil {
+		t.Fatalf("Failed to create database connection: %v", err)
+	}
 
 	// Create table
-	err := udb.CreateTable()
+	err = udb.CreateTable()
 	if err != nil {
 		t.Errorf("Error creating 'users' table: %s", err)
 	}
@@ -95,10 +104,13 @@ func TestGetUser(t *testing.T) {
 	var logger = *zap.NewExample()
 	dbName := "users_test.db"
 	defer DeleteDBFile(dbName)
-	udb := sqlite.CreateDatabaseConnection(dbName, &logger)
+	udb, err := sqlite.CreateDatabaseConnection(dbName, &logger)
+	if err != nil {
+		t.Fatalf("Failed to create database connection: %v", err)
+	}
 
 	// Create table
-	err := udb.CreateTable()
+	err = udb.CreateTable()
 	if err != nil {
 		t.Errorf("Error creating 'users' table: %s", err)
 	}
@@ -168,10 +180,13 @@ func TestUpdateUser(t *testing.T) {
 	var logger = *zap.NewExample()
 	dbName := "users_test.db"
 	defer DeleteDBFile(dbName)
-	udb := sqlite.CreateDatabaseConnection(dbName, &logger)
+	udb, err := sqlite.CreateDatabaseConnection(dbName, &logger)
+	if err != nil {
+		t.Fatalf("Failed to create database connection: %v", err)
+	}
 
 	// Create table
-	err := udb.CreateTable()
+	err = udb.CreateTable()
 	if err != nil {
 		t.Errorf("Error creating 'users' table: %s", err)
 	}

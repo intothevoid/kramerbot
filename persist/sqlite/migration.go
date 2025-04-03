@@ -30,7 +30,11 @@ func MigrateUserStoreFromJsonToDatabase(logger *zap.Logger) error {
 
 	// create database and table
 	dbName := "users_test.db"
-	udb := CreateDatabaseConnection(dbName, logger)
+	udb, err := CreateDatabaseConnection(dbName, logger)
+	if err != nil {
+		logger.Error("Failed to create database connection", zap.Error(err))
+		return err
+	}
 
 	// Create table
 	err = udb.CreateTable()
