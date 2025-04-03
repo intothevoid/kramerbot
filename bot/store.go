@@ -26,10 +26,12 @@ func (k *KramerBot) LoadUserStore() {
 	// Load user store i.e. user data indexed by chat id
 	if k.DataWriter != nil {
 		var err error
-		k.UserStore, err = k.DataWriter.ReadUserStore()
+		userStore, err := k.DataWriter.ReadUserStore()
 		if err != nil {
 			k.Logger.Error("Error loading user store: ", zap.Error(err))
+			return
 		}
+		k.UserStore = userStore
 	}
 }
 

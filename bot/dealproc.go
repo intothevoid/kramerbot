@@ -59,11 +59,9 @@ func (k *KramerBot) processOzbargainDeals() {
 	// Load store
 	k.LoadUserStore()
 
-	var userdata map[int64]*models.UserData
-	if k.UserStore != nil {
-		userdata = k.UserStore.Users
-	} else {
-		userdata = nil
+	// Get a thread-safe copy of all users
+	userdata := k.UserStore.GetAllUsers()
+	if userdata == nil {
 		k.Logger.Error("No users found in UserStore")
 		return
 	}
@@ -124,7 +122,9 @@ func (k *KramerBot) processCCCDeals() {
 
 	// Load store
 	k.LoadUserStore()
-	userdata := k.UserStore.Users
+
+	// Get a thread-safe copy of all users
+	userdata := k.UserStore.GetAllUsers()
 
 	// Get price drop target from configuration
 	priceDropTarget := k.Config.GetInt("scrapers.amazon.target_price_drop")

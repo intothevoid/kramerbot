@@ -61,7 +61,7 @@ func (k *KramerBot) RegisterUser(chat *tgbotapi.Chat) {
 			return
 		}
 		// Add to in-memory store as well
-		k.UserStore.Users[chat.ID] = newUser
+		k.UserStore.SetUser(chat.ID, newUser)
 		k.Logger.Info("Registered new user", zap.String("username", chat.UserName), zap.Int64("chatID", chat.ID))
 		k.SendMessage(chat.ID, fmt.Sprintf("Welcome %s! You are now registered. Use /help to see available commands.", chat.FirstName))
 		k.ShowPreferences(chat) // Show current (default) preferences
@@ -69,8 +69,8 @@ func (k *KramerBot) RegisterUser(chat *tgbotapi.Chat) {
 		// User exists, update username if changed and show status
 		if user.Username != chat.UserName {
 			user.Username = chat.UserName
-			k.UpdateUser(user)                                  // Update in DB
-			k.UserStore.Users[chat.ID].Username = chat.UserName // Update in memory
+			k.UpdateUser(user)                 // Update in DB
+			k.UserStore.SetUser(chat.ID, user) // Update in memory
 			k.Logger.Info("Updated username for existing user", zap.String("username", chat.UserName), zap.Int64("chatID", chat.ID))
 		}
 		k.Logger.Info("User already registered", zap.String("username", chat.UserName), zap.Int64("chatID", chat.ID))
@@ -133,8 +133,8 @@ func (k *KramerBot) ToggleOzbGood(chat *tgbotapi.Chat) {
 	}
 
 	user.OzbGood = !user.OzbGood
-	k.UpdateUser(user)                                // Update DB
-	k.UserStore.Users[chat.ID].OzbGood = user.OzbGood // Update memory
+	k.UpdateUser(user)                 // Update DB
+	k.UserStore.SetUser(chat.ID, user) // Update memory
 
 	k.SendMessage(chat.ID, fmt.Sprintf("Ozbargain Good Deals (25+) notifications set to: %t", user.OzbGood))
 	k.ShowPreferences(chat)
@@ -148,8 +148,8 @@ func (k *KramerBot) ToggleOzbSuper(chat *tgbotapi.Chat) {
 	}
 
 	user.OzbSuper = !user.OzbSuper
-	k.UpdateUser(user)                                  // Update DB
-	k.UserStore.Users[chat.ID].OzbSuper = user.OzbSuper // Update memory
+	k.UpdateUser(user)                 // Update DB
+	k.UserStore.SetUser(chat.ID, user) // Update memory
 
 	k.SendMessage(chat.ID, fmt.Sprintf("Ozbargain Super Deals (50+) notifications set to: %t", user.OzbSuper))
 	k.ShowPreferences(chat)
@@ -174,7 +174,7 @@ func (k *KramerBot) ToggleAmzDaily(chat *tgbotapi.Chat) {
 		k.SendMessage(chat.ID, "Sorry, there was an error updating your preferences. Please try again later.")
 		return
 	}
-	k.UserStore.Users[chat.ID].AmzDaily = user.AmzDaily // Update memory
+	k.UserStore.SetUser(chat.ID, user) // Update memory
 
 	k.Logger.Debug("Successfully updated AmzDaily preference",
 		zap.Int64("chatID", chat.ID),
@@ -192,8 +192,8 @@ func (k *KramerBot) ToggleAmzWeekly(chat *tgbotapi.Chat) {
 	}
 
 	user.AmzWeekly = !user.AmzWeekly
-	k.UpdateUser(user)                                    // Update DB
-	k.UserStore.Users[chat.ID].AmzWeekly = user.AmzWeekly // Update memory
+	k.UpdateUser(user)                 // Update DB
+	k.UserStore.SetUser(chat.ID, user) // Update memory
 
 	k.SendMessage(chat.ID, fmt.Sprintf("Amazon Weekly Deals notifications set to: %t", user.AmzWeekly))
 	k.ShowPreferences(chat)
@@ -221,8 +221,8 @@ func (k *KramerBot) AddKeyword(chat *tgbotapi.Chat, keyword string) {
 	}
 
 	user.Keywords = append(user.Keywords, keyword)
-	k.UpdateUser(user)                                  // Update DB
-	k.UserStore.Users[chat.ID].Keywords = user.Keywords // Update memory
+	k.UpdateUser(user)                 // Update DB
+	k.UserStore.SetUser(chat.ID, user) // Update memory
 
 	k.SendMessage(chat.ID, fmt.Sprintf("Keyword '%s' added to your watch list.", keyword))
 	k.ListKeywords(chat)
@@ -257,8 +257,8 @@ func (k *KramerBot) RemoveKeyword(chat *tgbotapi.Chat, keywordToRemove string) {
 	}
 
 	user.Keywords = updatedKeywords
-	k.UpdateUser(user)                                  // Update DB
-	k.UserStore.Users[chat.ID].Keywords = user.Keywords // Update memory
+	k.UpdateUser(user)                 // Update DB
+	k.UserStore.SetUser(chat.ID, user) // Update memory
 
 	k.SendMessage(chat.ID, fmt.Sprintf("Keyword '%s' removed from your watch list.", keywordToRemove))
 	k.ListKeywords(chat)
