@@ -8,7 +8,7 @@ import (
 	persist "github.com/intothevoid/kramerbot/persist"
 	"github.com/intothevoid/kramerbot/pipup"
 	"github.com/intothevoid/kramerbot/scrapers"
-	"github.com/spf13/viper"
+	"github.com/intothevoid/kramerbot/util"
 	"go.uber.org/zap"
 )
 
@@ -22,7 +22,7 @@ func TestKramerBot_verifyAdminPassword(t *testing.T) {
 		UserStore  *models.UserStore
 		DataWriter persist.DatabaseIF
 		Pipup      *pipup.Pipup
-		Config     *viper.Viper
+		Config     *util.Config
 	}
 	type args struct {
 		message string
