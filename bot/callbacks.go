@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"go.uber.org/zap"
+
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/intothevoid/kramerbot/models"
 	"github.com/intothevoid/kramerbot/scrapers"
@@ -17,12 +19,249 @@ func (k *KramerBot) Help(chat *tgbotapi.Chat) {
 	fpath, _ := filepath.Abs("./static/kramer_drnostrand.jpg")
 	k.SendPhoto(chat.ID, fpath)
 
-	urlWebUi := k.Config.GetString("webui.url")
-
 	// Show the help banner
-	k.SendMessage(chat.ID, fmt.Sprintf("Hi %s! Welcome to @kramerbot\n\n"+
-		"To configure your bot, please sign up at %s\n"+
-		"You ChatID is %d\n", chat.FirstName, urlWebUi, chat.ID))
+	helpText := fmt.Sprintf("Hi %s! Welcome to @kramerbot\n\n"+
+		"Available commands:\n"+
+		"/start - Register or view your status\n"+
+		"/help - Show this help message\n"+
+		"/preferences - Show your current notification preferences\n"+
+		"/ozbgood - Toggle OzBargain 'Good' deals (25+ votes)\n"+
+		"/ozbsuper - Toggle OzBargain 'Super' deals (50+ votes)\n"+
+		"/amzdaily - Toggle Amazon Daily deals\n"+
+		"/amzweekly - Toggle Amazon Weekly deals\n"+
+		"/addkeyword <keyword> - Add a keyword to watch\n"+
+		"/removekeyword <keyword> - Remove a keyword\n"+
+		"/listkeywords - List your watched keywords\n"+
+		"/test - Send a test notification",
+		chat.FirstName)
+	k.SendMessage(chat.ID, helpText)
+}
+
+// RegisterUser adds a new user or shows status for an existing user
+func (k *KramerBot) RegisterUser(chat *tgbotapi.Chat) {
+	// Check if user exists
+	user, err := k.DataWriter.GetUser(chat.ID)
+	if err != nil || user == nil {
+		// User doesn't exist, create a new one
+		newUser := &models.UserData{
+			ChatID:    chat.ID,
+			Username:  chat.UserName,
+			OzbGood:   true, // Default settings
+			OzbSuper:  false,
+			AmzDaily:  false,
+			AmzWeekly: false,
+			Keywords:  []string{},
+			OzbSent:   []string{},
+			AmzSent:   []string{},
+		}
+		err := k.DataWriter.AddUser(newUser)
+		if err != nil {
+			k.Logger.Error("Failed to add new user", zap.Int64("chatID", chat.ID), zap.Error(err))
+			k.SendMessage(chat.ID, "Sorry, there was an error registering you. Please try again later.")
+			return
+		}
+		// Add to in-memory store as well
+		k.UserStore.SetUser(chat.ID, newUser)
+		k.Logger.Info("Registered new user", zap.String("username", chat.UserName), zap.Int64("chatID", chat.ID))
+		k.SendMessage(chat.ID, fmt.Sprintf("Welcome %s! You are now registered. Use /help to see available commands.", chat.FirstName))
+		k.ShowPreferences(chat) // Show current (default) preferences
+	} else {
+		// User exists, update username if changed and show status
+		if user.Username != chat.UserName {
+			user.Username = chat.UserName
+			k.UpdateUser(user)                 // Update in DB
+			k.UserStore.SetUser(chat.ID, user) // Update in memory
+			k.Logger.Info("Updated username for existing user", zap.String("username", chat.UserName), zap.Int64("chatID", chat.ID))
+		}
+		k.Logger.Info("User already registered", zap.String("username", chat.UserName), zap.Int64("chatID", chat.ID))
+		k.SendMessage(chat.ID, fmt.Sprintf("Welcome back %s!", chat.FirstName))
+		k.ShowPreferences(chat) // Show current preferences
+	}
+}
+
+// ShowPreferences displays the user's current notification settings
+func (k *KramerBot) ShowPreferences(chat *tgbotapi.Chat) {
+	user, err := k.DataWriter.GetUser(chat.ID)
+	if err != nil || user == nil {
+		k.SendMessage(chat.ID, "Could not find your user data. Have you registered using /start ?")
+		return
+	}
+
+	prefsText := fmt.Sprintf("Your current preferences:\n"+
+		"Ozbargain Good Deals (25+): %t\n"+
+		"Ozbargain Super Deals (50+): %t\n"+
+		"Amazon Daily Deals: %t\n"+
+		"Amazon Weekly Deals: %t\n"+
+		"Watched Keywords: %d",
+		user.OzbGood, user.OzbSuper, user.AmzDaily, user.AmzWeekly, len(user.Keywords))
+
+	k.SendMessage(chat.ID, prefsText)
+	k.ListKeywords(chat) // Also list the keywords
+}
+
+// ListKeywords displays the user's watched keywords
+func (k *KramerBot) ListKeywords(chat *tgbotapi.Chat) {
+	user, err := k.DataWriter.GetUser(chat.ID)
+	if err != nil || user == nil {
+		k.SendMessage(chat.ID, "Could not find your user data. Have you registered using /start ?")
+		return
+	}
+
+	if len(user.Keywords) == 0 {
+		k.SendMessage(chat.ID, "You are not watching any keywords.")
+	} else {
+		keywordsText := "Your watched keywords:\n- " + strings.Join(user.Keywords, "\n- ")
+		k.SendMessage(chat.ID, keywordsText)
+	}
+}
+
+// Helper function to get user data and handle errors
+func (k *KramerBot) getUserData(chatID int64) (*models.UserData, error) {
+	user, err := k.DataWriter.GetUser(chatID)
+	if err != nil || user == nil {
+		k.SendMessage(chatID, "Could not find your user data. Have you registered using /start ?")
+		return nil, fmt.Errorf("user not found or error fetching data: %w", err)
+	}
+	return user, nil
+}
+
+// ToggleOzbGood toggles the OzbGood preference
+func (k *KramerBot) ToggleOzbGood(chat *tgbotapi.Chat) {
+	user, err := k.getUserData(chat.ID)
+	if err != nil {
+		return // Error message already sent by getUserData
+	}
+
+	user.OzbGood = !user.OzbGood
+	k.UpdateUser(user)                 // Update DB
+	k.UserStore.SetUser(chat.ID, user) // Update memory
+
+	k.SendMessage(chat.ID, fmt.Sprintf("Ozbargain Good Deals (25+) notifications set to: %t", user.OzbGood))
+	k.ShowPreferences(chat)
+}
+
+// ToggleOzbSuper toggles the OzbSuper preference
+func (k *KramerBot) ToggleOzbSuper(chat *tgbotapi.Chat) {
+	user, err := k.getUserData(chat.ID)
+	if err != nil {
+		return
+	}
+
+	user.OzbSuper = !user.OzbSuper
+	k.UpdateUser(user)                 // Update DB
+	k.UserStore.SetUser(chat.ID, user) // Update memory
+
+	k.SendMessage(chat.ID, fmt.Sprintf("Ozbargain Super Deals (50+) notifications set to: %t", user.OzbSuper))
+	k.ShowPreferences(chat)
+}
+
+// ToggleAmzDaily toggles the AmzDaily preference
+func (k *KramerBot) ToggleAmzDaily(chat *tgbotapi.Chat) {
+	user, err := k.getUserData(chat.ID)
+	if err != nil {
+		k.Logger.Error("Failed to get user data", zap.Error(err))
+		return // Error message already sent by getUserData
+	}
+
+	k.Logger.Debug("Toggling AmzDaily preference",
+		zap.Int64("chatID", chat.ID),
+		zap.Bool("currentValue", user.AmzDaily),
+		zap.Bool("newValue", !user.AmzDaily))
+
+	user.AmzDaily = !user.AmzDaily
+	if err := k.UpdateUser(user); err != nil {
+		k.Logger.Error("Failed to update user", zap.Error(err))
+		k.SendMessage(chat.ID, "Sorry, there was an error updating your preferences. Please try again later.")
+		return
+	}
+	k.UserStore.SetUser(chat.ID, user) // Update memory
+
+	k.Logger.Debug("Successfully updated AmzDaily preference",
+		zap.Int64("chatID", chat.ID),
+		zap.Bool("newValue", user.AmzDaily))
+
+	k.SendMessage(chat.ID, fmt.Sprintf("Amazon Daily Deals notifications set to: %t", user.AmzDaily))
+	k.ShowPreferences(chat)
+}
+
+// ToggleAmzWeekly toggles the AmzWeekly preference
+func (k *KramerBot) ToggleAmzWeekly(chat *tgbotapi.Chat) {
+	user, err := k.getUserData(chat.ID)
+	if err != nil {
+		return
+	}
+
+	user.AmzWeekly = !user.AmzWeekly
+	k.UpdateUser(user)                 // Update DB
+	k.UserStore.SetUser(chat.ID, user) // Update memory
+
+	k.SendMessage(chat.ID, fmt.Sprintf("Amazon Weekly Deals notifications set to: %t", user.AmzWeekly))
+	k.ShowPreferences(chat)
+}
+
+// AddKeyword adds a keyword to the user's watch list
+func (k *KramerBot) AddKeyword(chat *tgbotapi.Chat, keyword string) {
+	user, err := k.getUserData(chat.ID)
+	if err != nil {
+		return
+	}
+
+	keyword = strings.TrimSpace(strings.ToLower(keyword))
+	if keyword == "" {
+		k.SendMessage(chat.ID, "Please provide a keyword to add. Usage: /addkeyword <keyword>")
+		return
+	}
+
+	// Check if keyword already exists
+	for _, existingKeyword := range user.Keywords {
+		if existingKeyword == keyword {
+			k.SendMessage(chat.ID, fmt.Sprintf("Keyword '%s' is already in your watch list.", keyword))
+			return
+		}
+	}
+
+	user.Keywords = append(user.Keywords, keyword)
+	k.UpdateUser(user)                 // Update DB
+	k.UserStore.SetUser(chat.ID, user) // Update memory
+
+	k.SendMessage(chat.ID, fmt.Sprintf("Keyword '%s' added to your watch list.", keyword))
+	k.ListKeywords(chat)
+}
+
+// RemoveKeyword removes a keyword from the user's watch list
+func (k *KramerBot) RemoveKeyword(chat *tgbotapi.Chat, keywordToRemove string) {
+	user, err := k.getUserData(chat.ID)
+	if err != nil {
+		return
+	}
+
+	keywordToRemove = strings.TrimSpace(strings.ToLower(keywordToRemove))
+	if keywordToRemove == "" {
+		k.SendMessage(chat.ID, "Please provide a keyword to remove. Usage: /removekeyword <keyword>")
+		return
+	}
+
+	found := false
+	var updatedKeywords []string
+	for _, existingKeyword := range user.Keywords {
+		if existingKeyword != keywordToRemove {
+			updatedKeywords = append(updatedKeywords, existingKeyword)
+		} else {
+			found = true
+		}
+	}
+
+	if !found {
+		k.SendMessage(chat.ID, fmt.Sprintf("Keyword '%s' not found in your watch list.", keywordToRemove))
+		return
+	}
+
+	user.Keywords = updatedKeywords
+	k.UpdateUser(user)                 // Update DB
+	k.UserStore.SetUser(chat.ID, user) // Update memory
+
+	k.SendMessage(chat.ID, fmt.Sprintf("Keyword '%s' removed from your watch list.", keywordToRemove))
+	k.ListKeywords(chat)
 }
 
 // Send test message
@@ -57,44 +296,58 @@ func (k *KramerBot) MakeAnnouncement(chat *tgbotapi.Chat, announcement string) {
 }
 
 // Send OZB good deal message to user
-func (k *KramerBot) SendOzbGoodDeal(user *models.UserData, deal *models.OzBargainDeal) {
+func (k *KramerBot) SendOzbGoodDeal(user *models.UserData, deal *models.OzBargainDeal) error {
 	shortenedTitle := util.ShortenString(deal.Title, 30) + "..."
 	formattedDeal := fmt.Sprintf(`🟠🔥<a href="%s" target="_blank">%s</a>🔺%s`, deal.Url, shortenedTitle, deal.Upvotes)
 	textDeal := fmt.Sprintf(`🟠🔥 %s 🔺%s`, shortenedTitle, deal.Upvotes)
 
 	k.Logger.Debug(fmt.Sprintf("Sending good deal %s to user %s", shortenedTitle, user.Username))
-	k.SendHTMLMessage(user.ChatID, formattedDeal)
+	if err := k.SendHTMLMessage(user.ChatID, formattedDeal); err != nil {
+		return fmt.Errorf("failed to send HTML message: %w", err)
+	}
 
 	// Send android notification if username is set
-	if strings.EqualFold(user.Username, k.Pipup.Username) {
-		k.Pipup.SendMediaMessage(textDeal, "Kramerbot")
+	if k.Pipup != nil && strings.EqualFold(user.Username, k.Pipup.Username) {
+		if err := k.Pipup.SendMediaMessage(textDeal, "Kramerbot"); err != nil {
+			return fmt.Errorf("failed to send pipup message: %w", err)
+		}
 	}
 
 	// Mark deal as sent
 	user.OzbSent = append(user.OzbSent, deal.Id)
-	k.UpdateUser(user)
+	if err := k.UpdateUser(user); err != nil {
+		return fmt.Errorf("failed to update user: %w", err)
+	}
+	return nil
 }
 
 // Send OZB super deal to user
-func (k *KramerBot) SendOzbSuperDeal(user *models.UserData, deal *models.OzBargainDeal) {
+func (k *KramerBot) SendOzbSuperDeal(user *models.UserData, deal *models.OzBargainDeal) error {
 	shortenedTitle := util.ShortenString(deal.Title, 30) + "..."
 	formattedDeal := fmt.Sprintf(`🟠🔥<a href="%s" target="_blank">%s</a>🔺%s`, deal.Url, shortenedTitle, deal.Upvotes)
 	textDeal := fmt.Sprintf(`🟠🔥 %s 🔺%s`, shortenedTitle, deal.Upvotes)
 
 	k.Logger.Debug(fmt.Sprintf("Sending super deal %s to user %s", shortenedTitle, user.Username))
-	k.SendHTMLMessage(user.ChatID, formattedDeal)
+	if err := k.SendHTMLMessage(user.ChatID, formattedDeal); err != nil {
+		return fmt.Errorf("failed to send HTML message: %w", err)
+	}
 
 	// Send android notification if username is set
-	if strings.EqualFold(user.Username, k.Pipup.Username) {
-		k.Pipup.SendMediaMessage(textDeal, "Kramerbot")
+	if k.Pipup != nil && strings.EqualFold(user.Username, k.Pipup.Username) {
+		if err := k.Pipup.SendMediaMessage(textDeal, "Kramerbot"); err != nil {
+			return fmt.Errorf("failed to send pipup message: %w", err)
+		}
 	}
 
 	// Mark deal as sent
 	user.OzbSent = append(user.OzbSent, deal.Id)
-	k.UpdateUser(user)
+	if err := k.UpdateUser(user); err != nil {
+		return fmt.Errorf("failed to update user: %w", err)
+	}
+	return nil
 }
 
-func (k *KramerBot) SendAmzDeal(user *models.UserData, deal *models.CamCamCamDeal) {
+func (k *KramerBot) SendAmzDeal(user *models.UserData, deal *models.CamCamCamDeal) error {
 	dealType := ""
 
 	// Get deal type
@@ -110,52 +363,73 @@ func (k *KramerBot) SendAmzDeal(user *models.UserData, deal *models.CamCamCamDea
 	textDeal := fmt.Sprintf(`🅰️ %s`, shortenedTitle)
 
 	k.Logger.Debug(fmt.Sprintf("Sending Amazon %s deal %s to user %s", dealType, shortenedTitle, user.Username))
-	k.SendHTMLMessage(user.ChatID, formattedDeal)
+	if err := k.SendHTMLMessage(user.ChatID, formattedDeal); err != nil {
+		return fmt.Errorf("failed to send HTML message: %w", err)
+	}
 
 	// Send android notification if username is set
-	if strings.EqualFold(user.Username, k.Pipup.Username) {
-		k.Pipup.SendMediaMessage(textDeal, "Kramerbot")
+	if k.Pipup != nil && strings.EqualFold(user.Username, k.Pipup.Username) {
+		if err := k.Pipup.SendMediaMessage(textDeal, "Kramerbot"); err != nil {
+			return fmt.Errorf("failed to send pipup message: %w", err)
+		}
 	}
 
 	// Mark deal as sent
 	user.AmzSent = append(user.AmzSent, deal.Id)
-	k.UpdateUser(user)
+	if err := k.UpdateUser(user); err != nil {
+		return fmt.Errorf("failed to update user: %w", err)
+	}
+	return nil
 }
 
 // Send OZB watched deal to user
-func (k *KramerBot) SendOzbWatchedDeal(user *models.UserData, deal *models.OzBargainDeal) {
+func (k *KramerBot) SendOzbWatchedDeal(user *models.UserData, deal *models.OzBargainDeal) error {
 	shortenedTitle := util.ShortenString(deal.Title, 30) + "..."
 	formattedDeal := fmt.Sprintf(`🟠👀<a href="%s" target="_blank">%s</a>🔺%s`, deal.Url, shortenedTitle, deal.Upvotes)
 	textDeal := fmt.Sprintf(`🟠👀 %s 🔺%s`, shortenedTitle, deal.Upvotes)
 
 	k.Logger.Debug(fmt.Sprintf("Sending watched Ozbargain deal %s to user %s", shortenedTitle, user.Username))
-	k.SendHTMLMessage(user.ChatID, formattedDeal)
+	if err := k.SendHTMLMessage(user.ChatID, formattedDeal); err != nil {
+		return fmt.Errorf("failed to send HTML message: %w", err)
+	}
 
 	// Send android notification if username is set
-	if strings.EqualFold(user.Username, k.Pipup.Username) {
-		k.Pipup.SendMediaMessage(textDeal, "Kramerbot")
+	if k.Pipup != nil && strings.EqualFold(user.Username, k.Pipup.Username) {
+		if err := k.Pipup.SendMediaMessage(textDeal, "Kramerbot"); err != nil {
+			return fmt.Errorf("failed to send pipup message: %w", err)
+		}
 	}
 
 	// Mark deal as sent
 	user.OzbSent = append(user.OzbSent, deal.Id)
-	k.UpdateUser(user)
+	if err := k.UpdateUser(user); err != nil {
+		return fmt.Errorf("failed to update user: %w", err)
+	}
+	return nil
 }
 
 // Send AMZ watched deal to user
-func (k *KramerBot) SendAmzWatchedDeal(user *models.UserData, deal *models.CamCamCamDeal) {
+func (k *KramerBot) SendAmzWatchedDeal(user *models.UserData, deal *models.CamCamCamDeal) error {
 	shortenedTitle := util.ShortenString(deal.Title, 30) + "..."
 	formattedDeal := fmt.Sprintf(`🅰️👀<a href="%s" target="_blank">%s</a> - %s`, deal.Url, shortenedTitle, k.CCCScraper.GetDealDropString(deal))
 	textDeal := fmt.Sprintf(`🅰️👀 %s`, shortenedTitle)
 
 	k.Logger.Debug(fmt.Sprintf("Sending watched Amazon deal %s to user %s", shortenedTitle, user.Username))
-	k.SendHTMLMessage(user.ChatID, formattedDeal)
+	if err := k.SendHTMLMessage(user.ChatID, formattedDeal); err != nil {
+		return fmt.Errorf("failed to send HTML message: %w", err)
+	}
 
 	// Send android notification if username is set
-	if strings.EqualFold(user.Username, k.Pipup.Username) {
-		k.Pipup.SendMediaMessage(textDeal, "Kramerbot")
+	if k.Pipup != nil && strings.EqualFold(user.Username, k.Pipup.Username) {
+		if err := k.Pipup.SendMediaMessage(textDeal, "Kramerbot"); err != nil {
+			return fmt.Errorf("failed to send pipup message: %w", err)
+		}
 	}
 
 	// Mark deal as sent
 	user.AmzSent = append(user.AmzSent, deal.Id)
-	k.UpdateUser(user)
+	if err := k.UpdateUser(user); err != nil {
+		return fmt.Errorf("failed to update user: %w", err)
+	}
+	return nil
 }

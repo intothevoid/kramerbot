@@ -7,30 +7,38 @@ import (
 	"github.com/intothevoid/kramerbot/models"
 	"github.com/intothevoid/kramerbot/scrapers"
 	"github.com/intothevoid/kramerbot/util"
+	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
 
 // Basic test to check that the scraper works
 func TestScrape(t *testing.T) {
-	// create a new scraper
-	ozbScraper := new(scrapers.OzBargainScraper)
+	// Create a test logger
+	logger := util.SetupLogger(zapcore.DebugLevel, false)
 
-	// dummy config
-	config, err := util.SetupConfig("../config.yaml")
-	if err != nil {
-		t.Error("Error setting up config")
+	// Create a test config
+	config := &util.Config{
+		LogLevel:  -1,
+		LogToFile: false,
+		TestMode:  true,
+		Scrapers: util.ScrapersConfig{
+			OzBargain: util.OzBargainConfig{
+				ScrapeInterval: 5,
+				MaxStoredDeals: 100,
+			},
+		},
 	}
 
-	// initialise logger
-	t.Log("Initialising logger")
-	ozbScraper.Logger = util.SetupLogger(zapcore.Level(config.GetInt("log_level")), config.GetBool("log_to_file"))
+	// create a new scraper
+	ozbScraper := new(scrapers.OzBargainScraper)
+	ozbScraper.Logger = logger
 	ozbScraper.BaseUrl = "https://www.ozbargain.com.au/"
-	ozbScraper.ScrapeInterval = config.GetInt("scrapers.ozbargain.scrape_interval")
-	ozbScraper.MaxDealsToStore = config.GetInt("scrapers.ozbargain.max_stored_deals")
+	ozbScraper.ScrapeInterval = config.Scrapers.OzBargain.ScrapeInterval
+	ozbScraper.MaxDealsToStore = config.Scrapers.OzBargain.MaxStoredDeals
 
 	// Start scraping
 	t.Log("Scraping URL " + ozbScraper.BaseUrl)
-	err = ozbScraper.Scrape()
+	err := ozbScraper.Scrape()
 	if err != nil {
 		t.Error("Error scraping.", err.Error())
 	}
@@ -50,6 +58,7 @@ func TestScrape(t *testing.T) {
 func TestGetDealAge(t *testing.T) {
 	// create a new scraper
 	s := new(scrapers.OzBargainScraper)
+	s.Logger = util.SetupLogger(zapcore.DebugLevel, false)
 
 	inputstr := "Neoika on 15/05/2022 - 14:38  kogan.com"
 
@@ -60,6 +69,7 @@ func TestGetDealAge(t *testing.T) {
 func TestIsSuperDeal(t *testing.T) {
 	// create a new scraper
 	s := new(scrapers.OzBargainScraper)
+	s.Logger = util.SetupLogger(zapcore.DebugLevel, false)
 
 	// create a new deal
 	deal1 := models.OzBargainDeal{
@@ -117,6 +127,7 @@ func TestIsSuperDeal(t *testing.T) {
 func TestFilter(t *testing.T) {
 	// create a new scraper
 	s := new(scrapers.OzBargainScraper)
+	s.Logger = util.SetupLogger(zapcore.DebugLevel, false)
 
 	// create a new deal
 	deal1 := models.OzBargainDeal{
@@ -146,5 +157,63 @@ func TestFilter(t *testing.T) {
 
 	for deal := range filtered {
 		t.Log(filtered[deal].Title)
+	}
+}
+
+func TestOzBargainScraper_Scrape(t *testing.T) {
+	// Create a test logger
+	logger := util.SetupLogger(zapcore.DebugLevel, false)
+
+	// Create a test config
+	config := &util.Config{
+		LogLevel:  -1,
+		LogToFile: false,
+		TestMode:  true,
+		Scrapers: util.ScrapersConfig{
+			OzBargain: util.OzBargainConfig{
+				ScrapeInterval: 5,
+				MaxStoredDeals: 100,
+			},
+		},
+	}
+
+	type fields struct {
+		Logger          *zap.Logger
+		BaseUrl         string
+		Deals           []models.OzBargainDeal
+		SID             scrapers.ScraperID
+		ScrapeInterval  int
+		MaxDealsToStore int
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		wantErr bool
+	}{
+		{
+			name: "Test Scrape",
+			fields: fields{
+				Logger:          logger,
+				BaseUrl:         "https://www.ozbargain.com.au/",
+				ScrapeInterval:  config.Scrapers.OzBargain.ScrapeInterval,
+				MaxDealsToStore: config.Scrapers.OzBargain.MaxStoredDeals,
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			o := &scrapers.OzBargainScraper{
+				Logger:          tt.fields.Logger,
+				BaseUrl:         tt.fields.BaseUrl,
+				Deals:           tt.fields.Deals,
+				SID:             tt.fields.SID,
+				ScrapeInterval:  tt.fields.ScrapeInterval,
+				MaxDealsToStore: tt.fields.MaxDealsToStore,
+			}
+			if err := o.Scrape(); (err != nil) != tt.wantErr {
+				t.Errorf("OzBargainScraper.Scrape() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
 	}
 }

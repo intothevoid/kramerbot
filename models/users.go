@@ -1,10 +1,13 @@
 package models
 
+import "sync"
+
 // This package stores the model for user data
 
 // User model - indexed by chat ID
 type UserStore struct {
 	Users map[int64]*UserData
+	mu    sync.RWMutex // Mutex to protect concurrent access to Users map
 }
 
 // User data model
@@ -82,4 +85,34 @@ func (u *UserData) SetUsernameChosen(usernameChosen string) {
 }
 func (u *UserData) GetUsernameChosen() string {
 	return u.UsernameChosen
+}
+
+// Thread-safe methods for UserStore
+func (us *UserStore) GetUser(chatID int64) *UserData {
+	us.mu.RLock()
+	defer us.mu.RUnlock()
+	return us.Users[chatID]
+}
+
+func (us *UserStore) SetUser(chatID int64, user *UserData) {
+	us.mu.Lock()
+	defer us.mu.Unlock()
+	us.Users[chatID] = user
+}
+
+func (us *UserStore) DeleteUser(chatID int64) {
+	us.mu.Lock()
+	defer us.mu.Unlock()
+	delete(us.Users, chatID)
+}
+
+func (us *UserStore) GetAllUsers() map[int64]*UserData {
+	us.mu.RLock()
+	defer us.mu.RUnlock()
+	// Create a copy to avoid returning the internal map
+	users := make(map[int64]*UserData)
+	for k, v := range us.Users {
+		users[k] = v
+	}
+	return users
 }

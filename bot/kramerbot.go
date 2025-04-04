@@ -8,17 +8,15 @@ package bot
 // imports
 import (
 	"os"
-	"path"
 	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
-	"github.com/intothevoid/kramerbot/api"
 	"github.com/intothevoid/kramerbot/models"
-	persist "github.com/intothevoid/kramerbot/persist"
-	mongo_persist "github.com/intothevoid/kramerbot/persist/mongo"
+	"github.com/intothevoid/kramerbot/persist"
+	sqlite_persist "github.com/intothevoid/kramerbot/persist/sqlite"
 	"github.com/intothevoid/kramerbot/pipup"
 	"github.com/intothevoid/kramerbot/scrapers"
-	"github.com/spf13/viper"
+	"github.com/intothevoid/kramerbot/util"
 	"go.uber.org/zap"
 )
 
@@ -31,8 +29,7 @@ type KramerBot struct {
 	UserStore  *models.UserStore
 	DataWriter persist.DatabaseIF
 	Pipup      *pipup.Pipup
-	Config     *viper.Viper
-	ApiServer  *api.GinServer
+	Config     *util.Config
 }
 
 // function to read token from environment variable
@@ -50,8 +47,7 @@ func (k *KramerBot) GetAdminPass() string {
 
 // get test mode from configuration
 func (k *KramerBot) getTestMode() bool {
-	testMode := k.Config.GetBool("test_mode")
-	return testMode
+	return k.Config.TestMode
 }
 
 // function to create a new bot
@@ -61,15 +57,6 @@ func (k *KramerBot) NewBot(ozbs *scrapers.OzBargainScraper, cccs *scrapers.CamCa
 	if testMode {
 		// TEST MODE
 		k.Logger.Info("****** TEST MODE IS NOW ACTIVE. Telegram not connected. ******")
-
-		// Make entries to dummy database
-		// dataWriter, _ := dummy_persist.New(
-		// 	"dummy_uri",
-		// 	"dummy_dbname",
-		// 	"dummy_collname",
-		// 	k.Logger,
-		// )
-		// k.DataWriter = dataWriter
 	} else {
 		// REGULAR MODE
 		// If user has forgotten to set the token
@@ -98,26 +85,29 @@ func (k *KramerBot) NewBot(ozbs *scrapers.OzBargainScraper, cccs *scrapers.CamCa
 	k.OzbScraper = ozbs
 	k.CCCScraper = cccs
 
-	// Real mode, make entries to real database
-	dataWriter, _ := mongo_persist.New(
-		k.Config.GetString("mongo.mongo_uri"),
-		k.Config.GetString("mongo.mongo_dbname"),
-		k.Config.GetString("mongo.mongo_collname"),
-		k.Logger,
-	)
-	k.DataWriter = dataWriter
+	// Database Initialization (SQLite)
+	dbPath := os.Getenv("SQLITE_DB_PATH")
+	if dbPath == "" {
+		dbPath = k.Config.SQLite.DBPath
+	}
+
+	k.Logger.Info("Initializing SQLite database", zap.String("path", dbPath))
+
+	// Use the NewSQLiteWrapper from the sqlite package
+	dataWriter, err := sqlite_persist.NewSQLiteWrapper(dbPath, k.Logger)
+	if err != nil {
+		k.Logger.Fatal("Failed to initialize SQLite database", zap.String("path", dbPath), zap.Error(err))
+	}
+	k.DataWriter = dataWriter // Assign the wrapper which implements DatabaseIF
+
+	// Check if the database connection is valid using Ping
+	if err := k.DataWriter.Ping(); err != nil {
+		k.Logger.Fatal("Failed to connect to SQLite database", zap.String("path", dbPath), zap.Error(err))
+	}
+	k.Logger.Info("Successfully connected to SQLite database", zap.String("path", dbPath))
 
 	// Load user store
 	k.LoadUserStore()
-
-	// Initialise API server
-	k.ApiServer = &api.GinServer{
-		UserStoreDB: k.DataWriter,
-		OzbScraper:  k.OzbScraper,
-		CCCScraper:  k.CCCScraper,
-		Config:      k.Config,
-	}
-	go k.ApiServer.StartServer()
 }
 
 // start receiving updates from telegram
@@ -160,14 +150,4 @@ func (k *KramerBot) StartBot() {
 
 		}
 	}
-}
-
-// migration function to migrate from sqlite to mongo
-func (k *KramerBot) MigrateSqliteToMongo(mongoURI string, mongoDBName string, mongoCollectionName string) {
-	// Get working directory
-	sqliteDBPath, _ := os.Getwd()
-	sqliteDBPath = path.Join(sqliteDBPath, "users.db")
-
-	// Start the conversion
-	mongo_persist.SqliteToMongoDB(sqliteDBPath, mongoURI, mongoDBName, mongoCollectionName, k.Logger)
 }

@@ -4,12 +4,11 @@ import (
 	"testing"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
-	"github.com/intothevoid/kramerbot/api"
 	"github.com/intothevoid/kramerbot/models"
 	persist "github.com/intothevoid/kramerbot/persist"
 	"github.com/intothevoid/kramerbot/pipup"
 	"github.com/intothevoid/kramerbot/scrapers"
-	"github.com/spf13/viper"
+	"github.com/intothevoid/kramerbot/util"
 	"go.uber.org/zap"
 )
 
@@ -23,8 +22,7 @@ func TestKramerBot_verifyAdminPassword(t *testing.T) {
 		UserStore  *models.UserStore
 		DataWriter persist.DatabaseIF
 		Pipup      *pipup.Pipup
-		Config     *viper.Viper
-		ApiServer  *api.GinServer
+		Config     *util.Config
 	}
 	type args struct {
 		message string
@@ -47,7 +45,6 @@ func TestKramerBot_verifyAdminPassword(t *testing.T) {
 				DataWriter: nil,
 				Pipup:      nil,
 				Config:     nil,
-				ApiServer:  nil,
 			},
 			args: args{
 				message: "testpassword:this is a test announcement",
@@ -67,7 +64,6 @@ func TestKramerBot_verifyAdminPassword(t *testing.T) {
 				DataWriter: tt.fields.DataWriter,
 				Pipup:      tt.fields.Pipup,
 				Config:     tt.fields.Config,
-				ApiServer:  tt.fields.ApiServer,
 			}
 			if got := k.verifyAdminPassword(tt.args.message); got != tt.want {
 				t.Errorf("KramerBot.verifyAdminPassword() = %v, want %v", got, tt.want)

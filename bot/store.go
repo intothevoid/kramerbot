@@ -1,8 +1,9 @@
 package bot
 
 import (
+	"fmt"
+
 	"github.com/intothevoid/kramerbot/models"
-	"go.uber.org/zap"
 )
 
 // Create user data from parameters passed in
@@ -22,15 +23,17 @@ func (k *KramerBot) CreateUserData(chatID int64, username string, keyword string
 }
 
 // Function to load user store from file
-func (k *KramerBot) LoadUserStore() {
+func (k *KramerBot) LoadUserStore() error {
 	// Load user store i.e. user data indexed by chat id
 	if k.DataWriter != nil {
-		var err error
-		k.UserStore, err = k.DataWriter.ReadUserStore()
+		userStore, err := k.DataWriter.ReadUserStore()
 		if err != nil {
-			k.Logger.Error("Error loading user store: ", zap.Error(err))
+			return fmt.Errorf("error loading user store: %w", err)
 		}
+		k.UserStore = userStore
+		return nil
 	}
+	return fmt.Errorf("data writer is nil")
 }
 
 // Function to save user store to file
@@ -42,31 +45,40 @@ func (k *KramerBot) SaveUserStore() {
 }
 
 // Update single user record in user store
-func (k *KramerBot) UpdateUser(userData *models.UserData) {
+func (k *KramerBot) UpdateUser(userData *models.UserData) error {
 	// Update user store
 	if k.DataWriter != nil {
-		k.DataWriter.UpdateUser(userData)
+		return k.DataWriter.UpdateUser(userData)
 	}
+	return nil
 }
 
-// Check if the OZB deal has already been sent to the user
+// OzbDealSent checks if an OzBargain deal has already been sent to the user
+// by searching for the deal ID in the user's sent deals list
 func OzbDealSent(user *models.UserData, deal *models.OzBargainDeal) bool {
-	// Check if deal.Id is in user.DealsSent
-	for _, dealId := range user.OzbSent {
-		if dealId == deal.Id {
-			return true
-		}
+	if user == nil || deal == nil {
+		return false
 	}
-	return false
+
+	// Use a map for O(1) lookup instead of slice iteration
+	sentDeals := make(map[string]bool)
+	for _, id := range user.OzbSent {
+		sentDeals[id] = true
+	}
+	return sentDeals[deal.Id]
 }
 
-// Check if the AMZ deal has already been sent to the user
+// AmzDealSent checks if an Amazon deal has already been sent to the user
+// by searching for the deal ID in the user's sent deals list
 func AmzDealSent(user *models.UserData, deal *models.CamCamCamDeal) bool {
-	// Check if deal.Id is in user.DealsSent
-	for _, dealId := range user.AmzSent {
-		if dealId == deal.Id {
-			return true
-		}
+	if user == nil || deal == nil {
+		return false
 	}
-	return false
+
+	// Use a map for O(1) lookup instead of slice iteration
+	sentDeals := make(map[string]bool)
+	for _, id := range user.AmzSent {
+		sentDeals[id] = true
+	}
+	return sentDeals[deal.Id]
 }
