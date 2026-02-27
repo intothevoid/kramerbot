@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Zap, Bell, Search, Tv } from 'lucide-react';
+import { Bell, Search } from 'lucide-react';
 
 const features = [
   {
