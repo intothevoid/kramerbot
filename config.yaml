@@ -33,7 +33,7 @@ scrapers:
 api:
   enabled: true
   port: 8080
-  web_url: "http://localhost:8080"  # Public URL shown in Telegram welcome messages
+  web_url: "http://localhost:8989"  # Public URL shown in Telegram welcome messages
   cors_origins:
     - "http://localhost:5173"  # Vite dev server
   jwt_expiry_hours: 24

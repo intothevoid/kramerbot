@@ -6,7 +6,7 @@ services:
     container_name: kramerbot
     restart: unless-stopped
     ports:
-      - "8080:8080"   # HTTP API + web UI
+      - "8989:8080"   # HTTP API + web UI
     volumes:
       - ./data:/app/data
     env_file:
