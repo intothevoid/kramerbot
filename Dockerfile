@@ -24,15 +24,17 @@ RUN CGO_ENABLED=1 GOOS=linux go build -o kramerbot .
 
 # ── Stage 3: Minimal runtime image ───────────────────────────────────────────
 FROM debian:bookworm-slim
-RUN apt-get update && apt-get install -y ca-certificates sqlite3 && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y ca-certificates sqlite3 openssl && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 RUN mkdir -p /app/data && chmod 777 /app/data
 
 COPY --from=go-builder /app/kramerbot ./kramerbot
 COPY config.yaml ./config.yaml
+COPY entrypoint.sh ./entrypoint.sh
+RUN chmod +x ./entrypoint.sh
 
 # API port
 EXPOSE 8080
 
-ENTRYPOINT ["./kramerbot"]
+ENTRYPOINT ["./entrypoint.sh"]
