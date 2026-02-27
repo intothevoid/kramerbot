@@ -99,9 +99,8 @@ func (k *KramerBot) BotProc(updates tgbotapi.UpdatesChannel) {
 			continue
 		}
 
-		// If it's not a command and not announce mode, ignore or show help?
-		// For now, let's show help for any non-command text.
-		k.Help(update.Message.Chat)
+		// Not a command — send the welcome + web URL.
+		k.SendMessage(update.Message.Chat.ID, k.welcomeMessage(update.Message.Chat.FirstName))
 	}
 }
 

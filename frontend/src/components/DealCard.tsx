@@ -2,22 +2,22 @@ import { ExternalLink, ThumbsUp, Clock } from 'lucide-react';
 import type { OzbDeal, AmazonDeal } from '../types';
 
 function OzbBadge({ type }: { type: number }) {
-  // dealtype: 3 = OZB_GOOD, 2 = OZB_SUPER
+  // dealtype: 2 = OZB_SUPER (top deal: 25+ votes in 1h), 1 = OZB_REG
   if (type === 2)
     return (
       <span
         className="rounded-full px-2 py-0.5 text-xs font-semibold"
         style={{ background: 'var(--kb-yellow)', color: 'var(--kb-ink)' }}
       >
-        ⚡ Super
+        ⚡ Top
       </span>
     );
   return (
     <span
       className="rounded-full px-2 py-0.5 text-xs font-semibold"
-      style={{ background: '#dcfce7', color: '#166534' }}
+      style={{ background: '#f1f5f9', color: '#475569' }}
     >
-      ✅ Good
+      Deal
     </span>
   );
 }

@@ -2,7 +2,6 @@ package bot
 
 import (
 	"fmt"
-	"path/filepath"
 	"strings"
 
 	"go.uber.org/zap"
@@ -13,40 +12,28 @@ import (
 	"github.com/intothevoid/kramerbot/util"
 )
 
-// Function to display help message
-func (k *KramerBot) Help(chat *tgbotapi.Chat) {
-	// Send kramer's photo
-	fpath, _ := filepath.Abs("./static/kramer_drnostrand.jpg")
-	k.SendPhoto(chat.ID, fpath)
-
-	// Show the help banner
-	helpText := fmt.Sprintf("Hi %s! Welcome to @kramerbot\n\n"+
-		"Available commands:\n"+
-		"/start - Register or view your status\n"+
-		"/help - Show this help message\n"+
-		"/preferences - Show your current notification preferences\n"+
-		"/ozbgood - Toggle OzBargain 'Good' deals (25+ votes)\n"+
-		"/ozbsuper - Toggle OzBargain 'Super' deals (50+ votes)\n"+
-		"/amzdaily - Toggle Amazon Daily deals\n"+
-		"/amzweekly - Toggle Amazon Weekly deals\n"+
-		"/addkeyword <keyword> - Add a keyword to watch\n"+
-		"/removekeyword <keyword> - Remove a keyword\n"+
-		"/listkeywords - List your watched keywords\n"+
-		"/test - Send a test notification",
-		chat.FirstName)
-	k.SendMessage(chat.ID, helpText)
+// welcomeMessage returns the standard welcome text including the web app URL.
+func (k *KramerBot) welcomeMessage(firstName string) string {
+	webURL := "http://localhost:8080"
+	if k.Config != nil && k.Config.API.WebURL != "" {
+		webURL = k.Config.API.WebURL
+	}
+	return fmt.Sprintf("👋 Welcome to KramerBot - Aussie Deals, %s!\n\nManage your deal preferences and subscriptions at:\n%s", firstName, webURL)
 }
 
-// RegisterUser adds a new user or shows status for an existing user
+// Help sends the welcome message with the web app URL.
+func (k *KramerBot) Help(chat *tgbotapi.Chat) {
+	k.SendMessage(chat.ID, k.welcomeMessage(chat.FirstName))
+}
+
+// RegisterUser adds a new user or shows the welcome message for an existing user.
 func (k *KramerBot) RegisterUser(chat *tgbotapi.Chat) {
-	// Check if user exists
 	user, err := k.DataWriter.GetUser(chat.ID)
 	if err != nil || user == nil {
-		// User doesn't exist, create a new one
 		newUser := &models.UserData{
 			ChatID:    chat.ID,
 			Username:  chat.UserName,
-			OzbGood:   true, // Default settings
+			OzbGood:   true,
 			OzbSuper:  false,
 			AmzDaily:  false,
 			AmzWeekly: false,
@@ -54,29 +41,22 @@ func (k *KramerBot) RegisterUser(chat *tgbotapi.Chat) {
 			OzbSent:   []string{},
 			AmzSent:   []string{},
 		}
-		err := k.DataWriter.AddUser(newUser)
-		if err != nil {
+		if err := k.DataWriter.AddUser(newUser); err != nil {
 			k.Logger.Error("Failed to add new user", zap.Int64("chatID", chat.ID), zap.Error(err))
 			k.SendMessage(chat.ID, "Sorry, there was an error registering you. Please try again later.")
 			return
 		}
-		// Add to in-memory store as well
 		k.UserStore.SetUser(chat.ID, newUser)
 		k.Logger.Info("Registered new user", zap.String("username", chat.UserName), zap.Int64("chatID", chat.ID))
-		k.SendMessage(chat.ID, fmt.Sprintf("Welcome %s! You are now registered. Use /help to see available commands.", chat.FirstName))
-		k.ShowPreferences(chat) // Show current (default) preferences
 	} else {
-		// User exists, update username if changed and show status
 		if user.Username != chat.UserName {
 			user.Username = chat.UserName
-			k.UpdateUser(user)                 // Update in DB
-			k.UserStore.SetUser(chat.ID, user) // Update in memory
-			k.Logger.Info("Updated username for existing user", zap.String("username", chat.UserName), zap.Int64("chatID", chat.ID))
+			k.UpdateUser(user)
+			k.UserStore.SetUser(chat.ID, user)
+			k.Logger.Info("Updated username", zap.String("username", chat.UserName), zap.Int64("chatID", chat.ID))
 		}
-		k.Logger.Info("User already registered", zap.String("username", chat.UserName), zap.Int64("chatID", chat.ID))
-		k.SendMessage(chat.ID, fmt.Sprintf("Welcome back %s!", chat.FirstName))
-		k.ShowPreferences(chat) // Show current preferences
 	}
+	k.SendMessage(chat.ID, k.welcomeMessage(chat.FirstName))
 }
 
 // ShowPreferences displays the user's current notification settings
@@ -88,8 +68,8 @@ func (k *KramerBot) ShowPreferences(chat *tgbotapi.Chat) {
 	}
 
 	prefsText := fmt.Sprintf("Your current preferences:\n"+
-		"Ozbargain Good Deals (25+): %t\n"+
-		"Ozbargain Super Deals (50+): %t\n"+
+		"Ozbargain All Deals: %t\n"+
+		"Ozbargain Top Deals (25+ in 24h): %t\n"+
 		"Amazon Daily Deals: %t\n"+
 		"Amazon Weekly Deals: %t\n"+
 		"Watched Keywords: %d",
@@ -136,7 +116,7 @@ func (k *KramerBot) ToggleOzbGood(chat *tgbotapi.Chat) {
 	k.UpdateUser(user)                 // Update DB
 	k.UserStore.SetUser(chat.ID, user) // Update memory
 
-	k.SendMessage(chat.ID, fmt.Sprintf("Ozbargain Good Deals (25+) notifications set to: %t", user.OzbGood))
+	k.SendMessage(chat.ID, fmt.Sprintf("Ozbargain All Deals notifications set to: %t", user.OzbGood))
 	k.ShowPreferences(chat)
 }
 
@@ -151,7 +131,7 @@ func (k *KramerBot) ToggleOzbSuper(chat *tgbotapi.Chat) {
 	k.UpdateUser(user)                 // Update DB
 	k.UserStore.SetUser(chat.ID, user) // Update memory
 
-	k.SendMessage(chat.ID, fmt.Sprintf("Ozbargain Super Deals (50+) notifications set to: %t", user.OzbSuper))
+	k.SendMessage(chat.ID, fmt.Sprintf("Ozbargain Top Deals (25+ in 24h) notifications set to: %t", user.OzbSuper))
 	k.ShowPreferences(chat)
 }
 

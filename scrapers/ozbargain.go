@@ -115,7 +115,8 @@ func (s *OzBargainScraper) GetDealAge(postedOn string) time.Duration {
 	return tmnow.Sub(tmts)
 }
 
-// Check if deal is a super deal, good deal or just a regular deal
+// GetDealType classifies a deal as a top deal or a regular deal.
+// Top deal: 25+ upvotes within 24 hours.
 func (s *OzBargainScraper) GetDealType(deal models.OzBargainDeal) int {
 	upvotes := deal.Upvotes
 	dealAge := deal.DealAge
@@ -132,17 +133,12 @@ func (s *OzBargainScraper) GetDealType(deal models.OzBargainDeal) int {
 		s.Logger.Error("Error converting upvotes to int", zap.Error(err))
 	}
 
-	// 25+ upvotes within an hour
-	if duration.Hours() < 1.0 && upvotesInt >= 25 {
-		return int(OZB_GOOD)
-	}
-
-	// 100+ upvotes within 24 hours
-	if duration.Hours() < 24.0 && upvotesInt >= 100 {
+	// 25+ upvotes within 24 hours → top deal
+	if duration.Hours() < 24.0 && upvotesInt >= 25 {
 		return int(OZB_SUPER)
 	}
 
-	// regular deal
+	// everything else is a regular deal
 	return int(OZB_REG)
 }
 

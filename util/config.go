@@ -24,6 +24,7 @@ type Config struct {
 type APIConfig struct {
 	Enabled        bool     `mapstructure:"enabled"`
 	Port           int      `mapstructure:"port"`
+	WebURL         string   `mapstructure:"web_url"`
 	CORSOrigins    []string `mapstructure:"cors_origins"`
 	JWTExpiryHours int      `mapstructure:"jwt_expiry_hours"`
 }
@@ -112,6 +113,7 @@ func DefaultConfig() *Config {
 		API: APIConfig{
 			Enabled:        true,
 			Port:           8080,
+			WebURL:         "http://localhost:8080",
 			CORSOrigins:    []string{"http://localhost:5173"},
 			JWTExpiryHours: 24,
 		},
@@ -224,6 +226,7 @@ func SetupConfig(confPath string, logger *zap.Logger) (*Config, error) {
 	v.SetDefault("pipup.background_color", config.Pipup.BackgroundColor)
 	v.SetDefault("api.enabled", config.API.Enabled)
 	v.SetDefault("api.port", config.API.Port)
+	v.SetDefault("api.web_url", config.API.WebURL)
 	v.SetDefault("api.cors_origins", config.API.CORSOrigins)
 	v.SetDefault("api.jwt_expiry_hours", config.API.JWTExpiryHours)
 
