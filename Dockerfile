@@ -20,7 +20,7 @@ COPY . .
 # Embed the built React app so the Go binary can serve it
 COPY --from=frontend-builder /app/frontend/dist ./frontend/dist
 
-RUN CGO_ENABLED=1 GOOS=linux go build -o kramerbot .
+RUN CGO_ENABLED=1 GOOS=linux go build -tags prod -o kramerbot .
 
 # ── Stage 3: Minimal runtime image ───────────────────────────────────────────
 FROM debian:bookworm-slim

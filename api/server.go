@@ -4,8 +4,10 @@ package api
 import (
 	"context"
 	"fmt"
+	"io/fs"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -32,6 +34,7 @@ func NewServer(
 	ozbScraper *scrapers.OzBargainScraper,
 	cccScraper *scrapers.CamCamCamScraper,
 	logger *zap.Logger,
+	staticFiles fs.FS,
 ) (*Server, error) {
 	// Resolve JWT secret — prefer env var over a generated fallback.
 	jwtSecret := os.Getenv("JWT_SECRET")
@@ -105,6 +108,26 @@ func NewServer(
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("ok"))
 	})
+
+	// Serve React SPA — catch-all, must be last.
+	// Any path not matched above falls through to index.html so React Router works.
+	if staticFiles != nil {
+		fileServer := http.FileServer(http.FS(staticFiles))
+		r.Get("/*", func(w http.ResponseWriter, r *http.Request) {
+			path := strings.TrimPrefix(r.URL.Path, "/")
+			if path == "" {
+				path = "index.html"
+			}
+			if f, err := staticFiles.Open(path); err == nil {
+				f.Close()
+				fileServer.ServeHTTP(w, r)
+			} else {
+				// Unknown path → serve index.html and let React Router handle it.
+				r.URL.Path = "/"
+				fileServer.ServeHTTP(w, r)
+			}
+		})
+	}
 
 	addr := fmt.Sprintf(":%d", cfg.API.Port)
 	srv := &Server{

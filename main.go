@@ -83,7 +83,7 @@ func main() {
 
 	// Start the HTTP API server in the background (if enabled).
 	if config.API.Enabled {
-		srv, err := api.NewServer(config, k.DataWriter, ozbscraper, cccscraper, logger)
+		srv, err := api.NewServer(config, k.DataWriter, ozbscraper, cccscraper, logger, staticFiles)
 		if err != nil {
 			logger.Fatal("Failed to create API server", zap.Error(err))
 		}
