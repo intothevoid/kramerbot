@@ -19,12 +19,24 @@ export async function getKeywords(): Promise<string[]> {
   return res.data.data?.keywords ?? [];
 }
 
-export async function addKeyword(keyword: string): Promise<void> {
-  await api.post('/user/keywords', { keyword });
+export async function updatePreferences(prefs: {
+  ozb_good: boolean;
+  ozb_super: boolean;
+  amz_daily: boolean;
+  amz_weekly: boolean;
+}): Promise<WebUser> {
+  const res = await api.put<APIResponse<WebUser>>('/user/preferences', prefs);
+  return res.data.data!;
 }
 
-export async function removeKeyword(keyword: string): Promise<void> {
-  await api.delete(`/user/keywords/${encodeURIComponent(keyword)}`);
+export async function addKeyword(keyword: string): Promise<string[]> {
+  const res = await api.post<APIResponse<{ keywords: string[] }>>('/user/keywords', { keyword });
+  return res.data.data?.keywords ?? [];
+}
+
+export async function removeKeyword(keyword: string): Promise<string[]> {
+  const res = await api.delete<APIResponse<{ keywords: string[] }>>(`/user/keywords/${encodeURIComponent(keyword)}`);
+  return res.data.data?.keywords ?? [];
 }
 
 export async function generateTelegramLink(): Promise<TelegramLinkResponse> {

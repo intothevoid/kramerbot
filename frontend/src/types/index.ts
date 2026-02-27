@@ -4,6 +4,11 @@ export interface WebUser {
   display_name: string;
   telegram_chat_id?: number;
   telegram_username?: string;
+  ozb_good?: boolean;
+  ozb_super?: boolean;
+  amz_daily?: boolean;
+  amz_weekly?: boolean;
+  keywords?: string[];
   created_at: string;
   updated_at: string;
 }

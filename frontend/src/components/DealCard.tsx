@@ -4,8 +4,22 @@ import type { OzbDeal, AmazonDeal } from '../types';
 function OzbBadge({ type }: { type: number }) {
   // dealtype: 3 = OZB_GOOD, 2 = OZB_SUPER
   if (type === 2)
-    return <span className="rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-semibold text-yellow-800">⚡ Super</span>;
-  return <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-800">✅ Good</span>;
+    return (
+      <span
+        className="rounded-full px-2 py-0.5 text-xs font-semibold"
+        style={{ background: 'var(--kb-yellow)', color: 'var(--kb-ink)' }}
+      >
+        ⚡ Super
+      </span>
+    );
+  return (
+    <span
+      className="rounded-full px-2 py-0.5 text-xs font-semibold"
+      style={{ background: '#dcfce7', color: '#166534' }}
+    >
+      ✅ Good
+    </span>
+  );
 }
 
 export function OzbDealCard({ deal }: { deal: OzbDeal }) {
@@ -14,13 +28,16 @@ export function OzbDealCard({ deal }: { deal: OzbDeal }) {
       href={deal.url}
       target="_blank"
       rel="noopener noreferrer"
-      className="group flex flex-col gap-2 rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-indigo-300 hover:shadow-md"
+      className="group card flex flex-col gap-2 transition hover:shadow-md"
+      style={{ borderColor: 'transparent' }}
+      onMouseEnter={(e) => (e.currentTarget.style.borderColor = 'var(--kb-yellow)')}
+      onMouseLeave={(e) => (e.currentTarget.style.borderColor = 'transparent')}
     >
       <div className="flex items-start justify-between gap-2">
-        <p className="line-clamp-2 font-semibold text-slate-800 group-hover:text-indigo-700">
+        <p className="line-clamp-2 font-semibold text-slate-800 group-hover:text-red-700">
           {deal.title}
         </p>
-        <ExternalLink className="mt-0.5 h-4 w-4 shrink-0 text-slate-400 group-hover:text-indigo-500" />
+        <ExternalLink className="mt-0.5 h-4 w-4 shrink-0 text-slate-400 group-hover:text-red-500" />
       </div>
       <div className="flex flex-wrap items-center gap-2 text-sm text-slate-500">
         <OzbBadge type={deal.dealtype} />
@@ -38,13 +55,16 @@ export function OzbDealCard({ deal }: { deal: OzbDeal }) {
 }
 
 export function AmazonDealCard({ deal }: { deal: AmazonDeal }) {
-  const label = deal.dealtype === 4 ? '📅 Daily' : '📆 Weekly';
+  const isDaily = deal.dealtype === 4;
   return (
     <a
       href={deal.url}
       target="_blank"
       rel="noopener noreferrer"
-      className="group flex items-start gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-indigo-300 hover:shadow-md"
+      className="group card flex items-start gap-3 transition hover:shadow-md"
+      style={{ borderColor: 'transparent' }}
+      onMouseEnter={(e) => (e.currentTarget.style.borderColor = 'var(--kb-yellow)')}
+      onMouseLeave={(e) => (e.currentTarget.style.borderColor = 'transparent')}
     >
       {deal.image && (
         <img
@@ -55,12 +75,15 @@ export function AmazonDealCard({ deal }: { deal: AmazonDeal }) {
         />
       )}
       <div className="flex flex-col gap-1 overflow-hidden">
-        <p className="line-clamp-2 font-semibold text-slate-800 group-hover:text-indigo-700">
+        <p className="line-clamp-2 font-semibold text-slate-800 group-hover:text-red-700">
           {deal.title}
         </p>
         <div className="flex items-center gap-2 text-sm text-slate-500">
-          <span className="rounded-full bg-orange-100 px-2 py-0.5 text-xs font-semibold text-orange-800">
-            {label}
+          <span
+            className="rounded-full px-2 py-0.5 text-xs font-semibold"
+            style={{ background: 'var(--kb-yellow)', color: 'var(--kb-ink)' }}
+          >
+            {isDaily ? '📅 Daily' : '📆 Weekly'}
           </span>
           <ExternalLink className="h-3.5 w-3.5" />
         </div>

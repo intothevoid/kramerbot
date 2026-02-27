@@ -94,17 +94,27 @@ func main() {
 			}
 		}()
 
-		// Graceful shutdown on SIGINT / SIGTERM.
+		// Graceful shutdown on SIGINT / SIGTERM — exits the whole process.
 		go func() {
 			quit := make(chan os.Signal, 1)
 			signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 			<-quit
-			logger.Info("Shutting down API server")
+			logger.Info("Shutdown signal received, exiting…")
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
 			if err := srv.Shutdown(ctx); err != nil {
 				logger.Error("API server forced shutdown", zap.Error(err))
 			}
+			os.Exit(0)
+		}()
+	} else {
+		// No API server — still handle signals so Ctrl+C works.
+		go func() {
+			quit := make(chan os.Signal, 1)
+			signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+			<-quit
+			logger.Info("Shutdown signal received, exiting…")
+			os.Exit(0)
 		}()
 	}
 

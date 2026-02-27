@@ -12,6 +12,14 @@ type WebUser struct {
 	TelegramUsername *string    `json:"telegram_username,omitempty"`
 	LinkToken        *string    `json:"-"`
 	LinkTokenExpires *time.Time `json:"-"`
-	CreatedAt        time.Time  `json:"created_at"`
-	UpdatedAt        time.Time  `json:"updated_at"`
+	ResetToken       *string    `json:"-"`
+	ResetTokenExpires *time.Time `json:"-"`
+	// Deal notification preferences (synced to bot's UserData when Telegram is linked).
+	OzbGood   bool     `json:"ozb_good"`
+	OzbSuper  bool     `json:"ozb_super"`
+	AmzDaily  bool     `json:"amz_daily"`
+	AmzWeekly bool     `json:"amz_weekly"`
+	Keywords  []string `json:"keywords"`
+	CreatedAt time.Time  `json:"created_at"`
+	UpdatedAt time.Time  `json:"updated_at"`
 }

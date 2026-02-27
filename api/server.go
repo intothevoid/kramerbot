@@ -53,6 +53,7 @@ func NewServer(
 
 	h := &handlers.Handler{
 		WebUserDB:  webUserDB,
+		BotDB:      db,
 		OzbScraper: ozbScraper,
 		CCCScraper: cccScraper,
 		Config:     cfg,
@@ -74,6 +75,8 @@ func NewServer(
 		r.Post("/register", h.Register)
 		r.Post("/login", h.Login)
 		r.Post("/logout", h.Logout)
+		r.Post("/forgot-password", h.ForgotPassword)
+		r.Post("/reset-password", h.ResetPassword)
 	})
 
 	// Protected routes

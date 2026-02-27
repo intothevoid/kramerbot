@@ -13,10 +13,9 @@ export function TelegramLinker() {
   const { data: status, isLoading } = useQuery({
     queryKey: ['telegramStatus'],
     queryFn: getTelegramStatus,
-    refetchInterval: deepLink ? 4000 : false, // poll while link is pending
+    refetchInterval: deepLink ? 4000 : false,
   });
 
-  // Stop polling and clear the deep link once linked.
   useEffect(() => {
     if (status?.linked && deepLink) {
       setDeepLink(null);
@@ -51,8 +50,11 @@ export function TelegramLinker() {
 
   if (status?.linked) {
     return (
-      <div className="flex items-center justify-between rounded-xl border border-green-200 bg-green-50 p-4">
-        <div className="flex items-center gap-2 text-green-700">
+      <div
+        className="flex items-center justify-between rounded-xl border p-4"
+        style={{ background: '#f0fdf4', borderColor: '#bbf7d0' }}
+      >
+        <div className="flex items-center gap-2" style={{ color: '#166534' }}>
           <CheckCircle className="h-5 w-5" />
           <span className="font-medium">
             Linked{status.telegram_username ? ` as @${status.telegram_username}` : ''}
@@ -61,7 +63,8 @@ export function TelegramLinker() {
         <button
           onClick={() => unlinkMutation.mutate()}
           disabled={unlinkMutation.isPending}
-          className="flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm text-red-600 hover:bg-red-100 disabled:opacity-50"
+          className="flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm disabled:opacity-50"
+          style={{ color: 'var(--kb-red)' }}
         >
           <XCircle className="h-4 w-4" /> Unlink
         </button>
@@ -73,9 +76,9 @@ export function TelegramLinker() {
   const secs = String(secondsLeft % 60).padStart(2, '0');
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+    <div>
       <p className="mb-3 text-sm text-slate-600">
-        Link your Telegram account to receive deal notifications directly in Telegram.
+        Link your Telegram account to receive deal notifications.
       </p>
 
       {deepLink ? (
@@ -84,17 +87,18 @@ export function TelegramLinker() {
             href={deepLink}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-3 font-semibold text-white hover:bg-indigo-700"
+            className="btn-red flex w-full items-center justify-center gap-2"
           >
             <Send className="h-4 w-4" /> Open in Telegram
           </a>
           <div className="flex items-center justify-between text-xs text-slate-500">
-            <span>Waiting for link… <Spinner size="sm" /></span>
+            <span className="flex items-center gap-1">Waiting for link… <Spinner size="sm" /></span>
             <span className="font-mono">{mins}:{secs}</span>
           </div>
           <button
             onClick={() => linkMutation.mutate()}
-            className="flex items-center gap-1 text-xs text-indigo-600 hover:underline"
+            className="flex items-center gap-1 text-xs hover:underline"
+            style={{ color: 'var(--kb-red)' }}
           >
             <RefreshCw className="h-3 w-3" /> Generate new link
           </button>
@@ -103,7 +107,7 @@ export function TelegramLinker() {
         <button
           onClick={() => linkMutation.mutate()}
           disabled={linkMutation.isPending}
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-3 font-semibold text-white hover:bg-indigo-700 disabled:opacity-60"
+          className="btn-red flex w-full items-center justify-center gap-2 disabled:opacity-60"
         >
           {linkMutation.isPending ? <Spinner size="sm" /> : <Send className="h-4 w-4" />}
           Link Telegram Account
