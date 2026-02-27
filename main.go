@@ -1,10 +1,16 @@
 package main
 
 import (
+	"context"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
+	"github.com/intothevoid/kramerbot/api"
 	"github.com/intothevoid/kramerbot/bot"
 	"github.com/intothevoid/kramerbot/models"
+	sqlite_persist "github.com/intothevoid/kramerbot/persist/sqlite"
 	"github.com/intothevoid/kramerbot/pipup"
 	"github.com/intothevoid/kramerbot/scrapers"
 	"github.com/intothevoid/kramerbot/util"
@@ -40,8 +46,6 @@ func main() {
 	}
 
 	// Get the token for the telegram bot api
-	// it is safer to keep the token in an environment variable
-	// and not store it in the config file to avoid security issues
 	k.Token = k.GetToken()
 
 	// Test mode doesn't require a token
@@ -49,27 +53,61 @@ func main() {
 		logger.Fatal("Cannot proceed without a bot token, is the TELEGRAM_BOT_TOKEN environment variable set?")
 	}
 
-	// Create Ozbargain ozbscraper
+	// Create Ozbargain scraper
 	ozbscraper := new(scrapers.OzBargainScraper)
 	ozbscraper.SID = scrapers.SID_OZBARGAIN
 	ozbscraper.Logger = logger
 	ozbscraper.BaseUrl = scrapers.URL_OZBARGAIN
 	ozbscraper.Deals = []models.OzBargainDeal{}
-	ozbscraper.ScrapeInterval = config.Scrapers.OzBargain.ScrapeInterval  // mins
-	ozbscraper.MaxDealsToStore = config.Scrapers.OzBargain.MaxStoredDeals // max. no. of deals to store
+	ozbscraper.ScrapeInterval = config.Scrapers.OzBargain.ScrapeInterval
+	ozbscraper.MaxDealsToStore = config.Scrapers.OzBargain.MaxStoredDeals
 
-	// Create camel camel camel (amazon) scraper
+	// Create CamelCamelCamel (Amazon) scraper
 	cccscraper := new(scrapers.CamCamCamScraper)
 	cccscraper.SID = scrapers.SID_CCC_AMAZON
 	cccscraper.Logger = logger
 	cccscraper.BaseUrl = config.Scrapers.Amazon.URLs
 	cccscraper.Deals = []models.CamCamCamDeal{}
-	cccscraper.ScrapeInterval = config.Scrapers.Amazon.ScrapeInterval  // mins
-	cccscraper.MaxDealsToStore = config.Scrapers.Amazon.MaxStoredDeals // max. no. of deals to store
+	cccscraper.ScrapeInterval = config.Scrapers.Amazon.ScrapeInterval
+	cccscraper.MaxDealsToStore = config.Scrapers.Amazon.MaxStoredDeals
 
-	// create a new bot
+	// Initialise bot (creates DB connection internally)
 	k.NewBot(ozbscraper, cccscraper)
 
-	// start receiving updates from telegram
+	// Wire the WebUserDB so the bot can resolve Telegram link tokens.
+	if sw, ok := k.DataWriter.(*sqlite_persist.SQLiteWrapper); ok {
+		k.WebUserDB = sw
+	} else {
+		logger.Warn("DataWriter is not *SQLiteWrapper; Telegram linking will be unavailable")
+	}
+
+	// Start the HTTP API server in the background (if enabled).
+	if config.API.Enabled {
+		srv, err := api.NewServer(config, k.DataWriter, ozbscraper, cccscraper, logger)
+		if err != nil {
+			logger.Fatal("Failed to create API server", zap.Error(err))
+		}
+
+		go func() {
+			if err := srv.Start(); err != nil {
+				logger.Error("API server stopped", zap.Error(err))
+			}
+		}()
+
+		// Graceful shutdown on SIGINT / SIGTERM.
+		go func() {
+			quit := make(chan os.Signal, 1)
+			signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+			<-quit
+			logger.Info("Shutting down API server")
+			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			defer cancel()
+			if err := srv.Shutdown(ctx); err != nil {
+				logger.Error("API server forced shutdown", zap.Error(err))
+			}
+		}()
+	}
+
+	// Start the Telegram bot (blocks until process exits).
 	k.StartBot()
 }

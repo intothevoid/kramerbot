@@ -17,3 +17,13 @@ type DatabaseIF interface {
 	Close() error
 	Ping() error
 }
+
+// WebUserDBIF defines operations for managing web user accounts.
+type WebUserDBIF interface {
+	CreateWebUser(user *models.WebUser) error
+	GetWebUserByEmail(email string) (*models.WebUser, error)
+	GetWebUserByID(id string) (*models.WebUser, error)
+	GetWebUserByLinkToken(token string) (*models.WebUser, error)
+	UpdateWebUser(user *models.WebUser) error
+	DeleteWebUser(id string) error
+}

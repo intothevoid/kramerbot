@@ -52,14 +52,20 @@ func NewSQLiteWrapper(dbPath string, logger *zap.Logger) (*SQLiteWrapper, error)
 		return nil, fmt.Errorf("database connection is nil for path '%s'", dbPath)
 	}
 
-	// Create table if it doesn't exist
-	logger.Info("Ensuring database table exists", zap.String("path", dbPath))
+	// Create tables if they don't exist
+	logger.Info("Ensuring database tables exist", zap.String("path", dbPath))
 	if err := db.CreateTable(); err != nil {
-		logger.Error("Failed to create database table", zap.String("path", dbPath), zap.Error(err))
-		db.Close() // Attempt to close the connection if table creation failed
+		logger.Error("Failed to create users table", zap.String("path", dbPath), zap.Error(err))
+		db.Close()
 		return nil, fmt.Errorf("failed to create table in database '%s': %w", dbPath, err)
 	}
+	if err := db.CreateWebUsersTable(); err != nil {
+		logger.Error("Failed to create web_users table", zap.String("path", dbPath), zap.Error(err))
+		db.Close()
+		return nil, fmt.Errorf("failed to create web_users table in database '%s': %w", dbPath, err)
+	}
 
+	// Ensure SQLiteWrapper implements WebUserDBIF at compile time (checked via persist package).
 	logger.Info("SQLite database initialized successfully", zap.String("path", dbPath))
 	return &SQLiteWrapper{
 		UserStoreDB: db,

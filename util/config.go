@@ -17,6 +17,15 @@ type Config struct {
 	SQLite    SQLiteConfig
 	Scrapers  ScrapersConfig
 	Pipup     PipupConfig
+	API       APIConfig
+}
+
+// APIConfig holds configuration for the HTTP API server.
+type APIConfig struct {
+	Enabled        bool     `mapstructure:"enabled"`
+	Port           int      `mapstructure:"port"`
+	CORSOrigins    []string `mapstructure:"cors_origins"`
+	JWTExpiryHours int      `mapstructure:"jwt_expiry_hours"`
 }
 
 // SQLiteConfig holds SQLite database configuration
@@ -99,6 +108,12 @@ func DefaultConfig() *Config {
 			MessageColor:    "#ffffff",
 			MessageSize:     12,
 			BackgroundColor: "#000000",
+		},
+		API: APIConfig{
+			Enabled:        true,
+			Port:           8080,
+			CORSOrigins:    []string{"http://localhost:5173"},
+			JWTExpiryHours: 24,
 		},
 	}
 }
@@ -207,6 +222,10 @@ func SetupConfig(confPath string, logger *zap.Logger) (*Config, error) {
 	v.SetDefault("pipup.message_color", config.Pipup.MessageColor)
 	v.SetDefault("pipup.message_size", config.Pipup.MessageSize)
 	v.SetDefault("pipup.background_color", config.Pipup.BackgroundColor)
+	v.SetDefault("api.enabled", config.API.Enabled)
+	v.SetDefault("api.port", config.API.Port)
+	v.SetDefault("api.cors_origins", config.API.CORSOrigins)
+	v.SetDefault("api.jwt_expiry_hours", config.API.JWTExpiryHours)
 
 	// Check if config file exists
 	if confPath != "" {

@@ -28,6 +28,7 @@ type KramerBot struct {
 	CCCScraper *scrapers.CamCamCamScraper
 	UserStore  *models.UserStore
 	DataWriter persist.DatabaseIF
+	WebUserDB  persist.WebUserDBIF // web account store (set after NewBot)
 	Pipup      *pipup.Pipup
 	Config     *util.Config
 }

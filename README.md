@@ -4,95 +4,131 @@
 
 https://t.me/kramerbot
 
-A Telegram bot to get you the latest deals from websites like https://www.ozbargain.com.au and https://amazon.com.au. Let Kramer watch deals so you don't have to. Giddy up!
-
-**Note:** This version is CLI-only and does not include a web interface or API.
+A Telegram bot — and now a full web app — to get you the latest deals from https://www.ozbargain.com.au and https://amazon.com.au. Let Kramer watch deals so you don't have to. Giddy up!
 
 ## Features
 
 1. Uses Telegram Bot API for instant notifications
-2. Written in Go and can be deployed with a single binary (Dockerfile included)
-3. Subscribe to good deals, super deals or setup your own custom deals by watching specific keywords via Telegram commands
-4. User data is written to a SQLite database file (`data/users.db` by default)
-5. Keep track of deals already sent to avoid duplicate sending
-6. Supports scraping www.ozbargain.com.au - Good and super deals
-7. Supports scraping www.amazon.com.au (via Camel Camel Camel RSS) - Top daily and weekly deals
-8. Supports Android TV notifications (via Pipup)
-9. Ability to send maintenance messages / announcements to all users (if admin commands are implemented)
+2. Written in Go; deployable as a single binary or Docker container
+3. **Web UI** — sign up, manage preferences, browse deals, and link your Telegram account from a browser
+4. Subscribe to good deals, super deals or set up keyword watches via Telegram commands or the web dashboard
+5. User data is written to a SQLite database file (`data/users.db` by default)
+6. Keep track of deals already sent to avoid duplicate notifications
+7. Supports scraping www.ozbargain.com.au — Good (25+ votes) and Super (50+ votes) deals
+8. Supports scraping www.amazon.com.au (via Camel Camel Camel RSS) — Top daily and weekly deals
+9. Supports Android TV notifications (via Pipup)
+10. Admin announcement broadcast
 
-## API
+## Web UI
 
-The following API endpoints are available -
+The web interface runs at `http://localhost:8080` (or the configured port).
+
+### Pages
+
+| Route | Description |
+|---|---|
+| `/` | Landing page |
+| `/signup` | Create an account (email + password) |
+| `/login` | Sign in |
+| `/dashboard` | Browse today's deals; manage keywords; link Telegram |
+
+### Linking Telegram
+
+1. Sign up / log in on the web dashboard.
+2. Click **Link Telegram Account** in the sidebar.
+3. A deep link button appears — click it to open the Telegram app.
+4. The bot receives your `/start <token>` and links the accounts automatically.
+5. The dashboard updates within a few seconds.
+
+## REST API
+
+All endpoints are prefixed with `/api/v1`.
+
+### Auth (public)
 
 ```
-/users - Get user data for all users
-/users/:chatid - Get user data by chat id
-/deals - Get deal data for latest deals by the scraper
-/signup - Signup from accompanying web app https://www.github.com/intothevoid/kramerbotui
-/preferences - Update user preferences
-/authenticate - User authentication
+POST /api/v1/auth/register   — Create account { email, password, display_name }
+POST /api/v1/auth/login      — Login { email, password } → JWT
+POST /api/v1/auth/logout     — Logout (client discards token)
+```
+
+### User (requires Bearer JWT)
+
+```
+GET    /api/v1/user/profile             — Current user profile
+PUT    /api/v1/user/preferences         — Update deal toggles
+GET    /api/v1/user/keywords            — List keywords
+POST   /api/v1/user/keywords            — Add keyword { keyword }
+DELETE /api/v1/user/keywords/:keyword   — Remove keyword
+POST   /api/v1/user/telegram/link       — Generate deep link token
+GET    /api/v1/user/telegram/status     — Linked status
+DELETE /api/v1/user/telegram/link       — Unlink Telegram
+```
+
+### Deals (requires Bearer JWT)
+
+```
+GET /api/v1/deals/ozbargain   ?type=good|super  &limit=50 &offset=0
+GET /api/v1/deals/amazon      ?type=daily|weekly &limit=50 &offset=0
+GET /api/v1/deals             — Combined feed
 ```
 
 ## Deployment
 
-Configuration is primarily managed via `config.yaml`. However, sensitive information like tokens should be set via environment variables. Kramerbot can be deployed using the following command after setting the required environment variables:
+Configuration is primarily managed via `config.yaml`. Sensitive values must be set via environment variables.
+
+### Environment variables
 
 ```
-go build .
-./kramerbot
+TELEGRAM_BOT_TOKEN=<token>           # Mandatory for bot
+TELEGRAM_BOT_USERNAME=<username>     # Used in deep link URL (without @)
+KRAMERBOT_ADMIN_PASS=<password>      # Optional — admin commands
+SQLITE_DB_PATH=<path>                # Optional — defaults to data/users.db
+JWT_SECRET=<random_32_byte_hex>      # Mandatory for web API in production
 ```
 
-### Required environment variables
-
-These environment variables override values in `config.yaml` if set.
-
-```
-TELEGRAM_BOT_TOKEN=<your_telegram_bot_token> # Mandatory
-KRAMERBOT_ADMIN_PASS=<your_admin_password> # Optional: If admin commands are used
-SQLITE_DB_PATH=<path_to_your_sqlite_db_file> # Optional: Defaults to value in config.yaml or 'data/users.db'
-```
-*(Refer to `config.yaml` for other configuration options like logging, scraper intervals, etc.)*
-
-### Setup Database (SQLite)
-
-The bot uses a SQLite database file to store user data. By default, it will create/use a file at `./data/users.db` relative to where the bot is run.
-- Ensure the directory `./data` exists and the bot has write permissions.
-- You can change the path using the `sqlite.db_path` setting in `config.yaml` or the `SQLITE_DB_PATH` environment variable.
-
-### Using Docker
-
-To build a Docker image of Kramerbot:
-
-```
-sudo docker build -t kramerbot:latest .
+Generate a JWT secret:
+```bash
+openssl rand -hex 32
 ```
 
-Create an environment file (e.g., `kramerbot.env`) with your required variables:
-
-```
-TELEGRAM_BOT_TOKEN=<your_telegram_bot_token>
-KRAMERBOT_ADMIN_PASS=<your_admin_password> # Optional
-SQLITE_DB_PATH=/app/data/users.db # Optional: Specify path inside the container
-```
-
-To deploy your container using Docker Compose (recommended for persisting data):
-
-1.  Make sure you have a `docker-compose.yaml` file similar to the one provided in the repository (it should handle mounting the `./data` directory).
-2.  Run: `docker compose up -d`
-
-Alternatively, to run directly with `docker run`:
+### Run locally
 
 ```bash
-# Create the data directory on your host first if it doesn't exist
+# Backend
+go build .
+JWT_SECRET=changeme TELEGRAM_BOT_TOKEN=<token> ./kramerbot
+
+# Frontend (separate terminal)
+cd frontend && npm run dev
+```
+
+### Using Docker Compose (recommended)
+
+1. Copy `kramerbot.env` and fill in your values.
+2. Run:
+```bash
+docker compose up -d
+```
+
+The web UI and API are available at `http://localhost:8080`.
+
+### Using Docker directly
+
+```bash
 mkdir -p data
 
-# Run the container, mounting the local data directory
-sudo docker run -d --name kramerbot \
+docker run -d --name kramerbot \
   --env-file ./kramerbot.env \
   -v "$(pwd)/data:/app/data" \
+  -p 8080:8080 \
   --restart unless-stopped \
   kramerbot:latest
 ```
-*(This mounts your local `./data` directory into `/app/data` inside the container, where the bot expects to find the SQLite file by default or via the environment variable.)*
+
+### Setup Database (SQLite)
+
+The bot auto-creates `data/users.db` on first run (including the new `web_users` table).
+No manual migration is needed.
 
 <img src="https://raw.githubusercontent.com/intothevoid/kramerbot/main/static/about.jpeg" width="50%" height="50%"></img>

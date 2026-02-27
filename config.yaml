@@ -28,6 +28,15 @@ scrapers:
     # Set target price drop percentage. Only deals that meet target sent to user
     target_price_drop: 20
 
+# HTTP API server (web UI backend)
+# JWT_SECRET env var must be set for security in production
+api:
+  enabled: true
+  port: 8080
+  cors_origins:
+    - "http://localhost:5173"  # Vite dev server
+  jwt_expiry_hours: 24
+
 # notifications for android tv
 pipup:
   enabled: false

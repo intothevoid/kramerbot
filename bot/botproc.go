@@ -38,7 +38,12 @@ func (k *KramerBot) BotProc(updates tgbotapi.UpdatesChannel) {
 
 			switch command {
 			case "start", "register":
-				k.RegisterUser(update.Message.Chat)
+				if args != "" {
+					// args may be a web account link token.
+					k.HandleTelegramLink(update.Message.Chat, args)
+				} else {
+					k.RegisterUser(update.Message.Chat)
+				}
 				continue
 			case "help":
 				k.Help(update.Message.Chat)
