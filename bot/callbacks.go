@@ -33,7 +33,7 @@ func (k *KramerBot) RegisterUser(chat *tgbotapi.Chat) {
 		newUser := &models.UserData{
 			ChatID:    chat.ID,
 			Username:  chat.UserName,
-			OzbGood:   true,
+			OzbGood:   false, // no subscriptions until user opts-in via the web UI
 			OzbSuper:  false,
 			AmzDaily:  false,
 			AmzWeekly: false,

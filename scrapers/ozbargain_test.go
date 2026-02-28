@@ -7,209 +7,127 @@ import (
 	"github.com/intothevoid/kramerbot/models"
 	"github.com/intothevoid/kramerbot/scrapers"
 	"github.com/intothevoid/kramerbot/util"
-	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
 
-// Basic test to check that the scraper works
+// Basic integration test — scrapes the live site.
 func TestScrape(t *testing.T) {
-	// Create a test logger
 	logger := util.SetupLogger(zapcore.DebugLevel, false)
 
-	// Create a test config
-	config := &util.Config{
-		LogLevel:  -1,
-		LogToFile: false,
-		TestMode:  true,
-		Scrapers: util.ScrapersConfig{
-			OzBargain: util.OzBargainConfig{
-				ScrapeInterval: 5,
-				MaxStoredDeals: 100,
-			},
-		},
-	}
-
-	// create a new scraper
 	ozbScraper := new(scrapers.OzBargainScraper)
 	ozbScraper.Logger = logger
 	ozbScraper.BaseUrl = "https://www.ozbargain.com.au/"
-	ozbScraper.ScrapeInterval = config.Scrapers.OzBargain.ScrapeInterval
-	ozbScraper.MaxDealsToStore = config.Scrapers.OzBargain.MaxStoredDeals
+	ozbScraper.ScrapeInterval = 5
+	ozbScraper.MaxDealsToStore = 100
 
-	// Start scraping
 	t.Log("Scraping URL " + ozbScraper.BaseUrl)
-	err := ozbScraper.Scrape()
-	if err != nil {
-		t.Error("Error scraping.", err.Error())
+	if err := ozbScraper.Scrape(); err != nil {
+		t.Error("Error scraping:", err)
 	}
 
 	if len(ozbScraper.Deals) == 0 {
-		t.Error("No deals found")
-		t.Fail()
-	} else {
-		t.Log("Found " + fmt.Sprintf("%d", len(ozbScraper.Deals)) + " deals")
-		for deal := range ozbScraper.Deals {
-			t.Log(ozbScraper.Deals[deal].Title)
-		}
+		t.Fatal("No deals found")
 	}
+	t.Log("Found " + fmt.Sprintf("%d", len(ozbScraper.Deals)) + " deals")
 }
 
-// Test the getDealAge function
+// TestGetDealAge verifies the age parser doesn't crash.
 func TestGetDealAge(t *testing.T) {
-	// create a new scraper
 	s := new(scrapers.OzBargainScraper)
 	s.Logger = util.SetupLogger(zapcore.DebugLevel, false)
-
-	inputstr := "Neoika on 15/05/2022 - 14:38  kogan.com"
-
-	t.Logf("Deal age calculated was - %s", s.GetDealAge(inputstr))
+	t.Logf("Deal age: %s", s.GetDealAge("Neoika on 15/05/2022 - 14:38  kogan.com"))
 }
 
-// Test if deal is a super deal
-func TestIsSuperDeal(t *testing.T) {
-	// create a new scraper
-	s := new(scrapers.OzBargainScraper)
-	s.Logger = util.SetupLogger(zapcore.DebugLevel, false)
+// TestGetDealType_TopDeal asserts 25+ votes within 24h → OZB_SUPER.
+func TestGetDealType_TopDeal(t *testing.T) {
+	s := &scrapers.OzBargainScraper{Logger: util.SetupLogger(zapcore.DebugLevel, false)}
 
-	// create a new deal
-	deal1 := models.OzBargainDeal{
-		Title:    "Test deal",
-		Url:      "https://www.ozbargain.com.au/deals/test-deal",
-		PostedOn: "Neoika on 15/05/2022 - 14:38  kogan.com",
-		Upvotes:  "49",
-		DealAge:  "0h59m00s",
+	deal := models.OzBargainDeal{
+		Upvotes: "30",
+		DealAge: "2h0m0s",
 	}
-
-	if s.GetDealType(deal1) == int(scrapers.OZB_SUPER) {
-		t.Log("Deal1 is a super deal")
-	} else if s.GetDealType(deal1) == int(scrapers.OZB_GOOD) {
-		t.Log("Deal1 is a good deal")
-	} else {
-		t.Log("Deal1 is a regular deal")
-	}
-
-	// create a new deal
-	deal2 := models.OzBargainDeal{
-		Title:    "Test deal",
-		Url:      "https://www.ozbargain.com.au/deals/test-deal",
-		PostedOn: "Neoika on 15/05/2022 - 14:38  kogan.com",
-		Upvotes:  "55",
-		DealAge:  "0h59m00s",
-	}
-
-	if s.GetDealType(deal2) == int(scrapers.OZB_SUPER) {
-		t.Log("Deal2 is a super deal")
-	} else if s.GetDealType(deal2) == int(scrapers.OZB_GOOD) {
-		t.Log("Deal2 is a good deal")
-	} else {
-		t.Log("Deal2 is a regular deal")
-	}
-
-	// create a new deal
-	deal3 := models.OzBargainDeal{
-		Title:    "Test deal",
-		Url:      "https://www.ozbargain.com.au/deals/test-deal",
-		PostedOn: "Neoika on 15/05/2022 - 14:38  kogan.com",
-		Upvotes:  "20",
-		DealAge:  "0h25m00s",
-	}
-
-	if s.GetDealType(deal3) == int(scrapers.OZB_SUPER) {
-		t.Log("Deal3 is a super deal")
-	} else if s.GetDealType(deal2) == int(scrapers.OZB_GOOD) {
-		t.Log("Deal3 is a good deal")
-	} else {
-		t.Log("Deal3 is a regular deal")
+	got := s.GetDealType(deal)
+	if got != int(scrapers.OZB_SUPER) {
+		t.Errorf("expected OZB_SUPER (%d) for 30 votes / 2h, got %d", scrapers.OZB_SUPER, got)
 	}
 }
 
-// Test if filter is working
+// TestGetDealType_ExactThreshold asserts exactly 25 votes within 24h → OZB_SUPER.
+func TestGetDealType_ExactThreshold(t *testing.T) {
+	s := &scrapers.OzBargainScraper{Logger: util.SetupLogger(zapcore.DebugLevel, false)}
+
+	deal := models.OzBargainDeal{
+		Upvotes: "25",
+		DealAge: "23h59m0s",
+	}
+	got := s.GetDealType(deal)
+	if got != int(scrapers.OZB_SUPER) {
+		t.Errorf("expected OZB_SUPER (%d) for 25 votes / 23h59m, got %d", scrapers.OZB_SUPER, got)
+	}
+}
+
+// TestGetDealType_BelowThreshold asserts < 25 votes → OZB_REG.
+func TestGetDealType_BelowThreshold(t *testing.T) {
+	s := &scrapers.OzBargainScraper{Logger: util.SetupLogger(zapcore.DebugLevel, false)}
+
+	deal := models.OzBargainDeal{
+		Upvotes: "5",
+		DealAge: "1h0m0s",
+	}
+	got := s.GetDealType(deal)
+	if got != int(scrapers.OZB_REG) {
+		t.Errorf("expected OZB_REG (%d) for 5 votes / 1h, got %d", scrapers.OZB_REG, got)
+	}
+}
+
+// TestGetDealType_OldDeal asserts 100+ votes but older than 24h → OZB_REG.
+func TestGetDealType_OldDeal(t *testing.T) {
+	s := &scrapers.OzBargainScraper{Logger: util.SetupLogger(zapcore.DebugLevel, false)}
+
+	deal := models.OzBargainDeal{
+		Upvotes: "200",
+		DealAge: "48h0m0s",
+	}
+	got := s.GetDealType(deal)
+	if got != int(scrapers.OZB_REG) {
+		t.Errorf("expected OZB_REG (%d) for 200 votes / 48h old, got %d", scrapers.OZB_REG, got)
+	}
+}
+
+// TestFilter verifies keyword filtering works.
 func TestFilter(t *testing.T) {
-	// create a new scraper
-	s := new(scrapers.OzBargainScraper)
-	s.Logger = util.SetupLogger(zapcore.DebugLevel, false)
+	s := &scrapers.OzBargainScraper{Logger: util.SetupLogger(zapcore.DebugLevel, false)}
 
-	// create a new deal
-	deal1 := models.OzBargainDeal{
-		Title:    "Test deal",
-		Url:      "https://www.ozbargain.com.au/deals/test-deal",
-		PostedOn: "Neoika on 15/05/2022 - 14:38  kogan.com",
-		Upvotes:  "49",
-		DealAge:  "0h59m00s",
+	s.Deals = []models.OzBargainDeal{
+		{Title: "Test deal", Upvotes: "49", DealAge: "0h59m00s"},
+		{Title: "Test Beer Deal Weihenstephaner Schooner Cheap!", Upvotes: "100", DealAge: "5h59m00s"},
 	}
-
-	deal2 := models.OzBargainDeal{
-		Title:    "Test Beer Deal Weihenstephaner Schooner Cheap!",
-		Url:      "https://www.ozbargain.com.au/deals/test-deal-beer",
-		PostedOn: "intothevoid on 15/05/2022 - 14:38  danmurphys.com",
-		Upvotes:  "100",
-		DealAge:  "5h59m00s",
-	}
-
-	s.Deals = []models.OzBargainDeal{deal1, deal2}
 
 	filtered := s.FilterByKeywords([]string{"w00t", "beer"})
-
 	if len(filtered) == 0 {
-		t.Error("Filter deals did not work as intended")
-		t.Fail()
+		t.Fatal("Filter returned no deals — expected 1 match")
 	}
-
-	for deal := range filtered {
-		t.Log(filtered[deal].Title)
+	for _, d := range filtered {
+		t.Log(d.Title)
 	}
 }
 
 func TestOzBargainScraper_Scrape(t *testing.T) {
-	// Create a test logger
 	logger := util.SetupLogger(zapcore.DebugLevel, false)
 
-	// Create a test config
-	config := &util.Config{
-		LogLevel:  -1,
-		LogToFile: false,
-		TestMode:  true,
-		Scrapers: util.ScrapersConfig{
-			OzBargain: util.OzBargainConfig{
-				ScrapeInterval: 5,
-				MaxStoredDeals: 100,
-			},
-		},
-	}
-
-	type fields struct {
-		Logger          *zap.Logger
-		BaseUrl         string
-		Deals           []models.OzBargainDeal
-		SID             scrapers.ScraperID
-		ScrapeInterval  int
-		MaxDealsToStore int
-	}
 	tests := []struct {
 		name    string
-		fields  fields
 		wantErr bool
 	}{
-		{
-			name: "Test Scrape",
-			fields: fields{
-				Logger:          logger,
-				BaseUrl:         "https://www.ozbargain.com.au/",
-				ScrapeInterval:  config.Scrapers.OzBargain.ScrapeInterval,
-				MaxDealsToStore: config.Scrapers.OzBargain.MaxStoredDeals,
-			},
-			wantErr: false,
-		},
+		{name: "Test Scrape", wantErr: false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			o := &scrapers.OzBargainScraper{
-				Logger:          tt.fields.Logger,
-				BaseUrl:         tt.fields.BaseUrl,
-				Deals:           tt.fields.Deals,
-				SID:             tt.fields.SID,
-				ScrapeInterval:  tt.fields.ScrapeInterval,
-				MaxDealsToStore: tt.fields.MaxDealsToStore,
+				Logger:          logger,
+				BaseUrl:         "https://www.ozbargain.com.au/",
+				ScrapeInterval:  5,
+				MaxDealsToStore: 100,
 			}
 			if err := o.Scrape(); (err != nil) != tt.wantErr {
 				t.Errorf("OzBargainScraper.Scrape() error = %v, wantErr %v", err, tt.wantErr)

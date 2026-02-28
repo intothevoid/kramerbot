@@ -72,9 +72,10 @@ func (s *OzBargainScraper) Scrape() error {
 			PostedOn: postedOn,
 			Upvotes:  upVotes,
 			DealAge:  s.GetDealAge(postedOn).String(),
-			DealType: int(OZB_REG),
 		}
-		s.Logger.Debug("Found deal", zap.String("title", deal.Title), zap.String("url", deal.Url), zap.String("time", deal.PostedOn))
+		// Classify now so the API can filter by DealType (OZB_REG vs OZB_SUPER).
+		deal.DealType = s.GetDealType(deal)
+		s.Logger.Debug("Found deal", zap.String("title", deal.Title), zap.String("url", deal.Url), zap.String("time", deal.PostedOn), zap.Int("dealtype", deal.DealType))
 
 		// create item list
 		s.Deals = append(s.Deals, deal)
