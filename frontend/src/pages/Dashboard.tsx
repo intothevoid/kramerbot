@@ -70,29 +70,26 @@ export default function Dashboard({ user, onSignOut }: Props) {
   });
   const profile = profileQuery.data ?? user;
 
-  // Deal queries
+  // Deal queries — all fetch on mount so tab switches are instant.
+  // Responses come from in-memory scraper cache so the 4 requests are cheap.
   const ozbGood = useQuery({
     queryKey: ['deals', 'ozb', 'good'],
     queryFn: () => getOzbDeals(),
-    enabled: tab === 'ozb-good',
     staleTime: 2 * 60 * 1000,
   });
   const ozbSuper = useQuery({
     queryKey: ['deals', 'ozb', 'super'],
     queryFn: () => getOzbDeals('super'),
-    enabled: tab === 'ozb-super',
     staleTime: 2 * 60 * 1000,
   });
   const amzDaily = useQuery({
     queryKey: ['deals', 'amz', 'daily'],
     queryFn: () => getAmazonDeals('daily'),
-    enabled: tab === 'amz-daily',
     staleTime: 5 * 60 * 1000,
   });
   const amzWeekly = useQuery({
     queryKey: ['deals', 'amz', 'weekly'],
     queryFn: () => getAmazonDeals('weekly'),
-    enabled: tab === 'amz-weekly',
     staleTime: 5 * 60 * 1000,
   });
 
@@ -298,7 +295,7 @@ export default function Dashboard({ user, onSignOut }: Props) {
           {activeQuery.data && (
             <>
               <p className="mb-3 text-xs text-slate-400">{activeQuery.data.total} deals</p>
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div key={tab} className="grid gap-3 sm:grid-cols-2">
                 {isOzb
                   ? activeQuery.data.deals.map((d: unknown) => {
                       const deal = d as import('../types').OzbDeal;
