@@ -95,9 +95,6 @@ func (k *KramerBot) processOzbargainDeals() error {
 		// Pre-process deal title once
 		dealTitleLower := strings.ToLower(deal.Title)
 
-		// Check deal type
-		dealType := k.OzbScraper.GetDealType(deal)
-
 		// Go through all registered users and check deals they are subscribed to
 		for chatID, user := range userdata {
 			if user == nil {
@@ -116,7 +113,7 @@ func (k *KramerBot) processOzbargainDeals() error {
 				}
 			}
 
-			if user.OzbSuper && dealType == int(scrapers.OZB_SUPER) && !OzbDealSent(user, &deal) {
+			if user.OzbSuper && deal.DealType == int(scrapers.OZB_SUPER) && !OzbDealSent(user, &deal) {
 				// User is subscribed to top deals (25+ votes within 1h), notify user
 				if err := k.SendOzbSuperDeal(user, &deal); err != nil {
 					k.Logger.Error("Failed to send OZB top deal",

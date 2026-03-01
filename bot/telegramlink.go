@@ -56,6 +56,19 @@ func (k *KramerBot) HandleTelegramLink(chat *tgbotapi.Chat, token string) {
 	// Ensure the user exists in the bot's own users table so notifications work.
 	k.RegisterUser(chat)
 
+	// Sync web preferences to the bot's UserData so the user's subscription
+	// choices take effect immediately (even if they previously had different defaults).
+	if botUser, err := k.DataWriter.GetUser(chat.ID); err == nil && botUser != nil {
+		botUser.OzbGood = webUser.OzbGood
+		botUser.OzbSuper = webUser.OzbSuper
+		botUser.AmzDaily = webUser.AmzDaily
+		botUser.AmzWeekly = webUser.AmzWeekly
+		botUser.Keywords = webUser.Keywords
+		if err := k.DataWriter.UpdateUser(botUser); err != nil {
+			k.Logger.Warn("failed to sync web prefs to bot user after link", zap.Error(err))
+		}
+	}
+
 	k.SendMessage(chat.ID,
 		"✅ Your Telegram account is now linked to your KramerBot web account!\n\n"+
 			"You can manage your deal preferences at any time from the web dashboard.",
