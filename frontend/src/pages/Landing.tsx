@@ -24,7 +24,7 @@ export default function Landing() {
       >
         <span className="serif flex items-center gap-2 text-2xl font-bold tracking-tight">
           <img src="/kramer-icon.jpg" alt="" className="h-9 w-9 rounded-full object-cover" />
-          KramerBot - Aussie Deals
+          KramerBot
         </span>
         <div className="flex gap-3">
           <Link

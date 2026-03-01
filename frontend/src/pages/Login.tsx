@@ -46,7 +46,7 @@ export default function Login({ onLogin }: Props) {
         >
           <Link to="/" className="serif inline-flex items-center gap-2 text-2xl font-bold text-white">
             <img src="/kramer-icon.jpg" alt="" className="h-9 w-9 rounded-full object-cover" />
-            KramerBot - Aussie Deals
+            KramerBot
           </Link>
         </div>
 

@@ -244,12 +244,13 @@ export default function Dashboard({ user, onSignOut }: Props) {
     <div className="flex min-h-screen flex-col" style={{ background: 'var(--kb-cream)' }}>
       {/* Top nav */}
       <header
-        className="flex items-center justify-between px-4 py-3 shadow-sm sm:px-6"
+        className="flex items-center justify-between px-6 py-4 shadow-sm"
         style={{ background: 'var(--kb-red)' }}
       >
-        <span className="serif flex items-center gap-2 text-base font-bold text-white sm:text-lg">
-          <img src="/kramer-icon.jpg" alt="" className="h-7 w-7 rounded-full object-cover sm:h-8 sm:w-8" />
-          KramerBot
+        <span className="serif flex items-center gap-2 text-2xl font-bold text-white">
+          <img src="/kramer-icon.jpg" alt="" className="h-9 w-9 rounded-full object-cover" />
+          <span className="hidden sm:inline">KramerBot</span>
+          <span className="sm:hidden">KramerBot</span>
         </span>
         <div className="flex items-center gap-2 sm:gap-3">
           <span className="hidden text-sm text-red-100 sm:block">
