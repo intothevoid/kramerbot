@@ -1,0 +1,119 @@
+@import "tailwindcss";
+
+:root {
+  --kb-yellow: #F5C518;
+  --kb-yellow-dark: #d4a800;
+  --kb-red: #CC0000;
+  --kb-red-dark: #aa0000;
+  --kb-cream: #FFFEF7;
+  --kb-cream-dark: #FFF3CC;
+  --kb-ink: #1A1A1A;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background-color: var(--kb-cream);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, .serif {
+  font-family: Georgia, 'Times New Roman', serif;
+}
+
+/* Seinfeld colour utility classes */
+.bg-kb-yellow   { background-color: var(--kb-yellow); }
+.bg-kb-red      { background-color: var(--kb-red); }
+.bg-kb-cream    { background-color: var(--kb-cream); }
+.text-kb-yellow { color: var(--kb-yellow); }
+.text-kb-red    { color: var(--kb-red); }
+.text-kb-ink    { color: var(--kb-ink); }
+.border-kb-yellow { border-color: var(--kb-yellow); }
+.border-kb-red    { border-color: var(--kb-red); }
+
+.btn-red {
+  background-color: var(--kb-red);
+  color: #fff;
+  font-weight: 600;
+  border-radius: 0.75rem;
+  padding: 0.75rem 1.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: background-color 0.15s;
+  cursor: pointer;
+  border: none;
+}
+.btn-red:hover { background-color: var(--kb-red-dark); }
+.btn-red:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.btn-yellow {
+  background-color: var(--kb-yellow);
+  color: var(--kb-ink);
+  font-weight: 600;
+  border-radius: 0.75rem;
+  padding: 0.75rem 1.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: background-color 0.15s;
+  cursor: pointer;
+  border: none;
+}
+.btn-yellow:hover { background-color: var(--kb-yellow-dark); }
+.btn-yellow:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+}
+
+.input-field {
+  width: 100%;
+  border: 2px solid #d1d5db;
+  border-radius: 0.75rem;
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
+  outline: none;
+  background: #fff;
+  box-sizing: border-box;
+  transition: border-color 0.15s;
+}
+.input-field:focus {
+  border-color: var(--kb-yellow);
+  box-shadow: 0 0 0 3px rgba(245,197,24,0.2);
+}
+
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+  flex-shrink: 0;
+}
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
+.toggle-slider {
+  position: absolute;
+  inset: 0;
+  background-color: #d1d5db;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+.toggle-slider:before {
+  content: '';
+  position: absolute;
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  top: 3px;
+  background: white;
+  border-radius: 50%;
+  transition: transform 0.2s;
+}
+input:checked + .toggle-slider { background-color: var(--kb-red); }
+input:checked + .toggle-slider:before { transform: translateX(20px); }

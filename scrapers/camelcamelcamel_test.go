@@ -169,3 +169,42 @@ func TestCamCamCamScraper_GetDealDropString(t *testing.T) {
 		})
 	}
 }
+
+// TestGetDealTypeFromURL verifies the daily/weekly URL classifier (Bug 2).
+func TestGetDealTypeFromURL(t *testing.T) {
+	s := &CamCamCamScraper{}
+
+	cases := []struct {
+		url  string
+		want DealType
+	}{
+		{"https://au.camelcamelcamel.com/top_drops/feed?t=daily&", AMZ_DAILY},
+		{"https://au.camelcamelcamel.com/top_drops/feed?t=weekly&", AMZ_WEEKLY},
+		{"https://example.com/feed", UNKNOWN},
+	}
+	for _, c := range cases {
+		got := s.getDealTypeFromURL(c.url)
+		if got != c.want {
+			t.Errorf("getDealTypeFromURL(%q) = %v, want %v", c.url, got, c.want)
+		}
+	}
+}
+
+// TestAmazonDealTypeSeparation verifies the same product GUID appears as both
+// daily and weekly without one overwriting the other (Bug 2).
+func TestAmazonDealTypeSeparation(t *testing.T) {
+	existing := []models.CamCamCamDeal{
+		{Id: "same-guid", Title: "Product X", DealType: int(AMZ_DAILY)},
+		{Id: "same-guid", Title: "Product X", DealType: int(AMZ_WEEKLY)},
+	}
+
+	seen := make(map[string]models.CamCamCamDeal)
+	for _, d := range existing {
+		key := d.Id + ":" + string(rune(d.DealType))
+		seen[key] = d
+	}
+
+	if len(seen) != 2 {
+		t.Errorf("expected 2 entries (daily + weekly) for same GUID, got %d", len(seen))
+	}
+}

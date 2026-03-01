@@ -95,9 +95,6 @@ func (k *KramerBot) processOzbargainDeals() error {
 		// Pre-process deal title once
 		dealTitleLower := strings.ToLower(deal.Title)
 
-		// Check deal type
-		dealType := k.OzbScraper.GetDealType(deal)
-
 		// Go through all registered users and check deals they are subscribed to
 		for chatID, user := range userdata {
 			if user == nil {
@@ -106,20 +103,20 @@ func (k *KramerBot) processOzbargainDeals() error {
 			}
 
 			// Check deal type subscriptions
-			if user.OzbGood && dealType == int(scrapers.OZB_GOOD) && !OzbDealSent(user, &deal) {
-				// User is subscribed to good deals, notify user
+			if user.OzbGood && !OzbDealSent(user, &deal) {
+				// User is subscribed to all OzBargain deals — notify regardless of vote count.
 				if err := k.SendOzbGoodDeal(user, &deal); err != nil {
-					k.Logger.Error("Failed to send OZB good deal",
+					k.Logger.Error("Failed to send OZB deal",
 						zap.String("deal_id", deal.Id),
 						zap.Int64("user_id", user.ChatID),
 						zap.Error(err))
 				}
 			}
 
-			if user.OzbSuper && dealType == int(scrapers.OZB_SUPER) && !OzbDealSent(user, &deal) {
-				// User is subscribed to super deals, notify user
+			if user.OzbSuper && deal.DealType == int(scrapers.OZB_SUPER) && !OzbDealSent(user, &deal) {
+				// User is subscribed to top deals (25+ votes within 1h), notify user
 				if err := k.SendOzbSuperDeal(user, &deal); err != nil {
-					k.Logger.Error("Failed to send OZB super deal",
+					k.Logger.Error("Failed to send OZB top deal",
 						zap.String("deal_id", deal.Id),
 						zap.Int64("user_id", user.ChatID),
 						zap.Error(err))

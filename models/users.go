@@ -14,8 +14,8 @@ type UserStore struct {
 type UserData struct {
 	ChatID         int64    `bson:"chat_id"`         // Telegram chat ID
 	Username       string   `bson:"username"`        // Telegram username
-	OzbGood        bool     `bson:"ozb_good"`        // watch deals with 25+ upvotes in the last 24 hours
-	OzbSuper       bool     `bson:"ozb_super"`       // watch deals with 50+ upvotes in the last 24 hours
+	OzbGood        bool     `bson:"ozb_good"`        // watch all OzBargain deals
+	OzbSuper       bool     `bson:"ozb_super"`       // watch top deals (25+ upvotes within 1 hour)
 	Keywords       []string `bson:"keywords"`        // list of keywords / deals to watch for
 	OzbSent        []string `bson:"ozb_sent"`        // comma separated list of ozb deals sent to user
 	AmzDaily       bool     `bson:"amz_daily"`       // watch top daily deals on amazon

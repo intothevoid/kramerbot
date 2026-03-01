@@ -72,9 +72,10 @@ func (s *OzBargainScraper) Scrape() error {
 			PostedOn: postedOn,
 			Upvotes:  upVotes,
 			DealAge:  s.GetDealAge(postedOn).String(),
-			DealType: int(OZB_REG),
 		}
-		s.Logger.Debug("Found deal", zap.String("title", deal.Title), zap.String("url", deal.Url), zap.String("time", deal.PostedOn))
+		// Classify now so the API can filter by DealType (OZB_REG vs OZB_SUPER).
+		deal.DealType = s.GetDealType(deal)
+		s.Logger.Debug("Found deal", zap.String("title", deal.Title), zap.String("url", deal.Url), zap.String("time", deal.PostedOn), zap.Int("dealtype", deal.DealType))
 
 		// create item list
 		s.Deals = append(s.Deals, deal)
@@ -115,7 +116,8 @@ func (s *OzBargainScraper) GetDealAge(postedOn string) time.Duration {
 	return tmnow.Sub(tmts)
 }
 
-// Check if deal is a super deal, good deal or just a regular deal
+// GetDealType classifies a deal as a top deal or a regular deal.
+// Top deal: 25+ upvotes within 24 hours.
 func (s *OzBargainScraper) GetDealType(deal models.OzBargainDeal) int {
 	upvotes := deal.Upvotes
 	dealAge := deal.DealAge
@@ -132,17 +134,12 @@ func (s *OzBargainScraper) GetDealType(deal models.OzBargainDeal) int {
 		s.Logger.Error("Error converting upvotes to int", zap.Error(err))
 	}
 
-	// 25+ upvotes within an hour
-	if duration.Hours() < 1.0 && upvotesInt >= 25 {
-		return int(OZB_GOOD)
-	}
-
-	// 100+ upvotes within 24 hours
-	if duration.Hours() < 24.0 && upvotesInt >= 100 {
+	// 25+ upvotes within 24 hours → top deal
+	if duration.Hours() < 24.0 && upvotesInt >= 25 {
 		return int(OZB_SUPER)
 	}
 
-	// regular deal
+	// everything else is a regular deal
 	return int(OZB_REG)
 }
 

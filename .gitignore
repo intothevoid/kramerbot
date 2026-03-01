@@ -32,3 +32,5 @@ data/users.db-shm
 data/users.db
 persist/sqlite/users_test.db-shm
 persist/sqlite/users_test.db-wal
+CLAUDE.md
+BLOG_POST.md

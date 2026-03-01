@@ -39,6 +39,15 @@ func (s *CamCamCamScraper) Scrape() error {
 		return errors.New("Scraper not initialized correctly. Ensure all fields are set")
 	}
 
+	// Build a dedup map keyed by "GUID:dealtype" so the same product can appear
+	// as both daily (type 4) and weekly (type 5) without one overwriting the
+	// other, but repeated scrapes of the same item are collapsed.
+	seen := make(map[string]models.CamCamCamDeal, len(s.Deals))
+	for _, d := range s.Deals {
+		key := d.Id + ":" + strconv.Itoa(d.DealType)
+		seen[key] = d
+	}
+
 	for _, currUrl := range s.BaseUrl {
 		// Get deal type from URL
 		dtype := s.getDealTypeFromURL(currUrl)
@@ -56,11 +65,9 @@ func (s *CamCamCamScraper) Scrape() error {
 
 		// Loop through deals
 		for _, deal := range feed.Items {
-
 			// Handle missing image url
 			imgurl := s.getImageUrlFromDeal(deal)
 
-			// populate the amzDeal
 			amzDeal := models.CamCamCamDeal{
 				Id:        deal.GUID,
 				Title:     deal.Title,
@@ -70,10 +77,17 @@ func (s *CamCamCamScraper) Scrape() error {
 				DealType:  int(dtype),
 			}
 
-			// create item list
-			s.Deals = append(s.Deals, amzDeal)
+			key := deal.GUID + ":" + strconv.Itoa(int(dtype))
+			seen[key] = amzDeal
 		}
 	}
+
+	// Rebuild Deals slice from deduplicated map
+	newDeals := make([]models.CamCamCamDeal, 0, len(seen))
+	for _, d := range seen {
+		newDeals = append(newDeals, d)
+	}
+	s.Deals = newDeals
 
 	// Keep deals length under 'MaxDeals'
 	if len(s.Deals) > s.MaxDealsToStore {

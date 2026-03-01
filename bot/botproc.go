@@ -38,7 +38,12 @@ func (k *KramerBot) BotProc(updates tgbotapi.UpdatesChannel) {
 
 			switch command {
 			case "start", "register":
-				k.RegisterUser(update.Message.Chat)
+				if args != "" {
+					// args may be a web account link token.
+					k.HandleTelegramLink(update.Message.Chat, args)
+				} else {
+					k.RegisterUser(update.Message.Chat)
+				}
 				continue
 			case "help":
 				k.Help(update.Message.Chat)
@@ -94,9 +99,8 @@ func (k *KramerBot) BotProc(updates tgbotapi.UpdatesChannel) {
 			continue
 		}
 
-		// If it's not a command and not announce mode, ignore or show help?
-		// For now, let's show help for any non-command text.
-		k.Help(update.Message.Chat)
+		// Not a command — send the welcome + web URL.
+		k.SendMessage(update.Message.Chat.ID, k.welcomeMessage(update.Message.Chat.FirstName))
 	}
 }
 

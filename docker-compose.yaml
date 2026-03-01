@@ -5,7 +5,13 @@ services:
       dockerfile: Dockerfile
     container_name: kramerbot
     restart: unless-stopped
+    ports:
+      - "8989:8080"   # HTTP API + web UI
     volumes:
       - ./data:/app/data
     env_file:
       - kramerbot.env
+    environment:
+      # Override / extend anything in kramerbot.env here
+      # JWT_SECRET is mandatory for production — set it in kramerbot.env
+      - SQLITE_DB_PATH=/app/data/users.db
