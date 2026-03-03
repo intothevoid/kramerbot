@@ -6,7 +6,7 @@ import { Spinner } from '../components/Spinner';
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<{ message: string; reset_link?: string } | null>(null);
+  const [result, setResult] = useState<{ message: string } | null>(null);
   const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -45,7 +45,7 @@ export default function ForgotPassword() {
             Forgot password
           </h2>
           <p className="mb-6 text-sm text-slate-500">
-            Enter your email and we'll generate a reset link.
+            Enter your email and we'll send you a reset link.
           </p>
 
           {result ? (
@@ -53,20 +53,6 @@ export default function ForgotPassword() {
               <p className="rounded-lg bg-green-50 px-4 py-3 text-sm text-green-800">
                 {result.message}
               </p>
-              {result.reset_link && (
-                <div>
-                  <p className="mb-1 text-xs font-semibold text-slate-500 uppercase tracking-wide">
-                    Reset link (copy this):
-                  </p>
-                  <a
-                    href={result.reset_link}
-                    className="block break-all rounded-lg border px-3 py-2 text-xs hover:underline"
-                    style={{ borderColor: 'var(--kb-yellow)', color: 'var(--kb-red)' }}
-                  >
-                    {result.reset_link}
-                  </a>
-                </div>
-              )}
               <Link to="/login" className="btn-red w-full justify-center text-sm">
                 Back to Sign In
               </Link>
@@ -90,7 +76,7 @@ export default function ForgotPassword() {
               )}
 
               <button type="submit" disabled={loading} className="btn-red w-full justify-center">
-                {loading && <Spinner size="sm" />} Generate Reset Link
+                {loading && <Spinner size="sm" />} Send Reset Email
               </button>
             </form>
           )}

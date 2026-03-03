@@ -18,6 +18,16 @@ type Config struct {
 	Scrapers  ScrapersConfig
 	Pipup     PipupConfig
 	API       APIConfig
+	SMTP      SMTPConfig
+}
+
+// SMTPConfig holds outbound email (STARTTLS) configuration.
+type SMTPConfig struct {
+	Host     string `mapstructure:"host"`
+	Port     int    `mapstructure:"port"`
+	Username string `mapstructure:"username"`
+	Password string `mapstructure:"password"`
+	From     string `mapstructure:"from"`
 }
 
 // APIConfig holds configuration for the HTTP API server.
@@ -116,6 +126,10 @@ func DefaultConfig() *Config {
 			WebURL:         "http://localhost:8080",
 			CORSOrigins:    []string{"http://localhost:5173"},
 			JWTExpiryHours: 24,
+		},
+		SMTP: SMTPConfig{
+			Port: 587,
+			From: "KramerBot <noreply@yourdomain.com>",
 		},
 	}
 }
@@ -229,6 +243,11 @@ func SetupConfig(confPath string, logger *zap.Logger) (*Config, error) {
 	v.SetDefault("api.web_url", config.API.WebURL)
 	v.SetDefault("api.cors_origins", config.API.CORSOrigins)
 	v.SetDefault("api.jwt_expiry_hours", config.API.JWTExpiryHours)
+	v.SetDefault("smtp.host", config.SMTP.Host)
+	v.SetDefault("smtp.port", config.SMTP.Port)
+	v.SetDefault("smtp.username", config.SMTP.Username)
+	v.SetDefault("smtp.password", config.SMTP.Password)
+	v.SetDefault("smtp.from", config.SMTP.From)
 
 	// Check if config file exists
 	if confPath != "" {
@@ -258,6 +277,23 @@ func SetupConfig(confPath string, logger *zap.Logger) (*Config, error) {
 	// Override SQLite path with environment variable if set
 	if envPath := os.Getenv("SQLITE_DB_PATH"); envPath != "" {
 		config.SQLite.DBPath = envPath
+	}
+
+	// Override SMTP settings from environment variables (preferred for Docker secrets).
+	if v := os.Getenv("SMTP_HOST"); v != "" {
+		config.SMTP.Host = v
+	}
+	if v := os.Getenv("SMTP_PORT"); v != "" {
+		fmt.Sscanf(v, "%d", &config.SMTP.Port)
+	}
+	if v := os.Getenv("SMTP_USER"); v != "" {
+		config.SMTP.Username = v
+	}
+	if v := os.Getenv("SMTP_PASS"); v != "" {
+		config.SMTP.Password = v
+	}
+	if v := os.Getenv("SMTP_FROM"); v != "" {
+		config.SMTP.From = v
 	}
 
 	// Ensure database directory exists

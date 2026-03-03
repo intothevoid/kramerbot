@@ -6,6 +6,7 @@ import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+import VerifyEmail from './pages/VerifyEmail';
 import { Spinner } from './components/Spinner';
 import { useAuth } from './hooks/useAuth';
 import type { WebUser } from './types';
@@ -57,6 +58,7 @@ export default function App() {
       />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path="/verify-email" element={<VerifyEmail onLogin={handleLogin} />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

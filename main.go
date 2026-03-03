@@ -83,7 +83,18 @@ func main() {
 
 	// Start the HTTP API server in the background (if enabled).
 	if config.API.Enabled {
-		srv, err := api.NewServer(config, k.DataWriter, ozbscraper, cccscraper, logger, staticFiles)
+		emailSvc := util.NewEmailService(config.SMTP)
+		if emailSvc.Enabled() {
+			logger.Info("SMTP configured",
+				zap.String("host", config.SMTP.Host),
+				zap.Int("port", config.SMTP.Port),
+				zap.String("from", config.SMTP.From),
+				zap.Bool("auth", config.SMTP.Username != ""),
+			)
+		} else {
+			logger.Warn("SMTP not configured — verification/reset links will be logged only (set SMTP_HOST to enable email)")
+		}
+		srv, err := api.NewServer(config, k.DataWriter, ozbscraper, cccscraper, logger, staticFiles, emailSvc)
 		if err != nil {
 			logger.Fatal("Failed to create API server", zap.Error(err))
 		}

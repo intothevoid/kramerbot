@@ -8,12 +8,15 @@ type WebUser struct {
 	Email            string     `json:"email"`
 	PasswordHash     string     `json:"-"`
 	DisplayName      string     `json:"display_name"`
-	TelegramChatID   *int64     `json:"telegram_chat_id,omitempty"`
-	TelegramUsername *string    `json:"telegram_username,omitempty"`
-	LinkToken        *string    `json:"-"`
-	LinkTokenExpires *time.Time `json:"-"`
-	ResetToken       *string    `json:"-"`
-	ResetTokenExpires *time.Time `json:"-"`
+	EmailVerified      bool       `json:"email_verified"`
+	TelegramChatID     *int64     `json:"telegram_chat_id,omitempty"`
+	TelegramUsername   *string    `json:"telegram_username,omitempty"`
+	LinkToken          *string    `json:"-"`
+	LinkTokenExpires   *time.Time `json:"-"`
+	VerifyToken        *string    `json:"-"`
+	VerifyTokenExpires *time.Time `json:"-"`
+	ResetToken         *string    `json:"-"`
+	ResetTokenExpires  *time.Time `json:"-"`
 	// Deal notification preferences (synced to bot's UserData when Telegram is linked).
 	OzbGood   bool     `json:"ozb_good"`
 	OzbSuper  bool     `json:"ozb_super"`

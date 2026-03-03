@@ -16,6 +16,9 @@ CREATE TABLE IF NOT EXISTS web_users (
 	email                 TEXT UNIQUE NOT NULL,
 	password_hash         TEXT NOT NULL,
 	display_name          TEXT,
+	email_verified        INTEGER NOT NULL DEFAULT 0,
+	verify_token          TEXT,
+	verify_token_expires  DATETIME,
 	telegram_chat_id      INTEGER,
 	telegram_username     TEXT,
 	link_token            TEXT,
@@ -43,10 +46,15 @@ var migrateStmts = []string{
 	`ALTER TABLE web_users ADD COLUMN amz_daily INTEGER NOT NULL DEFAULT 0`,
 	`ALTER TABLE web_users ADD COLUMN amz_weekly INTEGER NOT NULL DEFAULT 0`,
 	`ALTER TABLE web_users ADD COLUMN keywords TEXT NOT NULL DEFAULT '[]'`,
+	// Email verification columns.
+	`ALTER TABLE web_users ADD COLUMN email_verified INTEGER NOT NULL DEFAULT 0`,
+	`ALTER TABLE web_users ADD COLUMN verify_token TEXT`,
+	`ALTER TABLE web_users ADD COLUMN verify_token_expires DATETIME`,
 	// Indexes — created after columns to avoid "no such column" on old schemas.
 	`CREATE INDEX IF NOT EXISTS idx_web_users_email ON web_users(email)`,
 	`CREATE INDEX IF NOT EXISTS idx_web_users_link_token ON web_users(link_token)`,
 	`CREATE INDEX IF NOT EXISTS idx_web_users_reset_token ON web_users(reset_token)`,
+	`CREATE INDEX IF NOT EXISTS idx_web_users_verify_token ON web_users(verify_token)`,
 }
 
 // CreateWebUsersTable creates the web_users table and migrates any missing columns/indexes.
@@ -65,6 +73,7 @@ func (udb *UserStoreDB) CreateWebUsersTable() error {
 // webUserColumns is the explicit column list used in all SELECT queries.
 const webUserColumns = `
 	id, email, password_hash, display_name,
+	email_verified, verify_token, verify_token_expires,
 	telegram_chat_id, telegram_username,
 	link_token, link_token_expires,
 	reset_token, reset_token_expires,
@@ -118,6 +127,14 @@ func (udb *UserStoreDB) GetWebUserByLinkToken(token string) (*models.WebUser, er
 	))
 }
 
+// GetWebUserByVerifyToken retrieves a web user by a non-expired email verification token.
+func (udb *UserStoreDB) GetWebUserByVerifyToken(token string) (*models.WebUser, error) {
+	return udb.scanWebUser(udb.DB.QueryRow(
+		`SELECT `+webUserColumns+` FROM web_users WHERE verify_token = ? AND verify_token_expires > ?`,
+		token, time.Now().UTC(),
+	))
+}
+
 // GetWebUserByResetToken retrieves a web user by a non-expired password reset token.
 func (udb *UserStoreDB) GetWebUserByResetToken(token string) (*models.WebUser, error) {
 	return udb.scanWebUser(udb.DB.QueryRow(
@@ -138,6 +155,9 @@ func (udb *UserStoreDB) UpdateWebUser(user *models.WebUser) error {
 			email = ?,
 			password_hash = ?,
 			display_name = ?,
+			email_verified = ?,
+			verify_token = ?,
+			verify_token_expires = ?,
 			telegram_chat_id = ?,
 			telegram_username = ?,
 			link_token = ?,
@@ -152,6 +172,7 @@ func (udb *UserStoreDB) UpdateWebUser(user *models.WebUser) error {
 			updated_at = ?
 		WHERE id = ?`,
 		user.Email, user.PasswordHash, user.DisplayName,
+		user.EmailVerified, user.VerifyToken, user.VerifyTokenExpires,
 		user.TelegramChatID, user.TelegramUsername,
 		user.LinkToken, user.LinkTokenExpires,
 		user.ResetToken, user.ResetTokenExpires,
@@ -179,6 +200,7 @@ func (udb *UserStoreDB) scanWebUser(row *sql.Row) (*models.WebUser, error) {
 	var kwJSON string
 	err := row.Scan(
 		&u.ID, &u.Email, &u.PasswordHash, &u.DisplayName,
+		&u.EmailVerified, &u.VerifyToken, &u.VerifyTokenExpires,
 		&u.TelegramChatID, &u.TelegramUsername,
 		&u.LinkToken, &u.LinkTokenExpires,
 		&u.ResetToken, &u.ResetTokenExpires,
