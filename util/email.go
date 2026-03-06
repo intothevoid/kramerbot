@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/mail"
 	"net/smtp"
+	"strings"
 )
 
 // EmailService sends transactional emails via SMTP (STARTTLS, port 587).
@@ -24,6 +25,30 @@ func (s *EmailService) Enabled() bool {
 	return s.cfg.Host != ""
 }
 
+// loginAuth implements smtp.Auth using the AUTH LOGIN mechanism required by
+// Outlook/Hotmail. Go's stdlib only provides AUTH PLAIN which Outlook rejects.
+type loginAuth struct {
+	username, password string
+}
+
+func (a *loginAuth) Start(_ *smtp.ServerInfo) (string, []byte, error) {
+	return "LOGIN", nil, nil
+}
+
+func (a *loginAuth) Next(fromServer []byte, more bool) ([]byte, error) {
+	if more {
+		switch strings.ToLower(strings.TrimSpace(string(fromServer))) {
+		case "username:":
+			return []byte(a.username), nil
+		case "password:":
+			return []byte(a.password), nil
+		default:
+			return nil, fmt.Errorf("unexpected server challenge: %q", fromServer)
+		}
+	}
+	return nil, nil
+}
+
 // envelopeFrom extracts the bare email address from the From field for use as
 // the SMTP envelope sender. smtp.SendMail requires a plain address with no
 // display name (e.g. "noreply@example.com", not "Name <noreply@example.com>").
@@ -36,7 +61,7 @@ func (s *EmailService) envelopeFrom() string {
 }
 
 // Send delivers an HTML email. Returns nil without sending if SMTP is not configured.
-// When Username is empty, authentication is skipped (suitable for local relays like Mailpit).
+// When Username is empty, authentication is skipped (suitable for unauthenticated local SMTP relays).
 func (s *EmailService) Send(to, subject, htmlBody string) error {
 	if !s.Enabled() {
 		return nil
@@ -44,7 +69,7 @@ func (s *EmailService) Send(to, subject, htmlBody string) error {
 
 	var auth smtp.Auth
 	if s.cfg.Username != "" {
-		auth = smtp.PlainAuth("", s.cfg.Username, s.cfg.Password, s.cfg.Host)
+		auth = &loginAuth{s.cfg.Username, s.cfg.Password}
 	}
 	msg := fmt.Sprintf(
 		"From: %s\r\nTo: %s\r\nSubject: %s\r\nMIME-Version: 1.0\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n%s",

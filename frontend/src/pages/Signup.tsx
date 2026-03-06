@@ -12,6 +12,7 @@ export default function Signup({ onLogin: _onLogin }: Props) {
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [registered, setRegistered] = useState(false);
@@ -20,6 +21,10 @@ export default function Signup({ onLogin: _onLogin }: Props) {
     e.preventDefault();
     if (password.length < 8) {
       setError('Password must be at least 8 characters');
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
       return;
     }
     setError('');
@@ -117,6 +122,19 @@ export default function Signup({ onLogin: _onLogin }: Props) {
                     minLength={8}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    className="input-field"
+                    placeholder="••••••••"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-slate-700">
+                    Confirm password
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
                     className="input-field"
                     placeholder="••••••••"
                   />

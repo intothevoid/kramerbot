@@ -1,25 +1,10 @@
 services:
-  mailpit:
-    image: axllent/mailpit:latest
-    container_name: mailpit
-    restart: unless-stopped
-    ports:
-      - "8025:8025"   # Mailpit web UI — view sent emails at http://localhost:8025
-      # Port 1025 (SMTP) is intentionally not exposed externally; only kramerbot reaches it
-    environment:
-      - MP_MAX_MESSAGES=500
-      - MP_DATABASE=/data/mailpit.db
-    volumes:
-      - ./data/mailpit:/data
-
   kramerbot:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: kramerbot
     restart: unless-stopped
-    depends_on:
-      - mailpit
     ports:
       - "8989:8080"   # HTTP API + web UI
     volumes:
@@ -30,8 +15,4 @@ services:
       # Override / extend anything in kramerbot.env here
       # JWT_SECRET is mandatory for production — set it in kramerbot.env
       - SQLITE_DB_PATH=/app/data/users.db
-      # SMTP → Mailpit (internal Docker network, no auth required)
-      - SMTP_HOST=mailpit
-      - SMTP_PORT=1025
-      - SMTP_USER=
-      - SMTP_PASS=
+      # SMTP is configured in kramerbot.env

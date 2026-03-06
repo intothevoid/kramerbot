@@ -63,28 +63,27 @@ Email is used for two flows:
 | Email verification | New account registration | `/verify-email?token=…` |
 | Password reset | Forgot password form | `/reset-password?token=…` |
 
-### Option A — Mailpit (default, self-hosted)
+### Configuring an SMTP provider
 
-[Mailpit](https://github.com/axllent/mailpit) is a lightweight SMTP relay bundled in `docker-compose.yaml`. It catches all outgoing emails and displays them in a web UI — no real email is delivered, which is ideal for self-hosted or development use.
-
-- SMTP inbox web UI: **http://localhost:8025**
-- No credentials needed — the `kramerbot` container talks to `mailpit` over the internal Docker network.
-- Emails are stored in `./data/mailpit/mailpit.db` and survive container restarts (up to 500 messages).
-
-After `docker compose up -d`, register an account and then check **http://localhost:8025** to find the verification email and click the link.
-
-### Option B — Real SMTP provider
-
-To send real emails (Gmail, SendGrid, Postmark, etc.), override the SMTP env vars in `kramerbot.env` or the `environment:` block of `docker-compose.yaml`. Remove or comment out the Mailpit overrides first:
+Set the following variables in `kramerbot.env`:
 
 ```bash
-# in kramerbot.env (or docker-compose.yaml environment:)
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=you@gmail.com
-SMTP_PASS=your-app-password
-SMTP_FROM=KramerBot <you@gmail.com>
+SMTP_HOST=smtp.resend.com        # SMTP server hostname
+SMTP_PORT=587                    # STARTTLS port (use 587 for all providers)
+SMTP_USER=resend                 # Username (varies by provider)
+SMTP_PASS=re_xxxx                # Password / API key
+SMTP_FROM=KramerBot <noreply@yourdomain.com>
 ```
+
+**Important:** Do not use a personal `@gmail.com`, `@outlook.com`, or `@yahoo.com` address as `SMTP_FROM` when routing through a third-party relay — those domains have DMARC policies that will cause delivery failures. Use an address on a domain you control, or a sender address provided by your email service.
+
+Recommended providers:
+
+| Provider | Free tier | Notes |
+|---|---|---|
+| [Resend](https://resend.com) | 3,000/month | Use `onboarding@resend.dev` as sender without a custom domain |
+| [Mailjet](https://mailjet.com) | 6,000/month | Requires verified sender domain or address |
+| [SendGrid](https://sendgrid.com) | 100/day | `SMTP_USER=apikey`, `SMTP_PASS=<api_key>` |
 
 Also update `api.web_url` in `config.yaml` to your public domain so links in emails point to the right place:
 
@@ -93,12 +92,12 @@ api:
   web_url: "https://yourdomain.com"
 ```
 
-### Disabling email entirely
+### Disabling email (development / testing)
 
-Leave `SMTP_HOST` empty (the default in `config.yaml`). The bot will skip sending emails and instead log the verification/reset links to the container console. This is useful for testing without any SMTP setup.
+Leave `SMTP_HOST` empty. The bot skips sending emails and logs the verification/reset links to the console instead — copy them directly into your browser.
 
-```
-# Find links in logs:
+```bash
+# Find links in container logs:
 docker logs kramerbot | grep "verify\|reset"
 ```
 
@@ -185,14 +184,7 @@ When running locally without Docker, SMTP is not configured by default. Verifica
 docker compose up -d
 ```
 
-Services started:
-
-| Service | Port | Purpose |
-|---|---|---|
-| `kramerbot` | 8989 | Web UI + API + Telegram bot |
-| `mailpit` | 8025 | Email inbox UI (view sent emails) |
-
-3. Open **http://localhost:8989** for the web app and **http://localhost:8025** for the email inbox.
+3. Open **http://localhost:8989** for the web app.
 
 ### Using Docker directly
 
