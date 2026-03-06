@@ -18,7 +18,7 @@ import type { WebUser } from '../types';
 type Tab = 'ozb-good' | 'ozb-super' | 'amz-daily' | 'amz-weekly';
 
 const tabs: { id: Tab; label: string }[] = [
-  { id: 'ozb-good', label: '✅ OzBargain All' },
+  { id: 'ozb-good', label: '🛒 OzBargain Regular' },
   { id: 'ozb-super', label: '⚡ OzBargain Top' },
   { id: 'amz-daily', label: '📅 Amazon Daily' },
   { id: 'amz-weekly', label: '📆 Amazon Weekly' },
@@ -159,13 +159,13 @@ export default function Dashboard({ user, onSignOut }: Props) {
         )}
         <div className="divide-y divide-slate-100">
           <ToggleRow
-            label="✅ OzBargain All deals"
+            label="🛒 OzBargain Regular (all deals)"
             checked={profile.ozb_good ?? false}
             onChange={(v) => handlePrefToggle('ozb_good', v)}
             disabled={prefsMutation.isPending}
           />
           <ToggleRow
-            label="⚡ OzBargain Top (25+ votes)"
+            label="⚡ OzBargain Top (25+ votes in 24h)"
             checked={profile.ozb_super ?? false}
             onChange={(v) => handlePrefToggle('ozb_super', v)}
             disabled={prefsMutation.isPending}

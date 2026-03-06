@@ -11,10 +11,10 @@ A Telegram bot — and now a full web app — to get you the latest deals from h
 1. Uses Telegram Bot API for instant notifications
 2. Written in Go; deployable as a single binary or Docker container
 3. **Web UI** — sign up, manage preferences, browse deals, and link your Telegram account from a browser
-4. Subscribe to good deals, super deals or set up keyword watches via Telegram commands or the web dashboard
+4. Subscribe to regular or top deals, or set up keyword watches via Telegram commands or the web dashboard
 5. User data is written to a SQLite database file (`data/users.db` by default)
 6. Keep track of deals already sent to avoid duplicate notifications
-7. Supports scraping www.ozbargain.com.au — Good (25+ votes) and Super (50+ votes) deals
+7. Supports scraping www.ozbargain.com.au — Regular (all deals) and Top (25+ votes in 24h) deals
 8. Supports scraping www.amazon.com.au (via Camel Camel Camel RSS) — Top daily and weekly deals
 9. Supports Android TV notifications (via Pipup)
 10. Admin announcement broadcast

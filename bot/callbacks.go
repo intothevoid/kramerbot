@@ -68,8 +68,8 @@ func (k *KramerBot) ShowPreferences(chat *tgbotapi.Chat) {
 	}
 
 	prefsText := fmt.Sprintf("Your current preferences:\n"+
-		"Ozbargain All Deals: %t\n"+
-		"Ozbargain Top Deals (25+ in 24h): %t\n"+
+		"OzBargain Regular Deals (all deals): %t\n"+
+		"OzBargain Top Deals (25+ votes in 24h): %t\n"+
 		"Amazon Daily Deals: %t\n"+
 		"Amazon Weekly Deals: %t\n"+
 		"Watched Keywords: %d",
@@ -116,7 +116,7 @@ func (k *KramerBot) ToggleOzbGood(chat *tgbotapi.Chat) {
 	k.UpdateUser(user)                 // Update DB
 	k.UserStore.SetUser(chat.ID, user) // Update memory
 
-	k.SendMessage(chat.ID, fmt.Sprintf("Ozbargain All Deals notifications set to: %t", user.OzbGood))
+	k.SendMessage(chat.ID, fmt.Sprintf("OzBargain Regular Deals (all deals) notifications set to: %t", user.OzbGood))
 	k.ShowPreferences(chat)
 }
 
@@ -131,7 +131,7 @@ func (k *KramerBot) ToggleOzbSuper(chat *tgbotapi.Chat) {
 	k.UpdateUser(user)                 // Update DB
 	k.UserStore.SetUser(chat.ID, user) // Update memory
 
-	k.SendMessage(chat.ID, fmt.Sprintf("Ozbargain Top Deals (25+ in 24h) notifications set to: %t", user.OzbSuper))
+	k.SendMessage(chat.ID, fmt.Sprintf("OzBargain Top Deals (25+ votes in 24h) notifications set to: %t", user.OzbSuper))
 	k.ShowPreferences(chat)
 }
 

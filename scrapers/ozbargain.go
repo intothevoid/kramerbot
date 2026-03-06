@@ -41,6 +41,15 @@ func (s *OzBargainScraper) Scrape() error {
 	url := s.BaseUrl + "/deals"
 	s.Logger.Info("Scraping...", zap.String("url", s.BaseUrl))
 
+	// Build a dedup map from existing deals so repeated scrapes update
+	// (not duplicate) deals already in the slice.
+	seen := make(map[string]models.OzBargainDeal, len(s.Deals))
+	for _, d := range s.Deals {
+		if d.Id != "" {
+			seen[d.Id] = d
+		}
+	}
+
 	// create a new collector
 	c := colly.NewCollector()
 
@@ -58,6 +67,10 @@ func (s *OzBargainScraper) Scrape() error {
 		re := regexp.MustCompile(`[\d]+`)
 		dealID = re.FindString(dealID)
 
+		if dealID == "" {
+			return
+		}
+
 		// get the deal poster and time
 		postedOn := e.ChildText(".n-right div.submitted")
 
@@ -73,16 +86,23 @@ func (s *OzBargainScraper) Scrape() error {
 			Upvotes:  upVotes,
 			DealAge:  s.GetDealAge(postedOn).String(),
 		}
-		// Classify now so the API can filter by DealType (OZB_REG vs OZB_SUPER).
+		// Classify now so the API can filter by DealType.
 		deal.DealType = s.GetDealType(deal)
 		s.Logger.Debug("Found deal", zap.String("title", deal.Title), zap.String("url", deal.Url), zap.String("time", deal.PostedOn), zap.Int("dealtype", deal.DealType))
 
-		// create item list
-		s.Deals = append(s.Deals, deal)
+		// Update or add to the dedup map (always keeps the freshest data).
+		seen[dealID] = deal
 	})
 
 	// Start scraping
 	c.Visit(url)
+
+	// Rebuild Deals slice from deduplicated map.
+	newDeals := make([]models.OzBargainDeal, 0, len(seen))
+	for _, d := range seen {
+		newDeals = append(newDeals, d)
+	}
+	s.Deals = newDeals
 
 	// Keep deals length under 'MaxDeals'
 	if len(s.Deals) > s.MaxDealsToStore {
@@ -117,7 +137,8 @@ func (s *OzBargainScraper) GetDealAge(postedOn string) time.Duration {
 }
 
 // GetDealType classifies a deal as a top deal or a regular deal.
-// Top deal: 25+ upvotes within 24 hours.
+// Top deal: 25+ upvotes within 24 hours (OZB_SUPER).
+// Regular:  everything else (OZB_REG).
 func (s *OzBargainScraper) GetDealType(deal models.OzBargainDeal) int {
 	upvotes := deal.Upvotes
 	dealAge := deal.DealAge
