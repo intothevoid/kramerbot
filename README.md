@@ -4,11 +4,11 @@
 
 Live Demo https://t.me/kramerbot
 
-<img src="https://raw.githubusercontent.com/intothevoid/kramerbot/main/static/kramer-ui1.jpeg" width="50%" height="50%"></img>
+<img src="https://raw.githubusercontent.com/intothevoid/kramerbot/main/static/kramer-ui1.jpg" width="50%" height="50%"></img>
 
-<img src="https://raw.githubusercontent.com/intothevoid/kramerbot/main/static/kramer-ui2.jpeg" width="50%" height="50%"></img>
+<img src="https://raw.githubusercontent.com/intothevoid/kramerbot/main/static/kramer-ui2.jpg" width="50%" height="50%"></img>
 
-<img src="https://raw.githubusercontent.com/intothevoid/kramerbot/main/static/kramer-ui3.jpeg" width="50%" height="50%"></img>
+<img src="https://raw.githubusercontent.com/intothevoid/kramerbot/main/static/kramer-ui3.jpg" width="50%" height="50%"></img>
 
 A Telegram bot — and now a full web app — to get you the latest deals from https://www.ozbargain.com.au and https://amazon.com.au. Let Kramer watch deals so you don't have to. Giddy up!
 A Telegram bot — and now a full web app — to get you the latest deals from https://www.ozbargain.com.au and https://amazon.com.au. Let Kramer watch deals so you don't have to. Giddy up!
