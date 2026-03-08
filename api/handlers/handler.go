@@ -21,6 +21,7 @@ type Handler struct {
 	Config     *util.Config
 	Logger     *zap.Logger
 	JWTSecret  []byte
+	EmailSvc   *util.EmailService
 }
 
 // APIResponse is the standard JSON envelope returned by all endpoints.

@@ -35,6 +35,7 @@ func NewServer(
 	cccScraper *scrapers.CamCamCamScraper,
 	logger *zap.Logger,
 	staticFiles fs.FS,
+	emailSvc *util.EmailService,
 ) (*Server, error) {
 	// Resolve JWT secret — prefer env var over a generated fallback.
 	jwtSecret := os.Getenv("JWT_SECRET")
@@ -62,6 +63,7 @@ func NewServer(
 		Config:     cfg,
 		Logger:     logger,
 		JWTSecret:  []byte(jwtSecret),
+		EmailSvc:   emailSvc,
 	}
 
 	r := chi.NewRouter()
@@ -78,6 +80,7 @@ func NewServer(
 		r.Post("/register", h.Register)
 		r.Post("/login", h.Login)
 		r.Post("/logout", h.Logout)
+		r.Get("/verify-email", h.VerifyEmail)
 		r.Post("/forgot-password", h.ForgotPassword)
 		r.Post("/reset-password", h.ResetPassword)
 	})

@@ -15,3 +15,4 @@ services:
       # Override / extend anything in kramerbot.env here
       # JWT_SECRET is mandatory for production — set it in kramerbot.env
       - SQLITE_DB_PATH=/app/data/users.db
+      # SMTP is configured in kramerbot.env

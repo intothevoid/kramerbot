@@ -38,6 +38,16 @@ api:
     - "http://localhost:5173"  # Vite dev server
   jwt_expiry_hours: 24
 
+# SMTP email service (for verification emails and password reset)
+# Override any field with env vars: SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM
+# Leave host empty to disable email sending (links will be logged instead)
+smtp:
+  host: ""
+  port: 587
+  username: ""
+  password: ""
+  from: "KramerBot <noreply@yourdomain.com>"
+
 # notifications for android tv
 pipup:
   enabled: false

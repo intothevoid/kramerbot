@@ -25,9 +25,14 @@ export default function Login({ onLogin }: Props) {
       onLogin(data.user);
       navigate('/dashboard');
     } catch (err: unknown) {
-      const msg =
-        (err as { response?: { data?: { error?: string } } })?.response?.data?.error ?? 'Login failed';
-      setError(msg);
+      const apiError = (err as { response?: { data?: { error?: string }; status?: number } });
+      const status = apiError?.response?.status;
+      const apiMsg = apiError?.response?.data?.error;
+      if (status === 403 && apiMsg?.includes('verify')) {
+        setError("Your email hasn't been verified yet. Check your inbox for the verification email.");
+      } else {
+        setError(apiMsg ?? 'Login failed');
+      }
     } finally {
       setLoading(false);
     }
