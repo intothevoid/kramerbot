@@ -44,7 +44,7 @@ func TestMigrateUserStoreFromJsonToDatabase(t *testing.T) {
 	defer os.Remove("user_store_test.json") // Clean up after test
 
 	encoder := json.NewEncoder(file)
-	if err := encoder.Encode(testStore); err != nil {
+	if err := encoder.Encode(&testStore); err != nil {
 		t.Fatalf("Failed to write test data: %v", err)
 	}
 	file.Close()

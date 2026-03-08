@@ -17,11 +17,11 @@ export function TelegramLinker() {
   });
 
   useEffect(() => {
-    if (status?.linked && deepLink) {
-      setDeepLink(null);
+    if (status?.linked) {
       clearInterval(timerRef.current!);
+      timerRef.current = null;
     }
-  }, [status?.linked, deepLink]);
+  }, [status?.linked]);
 
   const linkMutation = useMutation({
     mutationFn: generateTelegramLink,

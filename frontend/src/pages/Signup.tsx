@@ -2,13 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { register } from '../api/auth';
 import { Spinner } from '../components/Spinner';
-import type { WebUser } from '../types';
-
-interface Props {
-  onLogin: (user: WebUser) => void;
-}
-
-export default function Signup({ onLogin: _onLogin }: Props) {
+export default function Signup() {
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

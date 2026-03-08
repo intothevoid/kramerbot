@@ -44,7 +44,7 @@ export default function App() {
       />
       <Route
         path="/signup"
-        element={effectiveUser ? <Navigate to="/dashboard" replace /> : <Signup onLogin={handleLogin} />}
+        element={effectiveUser ? <Navigate to="/dashboard" replace /> : <Signup />}
       />
       <Route
         path="/dashboard"

@@ -4,14 +4,12 @@ import { getProfile } from '../api/user';
 
 export function useAuth() {
   const [user, setUser] = useState<WebUser | null>(null);
-  const [loading, setLoading] = useState(true);
+  // Start loading only when a token exists; no-token case is already resolved.
+  const [loading, setLoading] = useState(() => !!localStorage.getItem('kb_token'));
 
   useEffect(() => {
     const token = localStorage.getItem('kb_token');
-    if (!token) {
-      setLoading(false);
-      return;
-    }
+    if (!token) return;
     getProfile()
       .then(setUser)
       .catch(() => {
