@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS web_users (
 	ozb_super             INTEGER NOT NULL DEFAULT 0,
 	amz_daily             INTEGER NOT NULL DEFAULT 0,
 	amz_weekly            INTEGER NOT NULL DEFAULT 0,
+	email_summary         INTEGER NOT NULL DEFAULT 0,
 	keywords              TEXT NOT NULL DEFAULT '[]',
 	created_at            DATETIME DEFAULT CURRENT_TIMESTAMP,
 	updated_at            DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -50,6 +51,8 @@ var migrateStmts = []string{
 	`ALTER TABLE web_users ADD COLUMN email_verified INTEGER NOT NULL DEFAULT 0`,
 	`ALTER TABLE web_users ADD COLUMN verify_token TEXT`,
 	`ALTER TABLE web_users ADD COLUMN verify_token_expires DATETIME`,
+	// Daily email summary preference.
+	`ALTER TABLE web_users ADD COLUMN email_summary INTEGER NOT NULL DEFAULT 0`,
 	// Indexes — created after columns to avoid "no such column" on old schemas.
 	`CREATE INDEX IF NOT EXISTS idx_web_users_email ON web_users(email)`,
 	`CREATE INDEX IF NOT EXISTS idx_web_users_link_token ON web_users(link_token)`,
@@ -77,7 +80,7 @@ const webUserColumns = `
 	telegram_chat_id, telegram_username,
 	link_token, link_token_expires,
 	reset_token, reset_token_expires,
-	ozb_good, ozb_super, amz_daily, amz_weekly, keywords,
+	ozb_good, ozb_super, amz_daily, amz_weekly, email_summary, keywords,
 	created_at, updated_at`
 
 // CreateWebUser inserts a new web user record.
@@ -168,6 +171,7 @@ func (udb *UserStoreDB) UpdateWebUser(user *models.WebUser) error {
 			ozb_super = ?,
 			amz_daily = ?,
 			amz_weekly = ?,
+			email_summary = ?,
 			keywords = ?,
 			updated_at = ?
 		WHERE id = ?`,
@@ -176,7 +180,7 @@ func (udb *UserStoreDB) UpdateWebUser(user *models.WebUser) error {
 		user.TelegramChatID, user.TelegramUsername,
 		user.LinkToken, user.LinkTokenExpires,
 		user.ResetToken, user.ResetTokenExpires,
-		user.OzbGood, user.OzbSuper, user.AmzDaily, user.AmzWeekly, string(kw),
+		user.OzbGood, user.OzbSuper, user.AmzDaily, user.AmzWeekly, user.EmailSummary, string(kw),
 		user.UpdatedAt, user.ID,
 	)
 	if err != nil {
@@ -194,6 +198,39 @@ func (udb *UserStoreDB) DeleteWebUser(id string) error {
 	return nil
 }
 
+// GetAllVerifiedWebUsers returns all web users whose email has been verified.
+func (udb *UserStoreDB) GetAllVerifiedWebUsers() ([]*models.WebUser, error) {
+	rows, err := udb.DB.Query(`SELECT ` + webUserColumns + ` FROM web_users WHERE email_verified = 1`)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query verified web users: %w", err)
+	}
+	defer rows.Close()
+
+	var users []*models.WebUser
+	for rows.Next() {
+		u := &models.WebUser{}
+		var kwJSON string
+		if err := rows.Scan(
+			&u.ID, &u.Email, &u.PasswordHash, &u.DisplayName,
+			&u.EmailVerified, &u.VerifyToken, &u.VerifyTokenExpires,
+			&u.TelegramChatID, &u.TelegramUsername,
+			&u.LinkToken, &u.LinkTokenExpires,
+			&u.ResetToken, &u.ResetTokenExpires,
+			&u.OzbGood, &u.OzbSuper, &u.AmzDaily, &u.AmzWeekly, &u.EmailSummary, &kwJSON,
+			&u.CreatedAt, &u.UpdatedAt,
+		); err != nil {
+			return nil, fmt.Errorf("failed to scan web user: %w", err)
+		}
+		if kwJSON == "" || kwJSON == "null" {
+			u.Keywords = []string{}
+		} else {
+			json.Unmarshal([]byte(kwJSON), &u.Keywords) //nolint:errcheck
+		}
+		users = append(users, u)
+	}
+	return users, rows.Err()
+}
+
 // scanWebUser reads an explicit-column row into a WebUser struct.
 func (udb *UserStoreDB) scanWebUser(row *sql.Row) (*models.WebUser, error) {
 	u := &models.WebUser{}
@@ -204,7 +241,7 @@ func (udb *UserStoreDB) scanWebUser(row *sql.Row) (*models.WebUser, error) {
 		&u.TelegramChatID, &u.TelegramUsername,
 		&u.LinkToken, &u.LinkTokenExpires,
 		&u.ResetToken, &u.ResetTokenExpires,
-		&u.OzbGood, &u.OzbSuper, &u.AmzDaily, &u.AmzWeekly, &kwJSON,
+		&u.OzbGood, &u.OzbSuper, &u.AmzDaily, &u.AmzWeekly, &u.EmailSummary, &kwJSON,
 		&u.CreatedAt, &u.UpdatedAt,
 	)
 	if err == sql.ErrNoRows {

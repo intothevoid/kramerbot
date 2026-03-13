@@ -113,8 +113,9 @@ func (k *KramerBot) processOzbargainDeals() error {
 				}
 			}
 
-			if user.OzbSuper && deal.DealType == int(scrapers.OZB_SUPER) && !OzbDealSent(user, &deal) {
-				// User is subscribed to top deals (25+ votes within 24h).
+			if user.OzbSuper && !user.OzbGood && deal.DealType == int(scrapers.OZB_SUPER) && !OzbDealSent(user, &deal) {
+				// User is subscribed to top deals only (25+ votes within 24h).
+				// Skip if OzbGood is also on — Regular is a superset so the deal is already sent.
 				if err := k.SendOzbSuperDeal(user, &deal); err != nil {
 					k.Logger.Error("Failed to send OZB top deal",
 						zap.String("deal_id", deal.Id),

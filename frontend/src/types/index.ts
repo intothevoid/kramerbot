@@ -8,6 +8,7 @@ export interface WebUser {
   ozb_super?: boolean;
   amz_daily?: boolean;
   amz_weekly?: boolean;
+  email_summary?: boolean;
   keywords?: string[];
   created_at: string;
   updated_at: string;

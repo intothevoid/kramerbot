@@ -29,10 +29,11 @@ func (h *Handler) GetProfile(w http.ResponseWriter, r *http.Request) {
 }
 
 type preferencesRequest struct {
-	OzbGood   bool `json:"ozb_good"`
-	OzbSuper  bool `json:"ozb_super"`
-	AmzDaily  bool `json:"amz_daily"`
-	AmzWeekly bool `json:"amz_weekly"`
+	OzbGood      bool `json:"ozb_good"`
+	OzbSuper     bool `json:"ozb_super"`
+	AmzDaily     bool `json:"amz_daily"`
+	AmzWeekly    bool `json:"amz_weekly"`
+	EmailSummary bool `json:"email_summary"`
 }
 
 // UpdatePreferences saves the user's deal notification toggles and syncs them
@@ -61,6 +62,7 @@ func (h *Handler) UpdatePreferences(w http.ResponseWriter, r *http.Request) {
 	user.OzbSuper = req.OzbSuper
 	user.AmzDaily = req.AmzDaily
 	user.AmzWeekly = req.AmzWeekly
+	user.EmailSummary = req.EmailSummary
 
 	if err := h.WebUserDB.UpdateWebUser(user); err != nil {
 		h.Logger.Error("failed to save preferences", zap.Error(err))
