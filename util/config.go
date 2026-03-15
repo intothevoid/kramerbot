@@ -32,11 +32,12 @@ type SMTPConfig struct {
 
 // APIConfig holds configuration for the HTTP API server.
 type APIConfig struct {
-	Enabled        bool     `mapstructure:"enabled"`
-	Port           int      `mapstructure:"port"`
-	WebURL         string   `mapstructure:"web_url"`
-	CORSOrigins    []string `mapstructure:"cors_origins"`
-	JWTExpiryHours int      `mapstructure:"jwt_expiry_hours"`
+	Enabled         bool     `mapstructure:"enabled"`
+	Port            int      `mapstructure:"port"`
+	WebURL          string   `mapstructure:"web_url"`
+	CORSOrigins     []string `mapstructure:"cors_origins"`
+	JWTExpiryHours  int      `mapstructure:"jwt_expiry_hours"`
+	SummaryTimezone string   `mapstructure:"summary_timezone"`
 }
 
 // SQLiteConfig holds SQLite database configuration
@@ -243,6 +244,7 @@ func SetupConfig(confPath string, logger *zap.Logger) (*Config, error) {
 	v.SetDefault("api.web_url", config.API.WebURL)
 	v.SetDefault("api.cors_origins", config.API.CORSOrigins)
 	v.SetDefault("api.jwt_expiry_hours", config.API.JWTExpiryHours)
+	v.SetDefault("api.summary_timezone", "Australia/Adelaide")
 	v.SetDefault("smtp.host", config.SMTP.Host)
 	v.SetDefault("smtp.port", config.SMTP.Port)
 	v.SetDefault("smtp.username", config.SMTP.Username)
@@ -294,6 +296,9 @@ func SetupConfig(confPath string, logger *zap.Logger) (*Config, error) {
 	}
 	if v := os.Getenv("SMTP_FROM"); v != "" {
 		config.SMTP.From = v
+	}
+	if v := os.Getenv("SUMMARY_TIMEZONE"); v != "" {
+		config.API.SummaryTimezone = v
 	}
 
 	// Ensure database directory exists

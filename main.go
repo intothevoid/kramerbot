@@ -109,7 +109,13 @@ func main() {
 		}()
 
 		if emailSvc.Enabled() && k.WebUserDB != nil {
-			startDailySummaryScheduler(logger, k.WebUserDB, ozbscraper, cccscraper, emailSvc)
+			loc, err := time.LoadLocation(config.API.SummaryTimezone)
+			if err != nil {
+				logger.Warn("Invalid SUMMARY_TIMEZONE, falling back to UTC",
+					zap.String("timezone", config.API.SummaryTimezone), zap.Error(err))
+				loc = time.UTC
+			}
+			startDailySummaryScheduler(logger, k.WebUserDB, ozbscraper, cccscraper, emailSvc, loc)
 		}
 
 		// Graceful shutdown on SIGINT / SIGTERM — exits the whole process.
@@ -146,11 +152,12 @@ func startDailySummaryScheduler(
 	ozbScraper *scrapers.OzBargainScraper,
 	cccScraper *scrapers.CamCamCamScraper,
 	emailSvc *util.EmailService,
+	loc *time.Location,
 ) {
 	go func() {
 		for {
-			now := time.Now()
-			next := time.Date(now.Year(), now.Month(), now.Day(), 20, 0, 0, 0, now.Location())
+			now := time.Now().In(loc)
+			next := time.Date(now.Year(), now.Month(), now.Day(), 20, 0, 0, 0, loc)
 			if !now.Before(next) {
 				next = next.Add(24 * time.Hour)
 			}

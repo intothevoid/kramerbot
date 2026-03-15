@@ -24,8 +24,9 @@ A Telegram bot — and now a full web app — to get you the latest deals from h
 6. Keep track of deals already sent to avoid duplicate notifications
 7. Supports scraping www.ozbargain.com.au — Regular (all deals) and Top (25+ votes in 24h) deals
 8. Supports scraping www.amazon.com.au (via Camel Camel Camel RSS) — Top daily and weekly deals
-9. Supports Android TV notifications (via Pipup)
-10. Admin announcement broadcast
+9. **Daily email summary** — opt-in digest of top OzBargain + Amazon Daily deals sent at 8pm (configurable timezone, defaults to `Australia/Adelaide`)
+10. Supports Android TV notifications (via Pipup)
+11. Admin announcement broadcast
 
 ## Web UI
 
@@ -64,12 +65,13 @@ The web interface runs at `http://localhost:8989` (or the configured port).
 
 ## Email (SMTP)
 
-Email is used for two flows:
+Email is used for three flows:
 
 | Flow | Trigger | Link destination |
 |---|---|---|
 | Email verification | New account registration | `/verify-email?token=…` |
 | Password reset | Forgot password form | `/reset-password?token=…` |
+| Daily summary | 8pm scheduler (opt-in per user) | — |
 
 ### Configuring an SMTP provider
 
@@ -92,6 +94,8 @@ Recommended providers:
 | [Resend](https://resend.com) | 3,000/month | Use `onboarding@resend.dev` as sender without a custom domain |
 | [Mailjet](https://mailjet.com) | 6,000/month | Requires verified sender domain or address |
 | [SendGrid](https://sendgrid.com) | 100/day | `SMTP_USER=apikey`, `SMTP_PASS=<api_key>` |
+
+Set `SUMMARY_TIMEZONE` to any valid [IANA timezone](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) (e.g. `Australia/Sydney`, `America/New_York`). The server timezone is irrelevant — the scheduler always targets 8pm in the configured zone.
 
 Also update `api.web_url` in `config.yaml` to your public domain so links in emails point to the right place:
 
@@ -164,6 +168,9 @@ SMTP_PORT=587
 SMTP_USER=
 SMTP_PASS=
 SMTP_FROM=KramerBot <noreply@yourdomain.com>
+
+# Daily summary timezone — IANA timezone name (default: Australia/Adelaide)
+SUMMARY_TIMEZONE=Australia/Adelaide
 ```
 
 Generate a JWT secret:
