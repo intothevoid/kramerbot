@@ -4,12 +4,15 @@ import (
 	"context"
 	"os"
 	"os/signal"
+	"sort"
+	"strconv"
 	"syscall"
 	"time"
 
 	"github.com/intothevoid/kramerbot/api"
 	"github.com/intothevoid/kramerbot/bot"
 	"github.com/intothevoid/kramerbot/models"
+	"github.com/intothevoid/kramerbot/persist"
 	sqlite_persist "github.com/intothevoid/kramerbot/persist/sqlite"
 	"github.com/intothevoid/kramerbot/pipup"
 	"github.com/intothevoid/kramerbot/scrapers"
@@ -105,6 +108,16 @@ func main() {
 			}
 		}()
 
+		if emailSvc.Enabled() && k.WebUserDB != nil {
+			loc, err := time.LoadLocation(config.API.SummaryTimezone)
+			if err != nil {
+				logger.Warn("Invalid SUMMARY_TIMEZONE, falling back to UTC",
+					zap.String("timezone", config.API.SummaryTimezone), zap.Error(err))
+				loc = time.UTC
+			}
+			startDailySummaryScheduler(logger, k.WebUserDB, ozbscraper, cccscraper, emailSvc, loc)
+		}
+
 		// Graceful shutdown on SIGINT / SIGTERM — exits the whole process.
 		go func() {
 			quit := make(chan os.Signal, 1)
@@ -131,4 +144,74 @@ func main() {
 
 	// Start the Telegram bot (blocks until process exits).
 	k.StartBot()
+}
+
+func startDailySummaryScheduler(
+	logger *zap.Logger,
+	webUserDB persist.WebUserDBIF,
+	ozbScraper *scrapers.OzBargainScraper,
+	cccScraper *scrapers.CamCamCamScraper,
+	emailSvc *util.EmailService,
+	loc *time.Location,
+) {
+	go func() {
+		for {
+			now := time.Now().In(loc)
+			next := time.Date(now.Year(), now.Month(), now.Day(), 20, 0, 0, 0, loc)
+			if !now.Before(next) {
+				next = next.Add(24 * time.Hour)
+			}
+			logger.Info("Daily summary scheduled", zap.Time("next_run", next))
+			time.Sleep(time.Until(next))
+			sendDailySummaries(logger, webUserDB, ozbScraper, cccScraper, emailSvc)
+		}
+	}()
+}
+
+func sendDailySummaries(
+	logger *zap.Logger,
+	webUserDB persist.WebUserDBIF,
+	ozbScraper *scrapers.OzBargainScraper,
+	cccScraper *scrapers.CamCamCamScraper,
+	emailSvc *util.EmailService,
+) {
+	users, err := webUserDB.GetAllVerifiedWebUsers()
+	if err != nil {
+		logger.Error("daily summary: failed to fetch users", zap.Error(err))
+		return
+	}
+
+	// Collect OZB_SUPER deals, sorted by upvotes descending.
+	var ozbDeals []models.OzBargainDeal
+	for _, d := range ozbScraper.Deals {
+		if d.DealType == int(scrapers.OZB_SUPER) {
+			ozbDeals = append(ozbDeals, d)
+		}
+	}
+	sort.Slice(ozbDeals, func(i, j int) bool {
+		vi, _ := strconv.Atoi(ozbDeals[i].Upvotes)
+		vj, _ := strconv.Atoi(ozbDeals[j].Upvotes)
+		return vi > vj
+	})
+
+	// Collect AMZ_DAILY deals.
+	var amzDeals []models.CamCamCamDeal
+	for _, d := range cccScraper.Deals {
+		if d.DealType == int(scrapers.AMZ_DAILY) {
+			amzDeals = append(amzDeals, d)
+		}
+	}
+
+	sent := 0
+	for _, user := range users {
+		if !user.EmailSummary {
+			continue
+		}
+		if err := emailSvc.SendDailySummary(user.Email, ozbDeals, amzDeals); err != nil {
+			logger.Error("daily summary: send failed", zap.String("email", user.Email), zap.Error(err))
+		} else {
+			sent++
+		}
+	}
+	logger.Info("daily summary sent", zap.Int("recipients", sent))
 }

@@ -28,4 +28,5 @@ type WebUserDBIF interface {
 	GetWebUserByResetToken(token string) (*models.WebUser, error)
 	UpdateWebUser(user *models.WebUser) error
 	DeleteWebUser(id string) error
+	GetAllVerifiedWebUsers() ([]*models.WebUser, error)
 }

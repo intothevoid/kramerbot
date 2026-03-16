@@ -24,6 +24,7 @@ export async function updatePreferences(prefs: {
   ozb_super: boolean;
   amz_daily: boolean;
   amz_weekly: boolean;
+  email_summary: boolean;
 }): Promise<WebUser> {
   const res = await api.put<APIResponse<WebUser>>('/user/preferences', prefs);
   return res.data.data!;

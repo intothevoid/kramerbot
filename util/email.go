@@ -2,10 +2,13 @@ package util
 
 import (
 	"fmt"
+	"html"
 	"log"
 	"net/mail"
 	"net/smtp"
 	"strings"
+
+	"github.com/intothevoid/kramerbot/models"
 )
 
 // EmailService sends transactional emails via SMTP (STARTTLS, port 587).
@@ -125,5 +128,73 @@ func (s *EmailService) SendPasswordResetEmail(to, resetLink string) error {
   </div>
 </body>
 </html>`, resetLink, resetLink)
+	return s.Send(to, subject, body)
+}
+
+// SendDailySummary sends the nightly deal digest email.
+// ozbDeals should be pre-filtered to OZB_SUPER type, sorted by votes descending.
+// amzDeals should be pre-filtered to AMZ_DAILY type.
+func (s *EmailService) SendDailySummary(to string, ozbDeals []models.OzBargainDeal, amzDeals []models.CamCamCamDeal) error {
+	subject := "KramerBot Daily Deal Summary 🔥"
+
+	const limit = 10
+	var ozbRows strings.Builder
+	for i, d := range ozbDeals {
+		if i >= limit {
+			break
+		}
+		ozbRows.WriteString(fmt.Sprintf(`
+      <tr>
+        <td style="padding:10px 0;border-bottom:1px solid #f0ede4">
+          <a href="%s" style="color:#c0392b;font-weight:bold;text-decoration:none;font-size:14px">%s</a>
+          <div style="margin-top:4px">
+            <span style="background:#F5C518;color:#1a1a1a;border-radius:4px;padding:2px 7px;font-size:12px;font-weight:bold">🔺 %s votes</span>
+            <span style="color:#aaa;font-size:12px;margin-left:8px">%s</span>
+          </div>
+        </td>
+      </tr>`, html.EscapeString(d.Url), html.EscapeString(d.Title), html.EscapeString(d.Upvotes), html.EscapeString(d.PostedOn)))
+	}
+	if ozbRows.Len() == 0 {
+		ozbRows.WriteString(`<tr><td style="padding:10px 0;color:#aaa;font-size:13px">No top deals today.</td></tr>`)
+	}
+
+	var amzRows strings.Builder
+	for i, d := range amzDeals {
+		if i >= limit {
+			break
+		}
+		amzRows.WriteString(fmt.Sprintf(`
+      <tr>
+        <td style="padding:10px 0;border-bottom:1px solid #f0ede4">
+          <a href="%s" style="color:#c0392b;font-weight:bold;text-decoration:none;font-size:14px">%s</a>
+          <div style="margin-top:4px">
+            <span style="background:#e8f4f8;color:#1a1a1a;border-radius:4px;padding:2px 7px;font-size:12px">📦 Amazon Daily</span>
+          </div>
+        </td>
+      </tr>`, html.EscapeString(d.Url), html.EscapeString(d.Title)))
+	}
+	if amzRows.Len() == 0 {
+		amzRows.WriteString(`<tr><td style="padding:10px 0;color:#aaa;font-size:13px">No Amazon daily deals today.</td></tr>`)
+	}
+
+	body := fmt.Sprintf(`<!DOCTYPE html>
+<html>
+<body style="font-family:sans-serif;max-width:560px;margin:0 auto;padding:32px 16px;background:#FFFEF7">
+  <div style="background:#c0392b;border-radius:12px 12px 0 0;padding:24px;text-align:center">
+    <span style="color:#fff;font-size:22px;font-weight:bold">KramerBot — Daily Summary</span>
+  </div>
+  <div style="background:#fff;border-radius:0 0 12px 12px;padding:32px;border:1px solid #e5e7eb;border-top:none">
+    <h2 style="color:#c0392b;margin-top:0;font-size:17px">🔥 Top OzBargain Deals</h2>
+    <table style="width:100%%;border-collapse:collapse">%s</table>
+    <h2 style="color:#c0392b;margin-top:28px;font-size:17px">📦 Amazon Daily Deals</h2>
+    <table style="width:100%%;border-collapse:collapse">%s</table>
+    <hr style="border:none;border-top:1px solid #e5e7eb;margin:28px 0">
+    <p style="color:#aaa;font-size:12px;text-align:center">
+      KramerBot Daily Summary · Manage your preferences in the Dashboard
+    </p>
+  </div>
+</body>
+</html>`, ozbRows.String(), amzRows.String())
+
 	return s.Send(to, subject, body)
 }

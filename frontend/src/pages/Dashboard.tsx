@@ -13,6 +13,8 @@ import {
 import { OzbDealCard, AmazonDealCard } from '../components/DealCard';
 import { TelegramLinker } from '../components/TelegramLinker';
 import { Spinner } from '../components/Spinner';
+import { Toast } from '../components/Toast';
+import { useToast } from '../hooks/useToast';
 import type { WebUser } from '../types';
 
 type Tab = 'ozb-good' | 'ozb-super' | 'amz-daily' | 'amz-weekly';
@@ -58,6 +60,7 @@ function ToggleRow({
 
 export default function Dashboard({ user, onSignOut }: Props) {
   const qc = useQueryClient();
+  const { toastMsg, showToast } = useToast();
   const [tab, setTab] = useState<Tab>('ozb-good');
   const [newKeyword, setNewKeyword] = useState('');
   const [showMobilePrefs, setShowMobilePrefs] = useState(false);
@@ -102,25 +105,33 @@ export default function Dashboard({ user, onSignOut }: Props) {
     onSuccess: (updated) => {
       setNewKeyword('');
       qc.setQueryData(['keywords'], updated);
+      showToast('Keyword added!');
     },
   });
   const removeKw = useMutation({
     mutationFn: removeKeyword,
-    onSuccess: (updated) => qc.setQueryData(['keywords'], updated),
+    onSuccess: (updated) => {
+      qc.setQueryData(['keywords'], updated);
+      showToast('Keyword removed!');
+    },
   });
 
   // Preference mutation
   const prefsMutation = useMutation({
     mutationFn: updatePreferences,
-    onSuccess: (updated) => qc.setQueryData(['profile'], updated),
+    onSuccess: (updated) => {
+      qc.setQueryData(['profile'], updated);
+      showToast('Preferences updated!');
+    },
   });
 
-  const handlePrefToggle = (key: 'ozb_good' | 'ozb_super' | 'amz_daily' | 'amz_weekly', value: boolean) => {
+  const handlePrefToggle = (key: 'ozb_good' | 'ozb_super' | 'amz_daily' | 'amz_weekly' | 'email_summary', value: boolean) => {
     prefsMutation.mutate({
       ozb_good: key === 'ozb_good' ? value : profile.ozb_good ?? false,
       ozb_super: key === 'ozb_super' ? value : profile.ozb_super ?? false,
       amz_daily: key === 'amz_daily' ? value : profile.amz_daily ?? false,
       amz_weekly: key === 'amz_weekly' ? value : profile.amz_weekly ?? false,
+      email_summary: key === 'email_summary' ? value : profile.email_summary ?? false,
     });
   };
 
@@ -180,6 +191,12 @@ export default function Dashboard({ user, onSignOut }: Props) {
             label="📆 Amazon Weekly"
             checked={profile.amz_weekly ?? false}
             onChange={(v) => handlePrefToggle('amz_weekly', v)}
+            disabled={prefsMutation.isPending}
+          />
+          <ToggleRow
+            label="📧 Daily Email Summary (8pm)"
+            checked={profile.email_summary ?? false}
+            onChange={(v) => handlePrefToggle('email_summary', v)}
             disabled={prefsMutation.isPending}
           />
         </div>
@@ -366,6 +383,7 @@ export default function Dashboard({ user, onSignOut }: Props) {
           )}
         </main>
       </div>
+      <Toast message={toastMsg} />
     </div>
   );
 }

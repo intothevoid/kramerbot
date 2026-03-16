@@ -18,11 +18,12 @@ type WebUser struct {
 	ResetToken         *string    `json:"-"`
 	ResetTokenExpires  *time.Time `json:"-"`
 	// Deal notification preferences (synced to bot's UserData when Telegram is linked).
-	OzbGood   bool     `json:"ozb_good"`
-	OzbSuper  bool     `json:"ozb_super"`
-	AmzDaily  bool     `json:"amz_daily"`
-	AmzWeekly bool     `json:"amz_weekly"`
-	Keywords  []string `json:"keywords"`
+	OzbGood      bool     `json:"ozb_good"`
+	OzbSuper     bool     `json:"ozb_super"`
+	AmzDaily     bool     `json:"amz_daily"`
+	AmzWeekly    bool     `json:"amz_weekly"`
+	EmailSummary bool     `json:"email_summary"`
+	Keywords     []string `json:"keywords"`
 	CreatedAt time.Time  `json:"created_at"`
 	UpdatedAt time.Time  `json:"updated_at"`
 }
