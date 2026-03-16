@@ -13,7 +13,8 @@ import {
 import { OzbDealCard, AmazonDealCard } from '../components/DealCard';
 import { TelegramLinker } from '../components/TelegramLinker';
 import { Spinner } from '../components/Spinner';
-import { Toast, useToast } from '../components/Toast';
+import { Toast } from '../components/Toast';
+import { useToast } from '../hooks/useToast';
 import type { WebUser } from '../types';
 
 type Tab = 'ozb-good' | 'ozb-super' | 'amz-daily' | 'amz-weekly';
