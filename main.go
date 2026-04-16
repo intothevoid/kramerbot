@@ -181,10 +181,13 @@ func sendDailySummaries(
 		return
 	}
 
-	// Collect OZB_SUPER deals, sorted by upvotes descending.
+	const maxDealAge = 24 * time.Hour
+
+	// Collect OZB_SUPER deals posted within the last 24 hours, sorted by upvotes descending.
+	// GetDealAge re-parses PostedOn at call time, so it reflects current age not scrape-time age.
 	var ozbDeals []models.OzBargainDeal
 	for _, d := range ozbScraper.Deals {
-		if d.DealType == int(scrapers.OZB_SUPER) {
+		if d.DealType == int(scrapers.OZB_SUPER) && ozbScraper.GetDealAge(d.PostedOn) <= maxDealAge {
 			ozbDeals = append(ozbDeals, d)
 		}
 	}
@@ -194,10 +197,23 @@ func sendDailySummaries(
 		return vi > vj
 	})
 
-	// Collect AMZ_DAILY deals.
+	// Collect AMZ_DAILY deals published within the last 24 hours.
+	// gofeed sets Published as RFC1123Z or RFC1123; try both.
+	amzLayouts := []string{time.RFC1123Z, time.RFC1123}
+	cutoff := time.Now().Add(-maxDealAge)
 	var amzDeals []models.CamCamCamDeal
 	for _, d := range cccScraper.Deals {
-		if d.DealType == int(scrapers.AMZ_DAILY) {
+		if d.DealType != int(scrapers.AMZ_DAILY) {
+			continue
+		}
+		withinDay := false
+		for _, layout := range amzLayouts {
+			if t, err := time.Parse(layout, d.Published); err == nil {
+				withinDay = t.After(cutoff)
+				break
+			}
+		}
+		if withinDay {
 			amzDeals = append(amzDeals, d)
 		}
 	}
